@@ -7,5 +7,6 @@ class Settings(BaseSettings):
     
     GEMINI_API_KEY: str
     DATABASE_URL: str
+    LOGFIRE_TOKEN: str
 
 settings = Settings()

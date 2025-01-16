@@ -19,7 +19,6 @@ app.add_middleware(
 app.include_router(agent.router, prefix="/api/v1")
 app.include_router(onboarding_agent, prefix="/api/v1")
 
-
 @app.get("/")
 async def greet():
     return {"heelo": "there"}

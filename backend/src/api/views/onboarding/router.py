@@ -13,7 +13,6 @@ router = APIRouter(
 
 class ChatRequest(BaseModel):
     message: str
-    context: Optional[dict] = None
 
 @router.post("/chat")
 async def chat(request: ChatRequest):
@@ -30,7 +29,7 @@ async def chat(request: ChatRequest):
         deps = MLBDeps(client=client)
         
         try:
-            result = await mlb_agent.run(request.message, deps=deps)
+            result = await mlb_agent.process_message(ctx=deps, message=request.message)
             print(result)
             
             # Convert agent result to frontend response
@@ -54,8 +53,3 @@ async def chat(request: ChatRequest):
                 status_code=500, 
                 detail=f"Error processing chat: {str(e)}"
             )
-
-# Keep your existing test endpoint
-@router.post("/")
-async def test():
-    return "hi"
