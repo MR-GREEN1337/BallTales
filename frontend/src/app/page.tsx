@@ -1,101 +1,207 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import BaseballBat from '@/components/global/Baseball';
+
+const translations = {
+  en: {
+    title: "Your Game,",
+    titleSpan: "Your Highlights",
+    subtitle: "Personalized MLB highlights in English, Spanish, and Japanese. Stay connected to every moment that matters.",
+    cta: "Experience the Demo"
+  },
+  es: {
+    title: "Tu Juego,",
+    titleSpan: "Tus Momentos",
+    subtitle: "Momentos destacados personalizados de la MLB en inglés, español y japonés. Mantente conectado a cada momento importante.",
+    cta: "Prueba la Demo"
+  },
+  ja: {
+    title: "あなたの試合、",
+    titleSpan: "あなたのハイライト",
+    subtitle: "英語、スペイン語、日本語で楽しめるパーソナライズされたMLBハイライト。大切な瞬間をお見逃しなく。",
+    cta: "デモを体験"
+  }
+};
+
+const WindEffect = () => {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: [0.1, 0.3, 0.1] }}
+      transition={{
+        duration: 5,
+        repeat: Infinity,
+        ease: "easeInOut",
+      }}
+      className="absolute inset-0 z-10 mix-blend-overlay"
+    >
+      {[...Array(6)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute h-full w-1 bg-gradient-to-b from-transparent via-white to-transparent"
+          style={{
+            left: `${i * 20}%`,
+          }}
+          animate={{
+            y: ["0%", "100%"],
+            opacity: [0, 1, 0],
+          }}
+          transition={{
+            duration: 3 + Math.random() * 2,
+            repeat: Infinity,
+            delay: i * 0.2,
+            ease: "easeInOut",
+          }}
         />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+      ))}
+    </motion.div>
+  );
+};
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+const Home = () => {
+  const [language, setLanguage] = useState<'en' | 'es' | 'ja'>('en');
+  const t = translations[language];
+
+  return (
+    <div className="min-h-screen text-white overflow-hidden relative">
+      {/* Background image with overlay */}
+      <motion.div 
+        initial={{ scale: 1.1, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 1.5 }}
+        className="absolute inset-0 z-0"
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-blue-950/70 to-red-950/70 z-10" />
+        <div className="absolute inset-0 bg-black/30 z-10" />
+        <motion.img
+          src="/field.jpg"
+          alt="Baseball Field"
+          className="object-cover w-full h-full"
+          animate={{
+            scale: [1, 1.05, 1],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+      </motion.div>
+
+      {/* Wind effect overlay */}
+      <WindEffect />
+
+      {/* Main content */}
+      <div className="container mx-auto px-4 py-12 relative z-20">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="flex flex-col items-center justify-center min-h-[80vh] gap-8"
+        >
+          {/* 
+          3D Baseball Bat
+          <motion.div
+            whileHover={{ scale: 1.1 }}
+            transition={{ duration: 0.3 }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <BaseballBat />
+          </motion.div> */}
+
+          {/* Title */}
+          <AnimatePresence mode="wait">
+            <motion.h1
+              key={language}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5 }}
+              className="text-5xl md:text-7xl font-bold text-center mb-4"
+            >
+              {t.title}
+              <span className="text-red-500"> {t.titleSpan}</span>
+            </motion.h1>
+          </AnimatePresence>
+
+          {/* Subtitle */}
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={language}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5 }}
+              className="text-xl md:text-2xl text-gray-300 text-center max-w-2xl mb-8"
+            >
+              {t.subtitle}
+            </motion.p>
+          </AnimatePresence>
+
+          {/* CTA Button */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.9 }}
           >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+            <Button 
+              size="lg"
+              className={cn(
+                "bg-red-600 hover:bg-red-700 text-white",
+                "px-8 py-6 text-xl rounded-full",
+                "transition-transform hover:scale-105 shadow-lg"
+              )}
+              onClick={() => window.location.href = '/dashboard'}
+            >
+              {t.cta}
+            </Button>
+          </motion.div>
+        </motion.div>
+
+        {/* Language Selection */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.2 }}
+          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-4"
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          <Button 
+            variant={language === 'en' ? 'default' : 'ghost'} 
+            onClick={() => setLanguage('en')}
+            className={cn(
+              "text-white",
+              language === 'en' ? "bg-red-600 hover:bg-red-700" : "hover:text-red-500"
+            )}
+          >
+            English
+          </Button>
+          <Button 
+            variant={language === 'es' ? 'default' : 'ghost'}
+            onClick={() => setLanguage('es')}
+            className={cn(
+              "text-white",
+              language === 'es' ? "bg-red-600 hover:bg-red-700" : "hover:text-red-500"
+            )}
+          >
+            Español
+          </Button>
+          <Button 
+            variant={language === 'ja' ? 'default' : 'ghost'}
+            onClick={() => setLanguage('ja')}
+            className={cn(
+              "text-white",
+              language === 'ja' ? "bg-red-600 hover:bg-red-700" : "hover:text-red-500"
+            )}
+          >
+            日本語
+          </Button>
+        </motion.div>
+      </div>
     </div>
   );
-}
+};
+
+export default Home;

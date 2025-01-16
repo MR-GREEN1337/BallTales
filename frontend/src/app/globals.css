@@ -2,20 +2,88 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  color: var(--foreground);
-  background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer base {
+  :root {
+    /* MLB commonly uses navy blue, red, and clean whites */
+    --background: 0 0% 100%;
+    --foreground: 213 96% 18%;  /* MLB Navy */
+    --card: 0 0% 100%;
+    --card-foreground: 213 96% 18%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 213 96% 18%;
+    
+    /* MLB Red as primary */
+    --primary: 357 85% 45%;     /* MLB Red */
+    --primary-foreground: 0 0% 100%;
+    
+    /* Navy blue as secondary */
+    --secondary: 213 30% 95%;
+    --secondary-foreground: 213 96% 18%;
+    
+    /* Supporting colors */
+    --muted: 213 25% 90%;
+    --muted-foreground: 213 40% 45%;
+    --accent: 213 30% 95%;
+    --accent-foreground: 213 96% 18%;
+    
+    /* Alerts/Destructive */
+    --destructive: 357 85% 45%;
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Borders and inputs */
+    --border: 213 25% 85%;
+    --input: 213 25% 85%;
+    --ring: 357 85% 45%;
+    --radius: 0.3rem;
+    
+    /* Chart colors inspired by team colors */
+    --chart-1: 357 85% 45%;     /* MLB Red */
+    --chart-2: 213 96% 18%;     /* MLB Navy */
+    --chart-3: 206 100% 50%;    /* Dodger Blue */
+    --chart-4: 35 85% 50%;      /* Giants Orange */
+    --chart-5: 284 85% 45%;     /* Rockies Purple */
+  }
+
+  .dark {
+    --background: 213 45% 12%;  /* Dark Navy */
+    --foreground: 0 0% 100%;
+    --card: 213 45% 12%;
+    --card-foreground: 0 0% 100%;
+    --popover: 213 45% 12%;
+    --popover-foreground: 0 0% 100%;
+    
+    /* Brighter red for dark mode */
+    --primary: 357 85% 55%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Dark mode secondary */
+    --secondary: 213 30% 25%;
+    --secondary-foreground: 0 0% 100%;
+    
+    /* Supporting colors */
+    --muted: 213 30% 25%;
+    --muted-foreground: 213 20% 75%;
+    --accent: 213 30% 25%;
+    --accent-foreground: 0 0% 100%;
+    
+    /* Alerts/Destructive */
+    --destructive: 357 85% 55%;
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Borders and inputs */
+    --border: 213 30% 25%;
+    --input: 213 30% 25%;
+    --ring: 357 85% 55%;
+    
+    /* Brighter chart colors for dark mode */
+    --chart-1: 357 85% 60%;     /* Brighter Red */
+    --chart-2: 213 85% 60%;     /* Brighter Navy */
+    --chart-3: 206 100% 60%;    /* Brighter Dodger Blue */
+    --chart-4: 35 85% 60%;      /* Brighter Orange */
+    --chart-5: 284 85% 60%;     /* Brighter Purple */
+  }
 }

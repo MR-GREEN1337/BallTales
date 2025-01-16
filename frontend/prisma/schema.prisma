@@ -1,0 +1,44 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String          @id @default(cuid())
+  email       String          @unique
+  password    String
+  name        String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  preferences UserPreferences?
+}
+
+model UserPreferences {
+  id            String    @id @default(cuid())
+  userId        String    @unique
+  user          User      @relation(fields: [userId], references: [id])
+  language      String    @default("en")
+  theme         String    @default("system")
+  notifications Boolean   @default(true)
+}
+
+model Homerun {
+  id           Int      @id @default(autoincrement())
+  season       Int
+  title        String
+  exitVelocity Float?
+  launchAngle  Float?
+  hitDistance  Float?
+  video        String?
+  playerId     String
+  playerName   String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([playerId])
+  @@index([season])
+}
