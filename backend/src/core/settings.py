@@ -7,6 +7,6 @@ class Settings(BaseSettings):
     
     GEMINI_API_KEY: str
     DATABASE_URL: str
-    LOGFIRE_TOKEN: str
+    GROQ_API_KEY: str
 
 settings = Settings()

@@ -1,0 +1,52 @@
+2025-01-17 14:58:11,377 - __main__ - INFO - Project root: /Users/islam/dev/mlb-demo/backend
+2025-01-17 14:58:11,377 - __main__ - INFO - Constants directory: /Users/islam/dev/mlb-demo/backend/src/core/constants
+2025-01-17 14:58:11,390 - __main__ - INFO - Initialized MLBAPISchemaExtractor with batch_size=5
+2025-01-17 14:58:11,390 - __main__ - INFO - Loading endpoints from: /Users/islam/dev/mlb-demo/backend/src/core/constants/endpoints.json
+2025-01-17 14:58:12,156 - __main__ - ERROR - Error executing player_headshot: 200, message='Attempt to decode JSON with unexpected mimetype: image/jpeg', url='https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/671096/headshot/67/current'
+2025-01-17 14:58:13,060 - __main__ - ERROR - Error executing player_headshot: 200, message='Attempt to decode JSON with unexpected mimetype: image/jpeg', url='https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/671096/headshot/67/current'
+2025-01-17 14:58:14,469 - __main__ - ERROR - Error executing player_headshot: 200, message='Attempt to decode JSON with unexpected mimetype: image/jpeg', url='https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/671096/headshot/67/current'
+2025-01-17 14:58:14,469 - __main__ - INFO - Processed 5/63 endpoints
+2025-01-17 14:58:16,343 - __main__ - ERROR - Groq API error for teams_affiliates: Extra data: line 9 column 1 (char 172)
+2025-01-17 14:58:16,975 - __main__ - INFO - Processed 10/63 endpoints
+2025-01-17 14:58:18,794 - __main__ - ERROR - Groq API error for transactions: Expecting property name enclosed in double quotes: line 3 column 17 (char 34)
+2025-01-17 14:58:19,264 - __main__ - WARNING - Endpoint not found: https://statsapi.mlb.com/api/v1/{type}
+2025-01-17 14:58:19,480 - __main__ - INFO - Processed 15/63 endpoints
+2025-01-17 14:58:19,841 - __main__ - WARNING - Endpoint not found: https://statsapi.mlb.com/api/v1/awards{awardId}{recipients}
+2025-01-17 14:58:20,287 - __main__ - WARNING - Endpoint not found: https://statsapi.mlb.com/api/v1/conferences
+2025-01-17 14:58:21,312 - __main__ - WARNING - Endpoint not found: https://statsapi.mlb.com/api/v1/draft{prospects}{year}{latest}
+2025-01-17 14:58:21,824 - __main__ - WARNING - Endpoint not found: https://statsapi.mlb.com/api/v1/game/715705/feed/live
+2025-01-17 14:58:21,986 - __main__ - INFO - Processed 20/63 endpoints
+2025-01-17 14:58:22,437 - __main__ - WARNING - Endpoint not found: https://statsapi.mlb.com/api/v1/game/715705/feed/live/diffPatch
+2025-01-17 14:58:22,771 - __main__ - WARNING - Endpoint not found: https://statsapi.mlb.com/api/v1/game/715705/feed/live/timestamps
+2025-01-17 14:58:23,768 - __main__ - WARNING - Endpoint not found: https://statsapi.mlb.com/api/v1/game/715705/contextMetrics
+2025-01-17 14:58:24,208 - __main__ - WARNING - Endpoint not found: https://statsapi.mlb.com/api/v1/game/715705/winProbability
+2025-01-17 14:58:24,491 - __main__ - INFO - Processed 25/63 endpoints
+2025-01-17 14:58:25,716 - __main__ - WARNING - Endpoint not found: https://statsapi.mlb.com/api/v1/game/715705/feed/color
+2025-01-17 14:58:26,328 - __main__ - WARNING - Endpoint not found: https://statsapi.mlb.com/api/v1/game/715705/feed/color/diffPatch
+2025-01-17 14:58:26,702 - __main__ - WARNING - Endpoint not found: https://statsapi.mlb.com/api/v1/game/715705/feed/color/timestamps
+2025-01-17 14:58:26,996 - __main__ - INFO - Processed 30/63 endpoints
+2025-01-17 14:58:27,202 - __main__ - WARNING - Endpoint not found: https://statsapi.mlb.com/api/v1/game/715705/linescore
+2025-01-17 14:58:30,120 - __main__ - ERROR - Groq API error for homeRunDerby: Extra data: line 5 column 1 (char 28)
+2025-01-17 14:58:30,424 - __main__ - INFO - Processed 35/63 endpoints
+2025-01-17 14:58:33,294 - __main__ - ERROR - Groq API error for people: Extra data: line 7 column 1 (char 129)
+2025-01-17 14:58:33,294 - __main__ - INFO - Processed 40/63 endpoints
+2025-01-17 14:58:34,368 - __main__ - ERROR - Groq API error for people_freeAgents: Extra data: line 5 column 1 (char 25)
+2025-01-17 14:58:36,057 - __main__ - ERROR - Groq API error for jobs: Extra data: line 8 column 1 (char 134)
+2025-01-17 14:58:36,057 - __main__ - INFO - Processed 45/63 endpoints
+2025-01-17 14:58:37,203 - __main__ - ERROR - Groq API error for jobs_umpire_games: Extra data: line 6 column 1 (char 40)
+2025-01-17 14:58:38,563 - __main__ - INFO - Processed 50/63 endpoints
+2025-01-17 14:58:40,459 - __main__ - WARNING - Endpoint not found: https://statsapi.mlb.com/api/v1/seasons{/all}
+2025-01-17 14:58:41,069 - __main__ - INFO - Processed 55/63 endpoints
+2025-01-17 14:58:42,407 - __main__ - WARNING - Endpoint not found: https://statsapi.mlb.com/api/v1/stats/streaks
+2025-01-17 14:58:42,748 - __main__ - WARNING - Endpoint not found: https://statsapi.mlb.com/api/v1/teams/history
+2025-01-17 14:58:43,574 - __main__ - INFO - Processed 60/63 endpoints
+2025-01-17 14:58:45,378 - __main__ - ERROR - Groq API error for team_stats: Expecting property name enclosed in double quotes: line 2 column 18 (char 19)
+2025-01-17 14:58:45,378 - __main__ - INFO - Processed 63/63 endpoints
+2025-01-17 14:58:45,379 - __main__ - INFO - Results saved to: /Users/islam/dev/mlb-demo/backend/src/core/constants/mlb_api_schemas.json
+2025-01-17 14:58:45,379 - __main__ - INFO - Execution completed in 33.99s
+2025-01-17 14:58:45,379 - __main__ - INFO - Success rate: 38/63
+2025-01-17 14:58:45,379 - __main__ - INFO - Execution Summary:
+2025-01-17 14:58:45,379 - __main__ - INFO - Total endpoints: 63
+2025-01-17 14:58:45,379 - __main__ - INFO - Successful: 38
+2025-01-17 14:58:45,379 - __main__ - INFO - Failed: 1
+2025-01-17 14:58:45,379 - __main__ - INFO - Duration: 33.99s

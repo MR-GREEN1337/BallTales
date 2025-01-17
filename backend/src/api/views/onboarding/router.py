@@ -29,7 +29,7 @@ async def chat(request: ChatRequest):
         deps = MLBDeps(client=client)
         
         try:
-            result = await mlb_agent.process_message(ctx=deps, message=request.message)
+            result = await mlb_agent.process_message(deps=deps, message=request.message)
             print(result)
             
             # Convert agent result to frontend response
