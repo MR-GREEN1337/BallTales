@@ -11,7 +11,7 @@ const translations = {
     title: "Your Game,",
     titleSpan: "Your Highlights",
     subtitle: "Personalized MLB highlights in English, Spanish, and Japanese. Stay connected to every moment that matters.",
-    cta: "Experience the Demo"
+    cta: "Experience the App"
   },
   es: {
     title: "Tu Juego,",
@@ -154,7 +154,7 @@ const Home = () => {
                 "px-8 py-6 text-xl rounded-full",
                 "transition-transform hover:scale-105 shadow-lg"
               )}
-              onClick={() => window.location.href = '/dashboard'}
+              onClick={() => window.location.href = '/chat'}
             >
               {t.cta}
             </Button>

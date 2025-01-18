@@ -1,10 +1,12 @@
 {
   "metadata": {
-    "execution_time": 40.324031829833984,
+    "execution_time": 71.58098196983337,
     "total_endpoints": 63,
+    "successful_endpoints": 38,
+    "failed_endpoints": 25,
     "status_counts": {
-      "200": 37,
-      "500": 2,
+      "200": 38,
+      "500": 8,
       "404": 15,
       "400": 7,
       "401": 1
@@ -12,7 +14,7 @@
   },
   "endpoints": {
     "player_headshot": {
-      "timestamp": "2025-01-17T15:00:25.971186",
+      "timestamp": "2025-01-18T19:05:18.910298",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/sports",
         "description": "Get sports information",
@@ -29,7 +31,7 @@
       }
     },
     "attendance": {
-      "timestamp": "2025-01-17T15:00:25.971202",
+      "timestamp": "2025-01-18T19:05:18.910317",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/sports",
         "description": "Get sports information",
@@ -49,7 +51,7 @@
       }
     },
     "sports_players": {
-      "timestamp": "2025-01-17T15:00:25.971204",
+      "timestamp": "2025-01-18T19:05:18.910322",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/sports",
         "description": "Get sports information",
@@ -70,122 +72,356 @@
             },
             "people": {
               "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "int"
-                  },
-                  "fullName": {
-                    "type": "str"
-                  },
-                  "link": {
-                    "type": "str"
-                  },
-                  "firstName": {
-                    "type": "str"
-                  },
-                  "lastName": {
-                    "type": "str"
-                  },
-                  "primaryNumber": {
-                    "type": "str"
-                  },
-                  "birthDate": {
-                    "type": "str"
-                  },
-                  "currentAge": {
-                    "type": "int"
-                  },
-                  "birthCity": {
-                    "type": "str"
-                  },
-                  "birthCountry": {
-                    "type": "str"
-                  },
-                  "height": {
-                    "type": "str"
-                  },
-                  "weight": {
-                    "type": "int"
-                  },
-                  "active": {
-                    "type": "bool"
-                  },
-                  "currentTeam": {
-                    "type": "dict"
-                  },
-                  "primaryPosition": {
-                    "type": "dict"
-                  },
-                  "useName": {
-                    "type": "str"
-                  },
-                  "useLastName": {
-                    "type": "str"
-                  },
-                  "middleName": {
-                    "type": "str"
-                  },
-                  "boxscoreName": {
-                    "type": "str"
-                  },
-                  "nickName": {
-                    "type": "str"
-                  },
-                  "gender": {
-                    "type": "str"
-                  },
-                  "isPlayer": {
-                    "type": "bool"
-                  },
-                  "isVerified": {
-                    "type": "bool"
-                  },
-                  "pronunciation": {
-                    "type": "str"
-                  },
-                  "mlbDebutDate": {
-                    "type": "str"
-                  },
-                  "batSide": {
-                    "type": "dict"
-                  },
-                  "pitchHand": {
-                    "type": "dict"
-                  },
-                  "nameFirstLast": {
-                    "type": "str"
-                  },
-                  "nameSlug": {
-                    "type": "str"
-                  },
-                  "firstLastName": {
-                    "type": "str"
-                  },
-                  "lastFirstName": {
-                    "type": "str"
-                  },
-                  "lastInitName": {
-                    "type": "str"
-                  },
-                  "initLastName": {
-                    "type": "str"
-                  },
-                  "fullFMLName": {
-                    "type": "str"
-                  },
-                  "fullLFMName": {
-                    "type": "str"
-                  },
-                  "strikeZoneTop": {
-                    "type": "float"
-                  },
-                  "strikeZoneBottom": {
-                    "type": "float"
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "int"
+                    },
+                    "fullName": {
+                      "type": "str"
+                    },
+                    "link": {
+                      "type": "str"
+                    },
+                    "firstName": {
+                      "type": "str"
+                    },
+                    "lastName": {
+                      "type": "str"
+                    },
+                    "primaryNumber": {
+                      "type": "str"
+                    },
+                    "birthDate": {
+                      "type": "str"
+                    },
+                    "currentAge": {
+                      "type": "int"
+                    },
+                    "birthCity": {
+                      "type": "str"
+                    },
+                    "birthCountry": {
+                      "type": "str"
+                    },
+                    "height": {
+                      "type": "str"
+                    },
+                    "weight": {
+                      "type": "int"
+                    },
+                    "active": {
+                      "type": "bool"
+                    },
+                    "currentTeam": {
+                      "type": "dict"
+                    },
+                    "primaryPosition": {
+                      "type": "dict"
+                    },
+                    "useName": {
+                      "type": "str"
+                    },
+                    "useLastName": {
+                      "type": "str"
+                    },
+                    "middleName": {
+                      "type": "str"
+                    },
+                    "boxscoreName": {
+                      "type": "str"
+                    },
+                    "nickName": {
+                      "type": "str"
+                    },
+                    "gender": {
+                      "type": "str"
+                    },
+                    "isPlayer": {
+                      "type": "bool"
+                    },
+                    "isVerified": {
+                      "type": "bool"
+                    },
+                    "pronunciation": {
+                      "type": "str"
+                    },
+                    "mlbDebutDate": {
+                      "type": "str"
+                    },
+                    "batSide": {
+                      "type": "dict"
+                    },
+                    "pitchHand": {
+                      "type": "dict"
+                    },
+                    "nameFirstLast": {
+                      "type": "str"
+                    },
+                    "nameSlug": {
+                      "type": "str"
+                    },
+                    "firstLastName": {
+                      "type": "str"
+                    },
+                    "lastFirstName": {
+                      "type": "str"
+                    },
+                    "lastInitName": {
+                      "type": "str"
+                    },
+                    "initLastName": {
+                      "type": "str"
+                    },
+                    "fullFMLName": {
+                      "type": "str"
+                    },
+                    "fullLFMName": {
+                      "type": "str"
+                    },
+                    "strikeZoneTop": {
+                      "type": "float"
+                    },
+                    "strikeZoneBottom": {
+                      "type": "float"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "int"
+                    },
+                    "fullName": {
+                      "type": "str"
+                    },
+                    "link": {
+                      "type": "str"
+                    },
+                    "firstName": {
+                      "type": "str"
+                    },
+                    "lastName": {
+                      "type": "str"
+                    },
+                    "primaryNumber": {
+                      "type": "str"
+                    },
+                    "birthDate": {
+                      "type": "str"
+                    },
+                    "currentAge": {
+                      "type": "int"
+                    },
+                    "birthCity": {
+                      "type": "str"
+                    },
+                    "birthStateProvince": {
+                      "type": "str"
+                    },
+                    "birthCountry": {
+                      "type": "str"
+                    },
+                    "height": {
+                      "type": "str"
+                    },
+                    "weight": {
+                      "type": "int"
+                    },
+                    "active": {
+                      "type": "bool"
+                    },
+                    "currentTeam": {
+                      "type": "dict"
+                    },
+                    "primaryPosition": {
+                      "type": "dict"
+                    },
+                    "useName": {
+                      "type": "str"
+                    },
+                    "useLastName": {
+                      "type": "str"
+                    },
+                    "middleName": {
+                      "type": "str"
+                    },
+                    "boxscoreName": {
+                      "type": "str"
+                    },
+                    "gender": {
+                      "type": "str"
+                    },
+                    "isPlayer": {
+                      "type": "bool"
+                    },
+                    "isVerified": {
+                      "type": "bool"
+                    },
+                    "draftYear": {
+                      "type": "int"
+                    },
+                    "mlbDebutDate": {
+                      "type": "str"
+                    },
+                    "batSide": {
+                      "type": "dict"
+                    },
+                    "pitchHand": {
+                      "type": "dict"
+                    },
+                    "nameFirstLast": {
+                      "type": "str"
+                    },
+                    "nameSlug": {
+                      "type": "str"
+                    },
+                    "firstLastName": {
+                      "type": "str"
+                    },
+                    "lastFirstName": {
+                      "type": "str"
+                    },
+                    "lastInitName": {
+                      "type": "str"
+                    },
+                    "initLastName": {
+                      "type": "str"
+                    },
+                    "fullFMLName": {
+                      "type": "str"
+                    },
+                    "fullLFMName": {
+                      "type": "str"
+                    },
+                    "strikeZoneTop": {
+                      "type": "float"
+                    },
+                    "strikeZoneBottom": {
+                      "type": "float"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "int"
+                    },
+                    "fullName": {
+                      "type": "str"
+                    },
+                    "link": {
+                      "type": "str"
+                    },
+                    "firstName": {
+                      "type": "str"
+                    },
+                    "lastName": {
+                      "type": "str"
+                    },
+                    "primaryNumber": {
+                      "type": "str"
+                    },
+                    "birthDate": {
+                      "type": "str"
+                    },
+                    "currentAge": {
+                      "type": "int"
+                    },
+                    "birthCity": {
+                      "type": "str"
+                    },
+                    "birthStateProvince": {
+                      "type": "str"
+                    },
+                    "birthCountry": {
+                      "type": "str"
+                    },
+                    "height": {
+                      "type": "str"
+                    },
+                    "weight": {
+                      "type": "int"
+                    },
+                    "active": {
+                      "type": "bool"
+                    },
+                    "currentTeam": {
+                      "type": "dict"
+                    },
+                    "primaryPosition": {
+                      "type": "dict"
+                    },
+                    "useName": {
+                      "type": "str"
+                    },
+                    "useLastName": {
+                      "type": "str"
+                    },
+                    "middleName": {
+                      "type": "str"
+                    },
+                    "boxscoreName": {
+                      "type": "str"
+                    },
+                    "gender": {
+                      "type": "str"
+                    },
+                    "isPlayer": {
+                      "type": "bool"
+                    },
+                    "isVerified": {
+                      "type": "bool"
+                    },
+                    "draftYear": {
+                      "type": "int"
+                    },
+                    "mlbDebutDate": {
+                      "type": "str"
+                    },
+                    "batSide": {
+                      "type": "dict"
+                    },
+                    "pitchHand": {
+                      "type": "dict"
+                    },
+                    "nameFirstLast": {
+                      "type": "str"
+                    },
+                    "nameSlug": {
+                      "type": "str"
+                    },
+                    "firstLastName": {
+                      "type": "str"
+                    },
+                    "lastFirstName": {
+                      "type": "str"
+                    },
+                    "lastInitName": {
+                      "type": "str"
+                    },
+                    "initLastName": {
+                      "type": "str"
+                    },
+                    "fullFMLName": {
+                      "type": "str"
+                    },
+                    "fullLFMName": {
+                      "type": "str"
+                    },
+                    "strikeZoneTop": {
+                      "type": "float"
+                    },
+                    "strikeZoneBottom": {
+                      "type": "float"
+                    }
                   }
                 }
-              },
+              ],
               "example_length": 1457
             }
           }
@@ -194,7 +430,7 @@
       }
     },
     "schedule_postseason_tuneIn": {
-      "timestamp": "2025-01-17T15:00:25.971205",
+      "timestamp": "2025-01-18T19:05:18.910324",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/sports",
         "description": "Get sports information",
@@ -243,7 +479,7 @@
       }
     },
     "sports": {
-      "timestamp": "2025-01-17T15:00:25.971206",
+      "timestamp": "2025-01-18T19:05:18.910326",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/sports",
         "description": "Get sports information",
@@ -264,32 +500,86 @@
             },
             "sports": {
               "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "int"
-                  },
-                  "code": {
-                    "type": "str"
-                  },
-                  "link": {
-                    "type": "str"
-                  },
-                  "name": {
-                    "type": "str"
-                  },
-                  "abbreviation": {
-                    "type": "str"
-                  },
-                  "sortOrder": {
-                    "type": "int"
-                  },
-                  "activeStatus": {
-                    "type": "bool"
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "int"
+                    },
+                    "code": {
+                      "type": "str"
+                    },
+                    "link": {
+                      "type": "str"
+                    },
+                    "name": {
+                      "type": "str"
+                    },
+                    "abbreviation": {
+                      "type": "str"
+                    },
+                    "sortOrder": {
+                      "type": "int"
+                    },
+                    "activeStatus": {
+                      "type": "bool"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "int"
+                    },
+                    "code": {
+                      "type": "str"
+                    },
+                    "link": {
+                      "type": "str"
+                    },
+                    "name": {
+                      "type": "str"
+                    },
+                    "abbreviation": {
+                      "type": "str"
+                    },
+                    "sortOrder": {
+                      "type": "int"
+                    },
+                    "activeStatus": {
+                      "type": "bool"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "int"
+                    },
+                    "code": {
+                      "type": "str"
+                    },
+                    "link": {
+                      "type": "str"
+                    },
+                    "name": {
+                      "type": "str"
+                    },
+                    "abbreviation": {
+                      "type": "str"
+                    },
+                    "sortOrder": {
+                      "type": "int"
+                    },
+                    "activeStatus": {
+                      "type": "bool"
+                    }
                   }
                 }
-              },
+              ],
               "example_length": 18
             }
           }
@@ -298,7 +588,7 @@
       }
     },
     "standings": {
-      "timestamp": "2025-01-17T15:00:28.475855",
+      "timestamp": "2025-01-18T19:05:23.916216",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/teams/{teamId}/alumni",
         "description": "Get team alumni information",
@@ -323,29 +613,77 @@
             },
             "records": {
               "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "standingsType": {
-                    "type": "str"
-                  },
-                  "league": {
-                    "type": "dict"
-                  },
-                  "division": {
-                    "type": "dict"
-                  },
-                  "sport": {
-                    "type": "dict"
-                  },
-                  "lastUpdated": {
-                    "type": "str"
-                  },
-                  "teamRecords": {
-                    "type": "list"
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "standingsType": {
+                      "type": "str"
+                    },
+                    "league": {
+                      "type": "dict"
+                    },
+                    "division": {
+                      "type": "dict"
+                    },
+                    "sport": {
+                      "type": "dict"
+                    },
+                    "lastUpdated": {
+                      "type": "str"
+                    },
+                    "teamRecords": {
+                      "type": "list"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "standingsType": {
+                      "type": "str"
+                    },
+                    "league": {
+                      "type": "dict"
+                    },
+                    "division": {
+                      "type": "dict"
+                    },
+                    "sport": {
+                      "type": "dict"
+                    },
+                    "lastUpdated": {
+                      "type": "str"
+                    },
+                    "teamRecords": {
+                      "type": "list"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "standingsType": {
+                      "type": "str"
+                    },
+                    "league": {
+                      "type": "dict"
+                    },
+                    "division": {
+                      "type": "dict"
+                    },
+                    "sport": {
+                      "type": "dict"
+                    },
+                    "lastUpdated": {
+                      "type": "str"
+                    },
+                    "teamRecords": {
+                      "type": "list"
+                    }
                   }
                 }
-              },
+              ],
               "example_length": 3
             }
           }
@@ -354,7 +692,7 @@
       }
     },
     "teams": {
-      "timestamp": "2025-01-17T15:00:28.475865",
+      "timestamp": "2025-01-18T19:05:23.916226",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/teams/{teamId}/alumni",
         "description": "Get team alumni information",
@@ -379,71 +717,206 @@
             },
             "teams": {
               "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "allStarStatus": {
-                    "type": "str"
-                  },
-                  "id": {
-                    "type": "int"
-                  },
-                  "name": {
-                    "type": "str"
-                  },
-                  "link": {
-                    "type": "str"
-                  },
-                  "season": {
-                    "type": "int"
-                  },
-                  "venue": {
-                    "type": "dict"
-                  },
-                  "teamCode": {
-                    "type": "str"
-                  },
-                  "fileCode": {
-                    "type": "str"
-                  },
-                  "abbreviation": {
-                    "type": "str"
-                  },
-                  "teamName": {
-                    "type": "str"
-                  },
-                  "locationName": {
-                    "type": "str"
-                  },
-                  "firstYearOfPlay": {
-                    "type": "str"
-                  },
-                  "league": {
-                    "type": "dict"
-                  },
-                  "sport": {
-                    "type": "dict"
-                  },
-                  "shortName": {
-                    "type": "str"
-                  },
-                  "parentOrgName": {
-                    "type": "str"
-                  },
-                  "parentOrgId": {
-                    "type": "int"
-                  },
-                  "franchiseName": {
-                    "type": "str"
-                  },
-                  "clubName": {
-                    "type": "str"
-                  },
-                  "active": {
-                    "type": "bool"
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "allStarStatus": {
+                      "type": "str"
+                    },
+                    "id": {
+                      "type": "int"
+                    },
+                    "name": {
+                      "type": "str"
+                    },
+                    "link": {
+                      "type": "str"
+                    },
+                    "season": {
+                      "type": "int"
+                    },
+                    "venue": {
+                      "type": "dict"
+                    },
+                    "teamCode": {
+                      "type": "str"
+                    },
+                    "fileCode": {
+                      "type": "str"
+                    },
+                    "abbreviation": {
+                      "type": "str"
+                    },
+                    "teamName": {
+                      "type": "str"
+                    },
+                    "locationName": {
+                      "type": "str"
+                    },
+                    "firstYearOfPlay": {
+                      "type": "str"
+                    },
+                    "league": {
+                      "type": "dict"
+                    },
+                    "sport": {
+                      "type": "dict"
+                    },
+                    "shortName": {
+                      "type": "str"
+                    },
+                    "parentOrgName": {
+                      "type": "str"
+                    },
+                    "parentOrgId": {
+                      "type": "int"
+                    },
+                    "franchiseName": {
+                      "type": "str"
+                    },
+                    "clubName": {
+                      "type": "str"
+                    },
+                    "active": {
+                      "type": "bool"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "allStarStatus": {
+                      "type": "str"
+                    },
+                    "id": {
+                      "type": "int"
+                    },
+                    "name": {
+                      "type": "str"
+                    },
+                    "link": {
+                      "type": "str"
+                    },
+                    "season": {
+                      "type": "int"
+                    },
+                    "venue": {
+                      "type": "dict"
+                    },
+                    "teamCode": {
+                      "type": "str"
+                    },
+                    "fileCode": {
+                      "type": "str"
+                    },
+                    "abbreviation": {
+                      "type": "str"
+                    },
+                    "teamName": {
+                      "type": "str"
+                    },
+                    "locationName": {
+                      "type": "str"
+                    },
+                    "firstYearOfPlay": {
+                      "type": "str"
+                    },
+                    "league": {
+                      "type": "dict"
+                    },
+                    "division": {
+                      "type": "dict"
+                    },
+                    "sport": {
+                      "type": "dict"
+                    },
+                    "shortName": {
+                      "type": "str"
+                    },
+                    "parentOrgName": {
+                      "type": "str"
+                    },
+                    "parentOrgId": {
+                      "type": "int"
+                    },
+                    "franchiseName": {
+                      "type": "str"
+                    },
+                    "clubName": {
+                      "type": "str"
+                    },
+                    "active": {
+                      "type": "bool"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "allStarStatus": {
+                      "type": "str"
+                    },
+                    "id": {
+                      "type": "int"
+                    },
+                    "name": {
+                      "type": "str"
+                    },
+                    "link": {
+                      "type": "str"
+                    },
+                    "season": {
+                      "type": "int"
+                    },
+                    "venue": {
+                      "type": "dict"
+                    },
+                    "teamCode": {
+                      "type": "str"
+                    },
+                    "fileCode": {
+                      "type": "str"
+                    },
+                    "abbreviation": {
+                      "type": "str"
+                    },
+                    "teamName": {
+                      "type": "str"
+                    },
+                    "locationName": {
+                      "type": "str"
+                    },
+                    "firstYearOfPlay": {
+                      "type": "str"
+                    },
+                    "league": {
+                      "type": "dict"
+                    },
+                    "sport": {
+                      "type": "dict"
+                    },
+                    "shortName": {
+                      "type": "str"
+                    },
+                    "parentOrgName": {
+                      "type": "str"
+                    },
+                    "parentOrgId": {
+                      "type": "int"
+                    },
+                    "franchiseName": {
+                      "type": "str"
+                    },
+                    "clubName": {
+                      "type": "str"
+                    },
+                    "active": {
+                      "type": "bool"
+                    }
                   }
                 }
-              },
+              ],
               "example_length": 760
             }
           }
@@ -451,29 +924,8 @@
         "content_type": "application/json;charset=UTF-8"
       }
     },
-    "teams_affiliates": {
-      "timestamp": "2025-01-17T15:00:28.475866",
-      "endpoint": {
-        "url": "https://statsapi.mlb.com/api/v1/teams/{teamId}/alumni",
-        "description": "Get team alumni information",
-        "required_params": [
-          "teamId",
-          "season",
-          "group"
-        ],
-        "optional_params": [
-          "hydrate",
-          "fields"
-        ]
-      },
-      "response": {
-        "error": "HTTP 500",
-        "url": "https://statsapi.mlb.com/api/v1/teams/affiliates",
-        "content_type": "application/json;charset=UTF-8"
-      }
-    },
     "team": {
-      "timestamp": "2025-01-17T15:00:28.475867",
+      "timestamp": "2025-01-18T19:05:27.623777",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/teams/{teamId}/alumni",
         "description": "Get team alumni information",
@@ -574,7 +1026,7 @@
       }
     },
     "team_alumni": {
-      "timestamp": "2025-01-17T15:00:28.475868",
+      "timestamp": "2025-01-18T19:05:27.623788",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/teams/{teamId}/alumni",
         "description": "Get team alumni information",
@@ -599,125 +1051,368 @@
             },
             "people": {
               "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "int"
-                  },
-                  "fullName": {
-                    "type": "str"
-                  },
-                  "link": {
-                    "type": "str"
-                  },
-                  "firstName": {
-                    "type": "str"
-                  },
-                  "lastName": {
-                    "type": "str"
-                  },
-                  "primaryNumber": {
-                    "type": "str"
-                  },
-                  "birthDate": {
-                    "type": "str"
-                  },
-                  "currentAge": {
-                    "type": "int"
-                  },
-                  "birthCity": {
-                    "type": "str"
-                  },
-                  "birthCountry": {
-                    "type": "str"
-                  },
-                  "height": {
-                    "type": "str"
-                  },
-                  "weight": {
-                    "type": "int"
-                  },
-                  "active": {
-                    "type": "bool"
-                  },
-                  "primaryPosition": {
-                    "type": "dict"
-                  },
-                  "useName": {
-                    "type": "str"
-                  },
-                  "useLastName": {
-                    "type": "str"
-                  },
-                  "middleName": {
-                    "type": "str"
-                  },
-                  "boxscoreName": {
-                    "type": "str"
-                  },
-                  "nickName": {
-                    "type": "str"
-                  },
-                  "gender": {
-                    "type": "str"
-                  },
-                  "nameMatrilineal": {
-                    "type": "str"
-                  },
-                  "isPlayer": {
-                    "type": "bool"
-                  },
-                  "isVerified": {
-                    "type": "bool"
-                  },
-                  "pronunciation": {
-                    "type": "str"
-                  },
-                  "mlbDebutDate": {
-                    "type": "str"
-                  },
-                  "batSide": {
-                    "type": "dict"
-                  },
-                  "pitchHand": {
-                    "type": "dict"
-                  },
-                  "nameFirstLast": {
-                    "type": "str"
-                  },
-                  "nameSlug": {
-                    "type": "str"
-                  },
-                  "firstLastName": {
-                    "type": "str"
-                  },
-                  "lastFirstName": {
-                    "type": "str"
-                  },
-                  "lastInitName": {
-                    "type": "str"
-                  },
-                  "initLastName": {
-                    "type": "str"
-                  },
-                  "fullFMLName": {
-                    "type": "str"
-                  },
-                  "fullLFMName": {
-                    "type": "str"
-                  },
-                  "strikeZoneTop": {
-                    "type": "float"
-                  },
-                  "strikeZoneBottom": {
-                    "type": "float"
-                  },
-                  "alumniLastSeason": {
-                    "type": "str"
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "int"
+                    },
+                    "fullName": {
+                      "type": "str"
+                    },
+                    "link": {
+                      "type": "str"
+                    },
+                    "firstName": {
+                      "type": "str"
+                    },
+                    "lastName": {
+                      "type": "str"
+                    },
+                    "primaryNumber": {
+                      "type": "str"
+                    },
+                    "birthDate": {
+                      "type": "str"
+                    },
+                    "currentAge": {
+                      "type": "int"
+                    },
+                    "birthCity": {
+                      "type": "str"
+                    },
+                    "birthCountry": {
+                      "type": "str"
+                    },
+                    "height": {
+                      "type": "str"
+                    },
+                    "weight": {
+                      "type": "int"
+                    },
+                    "active": {
+                      "type": "bool"
+                    },
+                    "primaryPosition": {
+                      "type": "dict"
+                    },
+                    "useName": {
+                      "type": "str"
+                    },
+                    "useLastName": {
+                      "type": "str"
+                    },
+                    "middleName": {
+                      "type": "str"
+                    },
+                    "boxscoreName": {
+                      "type": "str"
+                    },
+                    "nickName": {
+                      "type": "str"
+                    },
+                    "gender": {
+                      "type": "str"
+                    },
+                    "nameMatrilineal": {
+                      "type": "str"
+                    },
+                    "isPlayer": {
+                      "type": "bool"
+                    },
+                    "isVerified": {
+                      "type": "bool"
+                    },
+                    "pronunciation": {
+                      "type": "str"
+                    },
+                    "mlbDebutDate": {
+                      "type": "str"
+                    },
+                    "batSide": {
+                      "type": "dict"
+                    },
+                    "pitchHand": {
+                      "type": "dict"
+                    },
+                    "nameFirstLast": {
+                      "type": "str"
+                    },
+                    "nameSlug": {
+                      "type": "str"
+                    },
+                    "firstLastName": {
+                      "type": "str"
+                    },
+                    "lastFirstName": {
+                      "type": "str"
+                    },
+                    "lastInitName": {
+                      "type": "str"
+                    },
+                    "initLastName": {
+                      "type": "str"
+                    },
+                    "fullFMLName": {
+                      "type": "str"
+                    },
+                    "fullLFMName": {
+                      "type": "str"
+                    },
+                    "strikeZoneTop": {
+                      "type": "float"
+                    },
+                    "strikeZoneBottom": {
+                      "type": "float"
+                    },
+                    "alumniLastSeason": {
+                      "type": "str"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "int"
+                    },
+                    "fullName": {
+                      "type": "str"
+                    },
+                    "link": {
+                      "type": "str"
+                    },
+                    "firstName": {
+                      "type": "str"
+                    },
+                    "lastName": {
+                      "type": "str"
+                    },
+                    "primaryNumber": {
+                      "type": "str"
+                    },
+                    "birthDate": {
+                      "type": "str"
+                    },
+                    "currentAge": {
+                      "type": "int"
+                    },
+                    "birthCity": {
+                      "type": "str"
+                    },
+                    "birthStateProvince": {
+                      "type": "str"
+                    },
+                    "birthCountry": {
+                      "type": "str"
+                    },
+                    "height": {
+                      "type": "str"
+                    },
+                    "weight": {
+                      "type": "int"
+                    },
+                    "active": {
+                      "type": "bool"
+                    },
+                    "primaryPosition": {
+                      "type": "dict"
+                    },
+                    "useName": {
+                      "type": "str"
+                    },
+                    "useLastName": {
+                      "type": "str"
+                    },
+                    "middleName": {
+                      "type": "str"
+                    },
+                    "boxscoreName": {
+                      "type": "str"
+                    },
+                    "gender": {
+                      "type": "str"
+                    },
+                    "isPlayer": {
+                      "type": "bool"
+                    },
+                    "isVerified": {
+                      "type": "bool"
+                    },
+                    "draftYear": {
+                      "type": "int"
+                    },
+                    "pronunciation": {
+                      "type": "str"
+                    },
+                    "mlbDebutDate": {
+                      "type": "str"
+                    },
+                    "batSide": {
+                      "type": "dict"
+                    },
+                    "pitchHand": {
+                      "type": "dict"
+                    },
+                    "nameFirstLast": {
+                      "type": "str"
+                    },
+                    "nameSlug": {
+                      "type": "str"
+                    },
+                    "firstLastName": {
+                      "type": "str"
+                    },
+                    "lastFirstName": {
+                      "type": "str"
+                    },
+                    "lastInitName": {
+                      "type": "str"
+                    },
+                    "initLastName": {
+                      "type": "str"
+                    },
+                    "fullFMLName": {
+                      "type": "str"
+                    },
+                    "fullLFMName": {
+                      "type": "str"
+                    },
+                    "strikeZoneTop": {
+                      "type": "float"
+                    },
+                    "strikeZoneBottom": {
+                      "type": "float"
+                    },
+                    "alumniLastSeason": {
+                      "type": "str"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "int"
+                    },
+                    "fullName": {
+                      "type": "str"
+                    },
+                    "link": {
+                      "type": "str"
+                    },
+                    "firstName": {
+                      "type": "str"
+                    },
+                    "lastName": {
+                      "type": "str"
+                    },
+                    "primaryNumber": {
+                      "type": "str"
+                    },
+                    "birthDate": {
+                      "type": "str"
+                    },
+                    "currentAge": {
+                      "type": "int"
+                    },
+                    "birthCity": {
+                      "type": "str"
+                    },
+                    "birthStateProvince": {
+                      "type": "str"
+                    },
+                    "birthCountry": {
+                      "type": "str"
+                    },
+                    "height": {
+                      "type": "str"
+                    },
+                    "weight": {
+                      "type": "int"
+                    },
+                    "active": {
+                      "type": "bool"
+                    },
+                    "primaryPosition": {
+                      "type": "dict"
+                    },
+                    "useName": {
+                      "type": "str"
+                    },
+                    "useLastName": {
+                      "type": "str"
+                    },
+                    "middleName": {
+                      "type": "str"
+                    },
+                    "boxscoreName": {
+                      "type": "str"
+                    },
+                    "nickName": {
+                      "type": "str"
+                    },
+                    "gender": {
+                      "type": "str"
+                    },
+                    "isPlayer": {
+                      "type": "bool"
+                    },
+                    "isVerified": {
+                      "type": "bool"
+                    },
+                    "draftYear": {
+                      "type": "int"
+                    },
+                    "pronunciation": {
+                      "type": "str"
+                    },
+                    "mlbDebutDate": {
+                      "type": "str"
+                    },
+                    "batSide": {
+                      "type": "dict"
+                    },
+                    "pitchHand": {
+                      "type": "dict"
+                    },
+                    "nameFirstLast": {
+                      "type": "str"
+                    },
+                    "nameSlug": {
+                      "type": "str"
+                    },
+                    "firstLastName": {
+                      "type": "str"
+                    },
+                    "lastFirstName": {
+                      "type": "str"
+                    },
+                    "lastInitName": {
+                      "type": "str"
+                    },
+                    "initLastName": {
+                      "type": "str"
+                    },
+                    "fullFMLName": {
+                      "type": "str"
+                    },
+                    "fullLFMName": {
+                      "type": "str"
+                    },
+                    "strikeZoneTop": {
+                      "type": "float"
+                    },
+                    "strikeZoneBottom": {
+                      "type": "float"
+                    },
+                    "alumniLastSeason": {
+                      "type": "str"
+                    }
                   }
                 }
-              },
+              ],
               "example_length": 34
             }
           }
@@ -726,7 +1421,7 @@
       }
     },
     "team_coaches": {
-      "timestamp": "2025-01-17T15:00:30.981780",
+      "timestamp": "2025-01-18T19:05:32.629669",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/{type}",
         "description": "Get reference data for use in other API calls",
@@ -746,26 +1441,68 @@
             },
             "roster": {
               "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "person": {
-                    "type": "dict"
-                  },
-                  "jerseyNumber": {
-                    "type": "str"
-                  },
-                  "job": {
-                    "type": "str"
-                  },
-                  "jobId": {
-                    "type": "str"
-                  },
-                  "title": {
-                    "type": "str"
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "person": {
+                      "type": "dict"
+                    },
+                    "jerseyNumber": {
+                      "type": "str"
+                    },
+                    "job": {
+                      "type": "str"
+                    },
+                    "jobId": {
+                      "type": "str"
+                    },
+                    "title": {
+                      "type": "str"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "person": {
+                      "type": "dict"
+                    },
+                    "jerseyNumber": {
+                      "type": "str"
+                    },
+                    "job": {
+                      "type": "str"
+                    },
+                    "jobId": {
+                      "type": "str"
+                    },
+                    "title": {
+                      "type": "str"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "person": {
+                      "type": "dict"
+                    },
+                    "jerseyNumber": {
+                      "type": "str"
+                    },
+                    "job": {
+                      "type": "str"
+                    },
+                    "jobId": {
+                      "type": "str"
+                    },
+                    "title": {
+                      "type": "str"
+                    }
                   }
                 }
-              },
+              ],
               "example_length": 11
             },
             "link": {
@@ -786,7 +1523,7 @@
       }
     },
     "team_roster": {
-      "timestamp": "2025-01-17T15:00:30.981792",
+      "timestamp": "2025-01-18T19:05:32.629679",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/{type}",
         "description": "Get reference data for use in other API calls",
@@ -806,26 +1543,68 @@
             },
             "roster": {
               "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "person": {
-                    "type": "dict"
-                  },
-                  "jerseyNumber": {
-                    "type": "str"
-                  },
-                  "position": {
-                    "type": "dict"
-                  },
-                  "status": {
-                    "type": "dict"
-                  },
-                  "parentTeamId": {
-                    "type": "int"
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "person": {
+                      "type": "dict"
+                    },
+                    "jerseyNumber": {
+                      "type": "str"
+                    },
+                    "position": {
+                      "type": "dict"
+                    },
+                    "status": {
+                      "type": "dict"
+                    },
+                    "parentTeamId": {
+                      "type": "int"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "person": {
+                      "type": "dict"
+                    },
+                    "jerseyNumber": {
+                      "type": "str"
+                    },
+                    "position": {
+                      "type": "dict"
+                    },
+                    "status": {
+                      "type": "dict"
+                    },
+                    "parentTeamId": {
+                      "type": "int"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "person": {
+                      "type": "dict"
+                    },
+                    "jerseyNumber": {
+                      "type": "str"
+                    },
+                    "position": {
+                      "type": "dict"
+                    },
+                    "status": {
+                      "type": "dict"
+                    },
+                    "parentTeamId": {
+                      "type": "int"
+                    }
                   }
                 }
-              },
+              ],
               "example_length": 40
             },
             "link": {
@@ -845,24 +1624,8 @@
         "content_type": "application/json;charset=UTF-8"
       }
     },
-    "transactions": {
-      "timestamp": "2025-01-17T15:00:30.981794",
-      "endpoint": {
-        "url": "https://statsapi.mlb.com/api/v1/{type}",
-        "description": "Get reference data for use in other API calls",
-        "required_params": [
-          "type"
-        ],
-        "optional_params": []
-      },
-      "response": {
-        "error": "HTTP 500",
-        "url": "https://statsapi.mlb.com/api/v1/transactions?teamId=137&playerId=671096",
-        "content_type": "application/json;charset=UTF-8"
-      }
-    },
     "venue": {
-      "timestamp": "2025-01-17T15:00:30.981796",
+      "timestamp": "2025-01-18T19:05:36.757563",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/{type}",
         "description": "Get reference data for use in other API calls",
@@ -909,44 +1672,8 @@
         "content_type": "application/json;charset=UTF-8"
       }
     },
-    "meta": {
-      "timestamp": "2025-01-17T15:00:30.981797",
-      "endpoint": {
-        "url": "https://statsapi.mlb.com/api/v1/{type}",
-        "description": "Get reference data for use in other API calls",
-        "required_params": [
-          "type"
-        ],
-        "optional_params": []
-      },
-      "response": {
-        "error": "HTTP 404",
-        "url": "https://statsapi.mlb.com/api/v1/%7Btype%7D",
-        "content_type": "application/json;charset=UTF-8"
-      }
-    },
-    "awards": {
-      "timestamp": "2025-01-17T15:00:33.487354",
-      "endpoint": {
-        "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/feed/live",
-        "description": "Get live game feed",
-        "required_params": [
-          "gamePk"
-        ],
-        "optional_params": [
-          "timecode",
-          "hydrate",
-          "fields"
-        ]
-      },
-      "response": {
-        "error": "HTTP 404",
-        "url": "https://statsapi.mlb.com/api/v1/awards%7BawardId%7D%7Brecipients%7D",
-        "content_type": "application/json;charset=UTF-8"
-      }
-    },
     "conferences": {
-      "timestamp": "2025-01-17T15:00:33.487373",
+      "timestamp": "2025-01-18T19:05:41.762843",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/feed/live",
         "description": "Get live game feed",
@@ -970,35 +1697,66 @@
             },
             "conferences": {
               "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "int"
-                  },
-                  "name": {
-                    "type": "str"
-                  },
-                  "link": {
-                    "type": "str"
-                  },
-                  "abbreviation": {
-                    "type": "str"
-                  },
-                  "hasWildcard": {
-                    "type": "bool"
-                  },
-                  "league": {
-                    "type": "dict"
-                  },
-                  "sport": {
-                    "type": "dict"
-                  },
-                  "nameShort": {
-                    "type": "str"
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "int"
+                    },
+                    "name": {
+                      "type": "str"
+                    },
+                    "link": {
+                      "type": "str"
+                    },
+                    "abbreviation": {
+                      "type": "str"
+                    },
+                    "hasWildcard": {
+                      "type": "bool"
+                    },
+                    "league": {
+                      "type": "dict"
+                    },
+                    "sport": {
+                      "type": "dict"
+                    },
+                    "nameShort": {
+                      "type": "str"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "int"
+                    },
+                    "name": {
+                      "type": "str"
+                    },
+                    "link": {
+                      "type": "str"
+                    },
+                    "abbreviation": {
+                      "type": "str"
+                    },
+                    "hasWildcard": {
+                      "type": "bool"
+                    },
+                    "league": {
+                      "type": "dict"
+                    },
+                    "sport": {
+                      "type": "dict"
+                    },
+                    "nameShort": {
+                      "type": "str"
+                    }
                   }
                 }
-              },
+              ],
               "example_length": 2
             }
           }
@@ -1007,7 +1765,7 @@
       }
     },
     "divisions": {
-      "timestamp": "2025-01-17T15:00:33.487380",
+      "timestamp": "2025-01-18T19:05:41.762853",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/feed/live",
         "description": "Get live game feed",
@@ -1031,44 +1789,128 @@
             },
             "divisions": {
               "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "int"
-                  },
-                  "name": {
-                    "type": "str"
-                  },
-                  "season": {
-                    "type": "str"
-                  },
-                  "nameShort": {
-                    "type": "str"
-                  },
-                  "link": {
-                    "type": "str"
-                  },
-                  "abbreviation": {
-                    "type": "str"
-                  },
-                  "league": {
-                    "type": "dict"
-                  },
-                  "sport": {
-                    "type": "dict"
-                  },
-                  "hasWildcard": {
-                    "type": "bool"
-                  },
-                  "sortOrder": {
-                    "type": "int"
-                  },
-                  "active": {
-                    "type": "bool"
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "int"
+                    },
+                    "name": {
+                      "type": "str"
+                    },
+                    "season": {
+                      "type": "str"
+                    },
+                    "nameShort": {
+                      "type": "str"
+                    },
+                    "link": {
+                      "type": "str"
+                    },
+                    "abbreviation": {
+                      "type": "str"
+                    },
+                    "league": {
+                      "type": "dict"
+                    },
+                    "sport": {
+                      "type": "dict"
+                    },
+                    "hasWildcard": {
+                      "type": "bool"
+                    },
+                    "sortOrder": {
+                      "type": "int"
+                    },
+                    "active": {
+                      "type": "bool"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "int"
+                    },
+                    "name": {
+                      "type": "str"
+                    },
+                    "season": {
+                      "type": "str"
+                    },
+                    "nameShort": {
+                      "type": "str"
+                    },
+                    "link": {
+                      "type": "str"
+                    },
+                    "abbreviation": {
+                      "type": "str"
+                    },
+                    "league": {
+                      "type": "dict"
+                    },
+                    "sport": {
+                      "type": "dict"
+                    },
+                    "hasWildcard": {
+                      "type": "bool"
+                    },
+                    "sortOrder": {
+                      "type": "int"
+                    },
+                    "numPlayoffTeams": {
+                      "type": "int"
+                    },
+                    "active": {
+                      "type": "bool"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "int"
+                    },
+                    "name": {
+                      "type": "str"
+                    },
+                    "season": {
+                      "type": "str"
+                    },
+                    "nameShort": {
+                      "type": "str"
+                    },
+                    "link": {
+                      "type": "str"
+                    },
+                    "abbreviation": {
+                      "type": "str"
+                    },
+                    "league": {
+                      "type": "dict"
+                    },
+                    "sport": {
+                      "type": "dict"
+                    },
+                    "hasWildcard": {
+                      "type": "bool"
+                    },
+                    "sortOrder": {
+                      "type": "int"
+                    },
+                    "numPlayoffTeams": {
+                      "type": "int"
+                    },
+                    "active": {
+                      "type": "bool"
+                    }
                   }
                 }
-              },
+              ],
               "example_length": 61
             }
           }
@@ -1076,86 +1918,8 @@
         "content_type": "application/json;charset=UTF-8"
       }
     },
-    "draft": {
-      "timestamp": "2025-01-17T15:00:33.487383",
-      "endpoint": {
-        "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/feed/live",
-        "description": "Get live game feed",
-        "required_params": [
-          "gamePk"
-        ],
-        "optional_params": [
-          "timecode",
-          "hydrate",
-          "fields"
-        ]
-      },
-      "response": {
-        "error": "HTTP 404",
-        "url": "https://statsapi.mlb.com/api/v1/draft%7Bprospects%7D%7Byear%7D%7Blatest%7D",
-        "content_type": "application/json;charset=UTF-8"
-      }
-    },
-    "game": {
-      "timestamp": "2025-01-17T15:00:33.487385",
-      "endpoint": {
-        "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/feed/live",
-        "description": "Get live game feed",
-        "required_params": [
-          "gamePk"
-        ],
-        "optional_params": [
-          "timecode",
-          "hydrate",
-          "fields"
-        ]
-      },
-      "response": {
-        "error": "HTTP 404",
-        "url": "https://statsapi.mlb.com/api/v1/game/715705/feed/live?gamePk=715705",
-        "content_type": "application/json;charset=UTF-8"
-      }
-    },
-    "game_diff": {
-      "timestamp": "2025-01-17T15:00:35.993297",
-      "endpoint": {
-        "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/winProbability",
-        "description": "Get win probability. For current probability only, use game_contextMetrics instead.",
-        "required_params": [
-          "gamePk"
-        ],
-        "optional_params": [
-          "timecode",
-          "fields"
-        ]
-      },
-      "response": {
-        "error": "HTTP 404",
-        "url": "https://statsapi.mlb.com/api/v1/game/715705/feed/live/diffPatch?gamePk=715705",
-        "content_type": "application/json;charset=UTF-8"
-      }
-    },
-    "game_timestamps": {
-      "timestamp": "2025-01-17T15:00:35.993310",
-      "endpoint": {
-        "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/winProbability",
-        "description": "Get win probability. For current probability only, use game_contextMetrics instead.",
-        "required_params": [
-          "gamePk"
-        ],
-        "optional_params": [
-          "timecode",
-          "fields"
-        ]
-      },
-      "response": {
-        "error": "HTTP 404",
-        "url": "https://statsapi.mlb.com/api/v1/game/715705/feed/live/timestamps?gamePk=715705",
-        "content_type": "application/json;charset=UTF-8"
-      }
-    },
     "game_changes": {
-      "timestamp": "2025-01-17T15:00:44.750676",
+      "timestamp": "2025-01-18T19:05:47.444003",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/winProbability",
         "description": "Get win probability. For current probability only, use game_contextMetrics instead.",
@@ -1168,49 +1932,121 @@
         ]
       },
       "response": {
-        "error": ""
-      }
-    },
-    "game_contextMetrics": {
-      "timestamp": "2025-01-17T15:00:44.750690",
-      "endpoint": {
-        "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/winProbability",
-        "description": "Get win probability. For current probability only, use game_contextMetrics instead.",
-        "required_params": [
-          "gamePk"
-        ],
-        "optional_params": [
-          "timecode",
-          "fields"
-        ]
-      },
-      "response": {
-        "error": "HTTP 404",
-        "url": "https://statsapi.mlb.com/api/v1/game/715705/contextMetrics?gamePk=715705",
-        "content_type": "application/json;charset=UTF-8"
-      }
-    },
-    "game_winProbability": {
-      "timestamp": "2025-01-17T15:00:44.750693",
-      "endpoint": {
-        "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/winProbability",
-        "description": "Get win probability. For current probability only, use game_contextMetrics instead.",
-        "required_params": [
-          "gamePk"
-        ],
-        "optional_params": [
-          "timecode",
-          "fields"
-        ]
-      },
-      "response": {
-        "error": "HTTP 404",
-        "url": "https://statsapi.mlb.com/api/v1/game/715705/winProbability?gamePk=715705",
+        "type": "json",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "copyright": {
+              "type": "str",
+              "example": "Copyright 2025 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to t"
+            },
+            "totalItems": {
+              "type": "int",
+              "example": "478638"
+            },
+            "totalEvents": {
+              "type": "int",
+              "example": "0"
+            },
+            "totalGames": {
+              "type": "int",
+              "example": "478638"
+            },
+            "totalGamesInProgress": {
+              "type": "int",
+              "example": "0"
+            },
+            "dates": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "date": {
+                      "type": "str"
+                    },
+                    "totalItems": {
+                      "type": "int"
+                    },
+                    "totalEvents": {
+                      "type": "int"
+                    },
+                    "totalGames": {
+                      "type": "int"
+                    },
+                    "totalGamesInProgress": {
+                      "type": "int"
+                    },
+                    "games": {
+                      "type": "list"
+                    },
+                    "events": {
+                      "type": "list"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "date": {
+                      "type": "str"
+                    },
+                    "totalItems": {
+                      "type": "int"
+                    },
+                    "totalEvents": {
+                      "type": "int"
+                    },
+                    "totalGames": {
+                      "type": "int"
+                    },
+                    "totalGamesInProgress": {
+                      "type": "int"
+                    },
+                    "games": {
+                      "type": "list"
+                    },
+                    "events": {
+                      "type": "list"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "date": {
+                      "type": "str"
+                    },
+                    "totalItems": {
+                      "type": "int"
+                    },
+                    "totalEvents": {
+                      "type": "int"
+                    },
+                    "totalGames": {
+                      "type": "int"
+                    },
+                    "totalGamesInProgress": {
+                      "type": "int"
+                    },
+                    "games": {
+                      "type": "list"
+                    },
+                    "events": {
+                      "type": "list"
+                    }
+                  }
+                }
+              ],
+              "example_length": 504
+            }
+          }
+        },
         "content_type": "application/json;charset=UTF-8"
       }
     },
     "game_boxscore": {
-      "timestamp": "2025-01-17T15:00:47.256423",
+      "timestamp": "2025-01-18T19:05:52.449227",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/feed/color/timestamps",
         "description": "Get game color feed timestamps",
@@ -1325,7 +2161,7 @@
       }
     },
     "game_content": {
-      "timestamp": "2025-01-17T15:00:47.256462",
+      "timestamp": "2025-01-18T19:05:52.449239",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/feed/color/timestamps",
         "description": "Get game color feed timestamps",
@@ -1435,76 +2271,8 @@
         "content_type": "application/json;charset=UTF-8"
       }
     },
-    "game_color": {
-      "timestamp": "2025-01-17T15:00:47.256467",
-      "endpoint": {
-        "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/feed/color/timestamps",
-        "description": "Get game color feed timestamps",
-        "required_params": [
-          "gamePk"
-        ],
-        "optional_params": []
-      },
-      "response": {
-        "error": "HTTP 404",
-        "url": "https://statsapi.mlb.com/api/v1/game/715705/feed/color?gamePk=715705",
-        "content_type": ""
-      }
-    },
-    "game_color_diff": {
-      "timestamp": "2025-01-17T15:00:47.256471",
-      "endpoint": {
-        "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/feed/color/timestamps",
-        "description": "Get game color feed timestamps",
-        "required_params": [
-          "gamePk"
-        ],
-        "optional_params": []
-      },
-      "response": {
-        "error": "HTTP 404",
-        "url": "https://statsapi.mlb.com/api/v1/game/715705/feed/color/diffPatch?gamePk=715705",
-        "content_type": "application/json;charset=UTF-8"
-      }
-    },
-    "game_color_timestamps": {
-      "timestamp": "2025-01-17T15:00:47.256476",
-      "endpoint": {
-        "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/feed/color/timestamps",
-        "description": "Get game color feed timestamps",
-        "required_params": [
-          "gamePk"
-        ],
-        "optional_params": []
-      },
-      "response": {
-        "error": "HTTP 404",
-        "url": "https://statsapi.mlb.com/api/v1/game/715705/feed/color/timestamps?gamePk=715705",
-        "content_type": ""
-      }
-    },
-    "game_linescore": {
-      "timestamp": "2025-01-17T15:00:49.761415",
-      "endpoint": {
-        "url": "https://statsapi.mlb.com/api/v1/homeRunDerby/{gamePk}{bracket}{pool}",
-        "description": "Get Home Run Derby information",
-        "required_params": [
-          "gamePk"
-        ],
-        "optional_params": [
-          "bracket",
-          "pool",
-          "fields"
-        ]
-      },
-      "response": {
-        "error": "HTTP 404",
-        "url": "https://statsapi.mlb.com/api/v1/game/715705/linescore?gamePk=715705",
-        "content_type": "application/json;charset=UTF-8"
-      }
-    },
     "game_playByPlay": {
-      "timestamp": "2025-01-17T15:00:49.761432",
+      "timestamp": "2025-01-18T19:05:57.455190",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/homeRunDerby/{gamePk}{bracket}{pool}",
         "description": "Get Home Run Derby information",
@@ -1544,7 +2312,7 @@
       }
     },
     "gamePace": {
-      "timestamp": "2025-01-17T15:00:49.761435",
+      "timestamp": "2025-01-18T19:05:57.455200",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/homeRunDerby/{gamePk}{bracket}{pool}",
         "description": "Get Home Run Derby information",
@@ -1576,125 +2344,386 @@
             },
             "sports": {
               "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "hitsPer9Inn": {
-                    "type": "float"
-                  },
-                  "runsPer9Inn": {
-                    "type": "float"
-                  },
-                  "pitchesPer9Inn": {
-                    "type": "float"
-                  },
-                  "plateAppearancesPer9Inn": {
-                    "type": "float"
-                  },
-                  "hitsPerGame": {
-                    "type": "float"
-                  },
-                  "runsPerGame": {
-                    "type": "float"
-                  },
-                  "inningsPlayedPerGame": {
-                    "type": "float"
-                  },
-                  "pitchesPerGame": {
-                    "type": "float"
-                  },
-                  "pitchersPerGame": {
-                    "type": "float"
-                  },
-                  "plateAppearancesPerGame": {
-                    "type": "float"
-                  },
-                  "totalGameTime": {
-                    "type": "str"
-                  },
-                  "totalInningsPlayed": {
-                    "type": "float"
-                  },
-                  "totalHits": {
-                    "type": "int"
-                  },
-                  "totalRuns": {
-                    "type": "int"
-                  },
-                  "totalPlateAppearances": {
-                    "type": "int"
-                  },
-                  "totalPitchers": {
-                    "type": "int"
-                  },
-                  "totalPitches": {
-                    "type": "int"
-                  },
-                  "totalGames": {
-                    "type": "int"
-                  },
-                  "total7InnGames": {
-                    "type": "int"
-                  },
-                  "total9InnGames": {
-                    "type": "int"
-                  },
-                  "totalExtraInnGames": {
-                    "type": "int"
-                  },
-                  "timePerGame": {
-                    "type": "str"
-                  },
-                  "timePerPitch": {
-                    "type": "str"
-                  },
-                  "timePerHit": {
-                    "type": "str"
-                  },
-                  "timePerRun": {
-                    "type": "str"
-                  },
-                  "timePerPlateAppearance": {
-                    "type": "str"
-                  },
-                  "timePer9Inn": {
-                    "type": "str"
-                  },
-                  "timePer77PlateAppearances": {
-                    "type": "str"
-                  },
-                  "totalExtraInnTime": {
-                    "type": "str"
-                  },
-                  "timePer7InnGameWithoutExtraInn": {
-                    "type": "str"
-                  },
-                  "total9InnGamesCompletedEarly": {
-                    "type": "int"
-                  },
-                  "total9InnGamesWithoutExtraInn": {
-                    "type": "int"
-                  },
-                  "total9InnGamesScheduled": {
-                    "type": "int"
-                  },
-                  "hitsPerRun": {
-                    "type": "float"
-                  },
-                  "pitchesPerPitcher": {
-                    "type": "float"
-                  },
-                  "season": {
-                    "type": "str"
-                  },
-                  "sport": {
-                    "type": "dict"
-                  },
-                  "prPortalCalculatedFields": {
-                    "type": "dict"
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "hitsPer9Inn": {
+                      "type": "float"
+                    },
+                    "runsPer9Inn": {
+                      "type": "float"
+                    },
+                    "pitchesPer9Inn": {
+                      "type": "float"
+                    },
+                    "plateAppearancesPer9Inn": {
+                      "type": "float"
+                    },
+                    "hitsPerGame": {
+                      "type": "float"
+                    },
+                    "runsPerGame": {
+                      "type": "float"
+                    },
+                    "inningsPlayedPerGame": {
+                      "type": "float"
+                    },
+                    "pitchesPerGame": {
+                      "type": "float"
+                    },
+                    "pitchersPerGame": {
+                      "type": "float"
+                    },
+                    "plateAppearancesPerGame": {
+                      "type": "float"
+                    },
+                    "totalGameTime": {
+                      "type": "str"
+                    },
+                    "totalInningsPlayed": {
+                      "type": "float"
+                    },
+                    "totalHits": {
+                      "type": "int"
+                    },
+                    "totalRuns": {
+                      "type": "int"
+                    },
+                    "totalPlateAppearances": {
+                      "type": "int"
+                    },
+                    "totalPitchers": {
+                      "type": "int"
+                    },
+                    "totalPitches": {
+                      "type": "int"
+                    },
+                    "totalGames": {
+                      "type": "int"
+                    },
+                    "total7InnGames": {
+                      "type": "int"
+                    },
+                    "total9InnGames": {
+                      "type": "int"
+                    },
+                    "totalExtraInnGames": {
+                      "type": "int"
+                    },
+                    "timePerGame": {
+                      "type": "str"
+                    },
+                    "timePerPitch": {
+                      "type": "str"
+                    },
+                    "timePerHit": {
+                      "type": "str"
+                    },
+                    "timePerRun": {
+                      "type": "str"
+                    },
+                    "timePerPlateAppearance": {
+                      "type": "str"
+                    },
+                    "timePer9Inn": {
+                      "type": "str"
+                    },
+                    "timePer77PlateAppearances": {
+                      "type": "str"
+                    },
+                    "totalExtraInnTime": {
+                      "type": "str"
+                    },
+                    "timePer7InnGameWithoutExtraInn": {
+                      "type": "str"
+                    },
+                    "total9InnGamesCompletedEarly": {
+                      "type": "int"
+                    },
+                    "total9InnGamesWithoutExtraInn": {
+                      "type": "int"
+                    },
+                    "total9InnGamesScheduled": {
+                      "type": "int"
+                    },
+                    "hitsPerRun": {
+                      "type": "float"
+                    },
+                    "pitchesPerPitcher": {
+                      "type": "float"
+                    },
+                    "season": {
+                      "type": "str"
+                    },
+                    "sport": {
+                      "type": "dict"
+                    },
+                    "prPortalCalculatedFields": {
+                      "type": "dict"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "hitsPer9Inn": {
+                      "type": "float"
+                    },
+                    "runsPer9Inn": {
+                      "type": "float"
+                    },
+                    "pitchesPer9Inn": {
+                      "type": "float"
+                    },
+                    "plateAppearancesPer9Inn": {
+                      "type": "float"
+                    },
+                    "hitsPerGame": {
+                      "type": "float"
+                    },
+                    "runsPerGame": {
+                      "type": "float"
+                    },
+                    "inningsPlayedPerGame": {
+                      "type": "float"
+                    },
+                    "pitchesPerGame": {
+                      "type": "float"
+                    },
+                    "pitchersPerGame": {
+                      "type": "float"
+                    },
+                    "plateAppearancesPerGame": {
+                      "type": "float"
+                    },
+                    "totalGameTime": {
+                      "type": "str"
+                    },
+                    "totalInningsPlayed": {
+                      "type": "float"
+                    },
+                    "totalHits": {
+                      "type": "int"
+                    },
+                    "totalRuns": {
+                      "type": "int"
+                    },
+                    "totalPlateAppearances": {
+                      "type": "int"
+                    },
+                    "totalPitchers": {
+                      "type": "int"
+                    },
+                    "totalPitches": {
+                      "type": "int"
+                    },
+                    "totalGames": {
+                      "type": "int"
+                    },
+                    "total7InnGames": {
+                      "type": "int"
+                    },
+                    "total9InnGames": {
+                      "type": "int"
+                    },
+                    "totalExtraInnGames": {
+                      "type": "int"
+                    },
+                    "timePerGame": {
+                      "type": "str"
+                    },
+                    "timePerPitch": {
+                      "type": "str"
+                    },
+                    "timePerHit": {
+                      "type": "str"
+                    },
+                    "timePerRun": {
+                      "type": "str"
+                    },
+                    "timePerPlateAppearance": {
+                      "type": "str"
+                    },
+                    "timePer9Inn": {
+                      "type": "str"
+                    },
+                    "timePer77PlateAppearances": {
+                      "type": "str"
+                    },
+                    "totalExtraInnTime": {
+                      "type": "str"
+                    },
+                    "timePer7InnGame": {
+                      "type": "str"
+                    },
+                    "timePer7InnGameWithoutExtraInn": {
+                      "type": "str"
+                    },
+                    "total7InnGamesScheduled": {
+                      "type": "int"
+                    },
+                    "total7InnGamesWithoutExtraInn": {
+                      "type": "int"
+                    },
+                    "total9InnGamesCompletedEarly": {
+                      "type": "int"
+                    },
+                    "total9InnGamesWithoutExtraInn": {
+                      "type": "int"
+                    },
+                    "total9InnGamesScheduled": {
+                      "type": "int"
+                    },
+                    "hitsPerRun": {
+                      "type": "float"
+                    },
+                    "pitchesPerPitcher": {
+                      "type": "float"
+                    },
+                    "season": {
+                      "type": "str"
+                    },
+                    "sport": {
+                      "type": "dict"
+                    },
+                    "prPortalCalculatedFields": {
+                      "type": "dict"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "hitsPer9Inn": {
+                      "type": "float"
+                    },
+                    "runsPer9Inn": {
+                      "type": "float"
+                    },
+                    "pitchesPer9Inn": {
+                      "type": "float"
+                    },
+                    "plateAppearancesPer9Inn": {
+                      "type": "float"
+                    },
+                    "hitsPerGame": {
+                      "type": "float"
+                    },
+                    "runsPerGame": {
+                      "type": "float"
+                    },
+                    "inningsPlayedPerGame": {
+                      "type": "float"
+                    },
+                    "pitchesPerGame": {
+                      "type": "float"
+                    },
+                    "pitchersPerGame": {
+                      "type": "float"
+                    },
+                    "plateAppearancesPerGame": {
+                      "type": "float"
+                    },
+                    "totalGameTime": {
+                      "type": "str"
+                    },
+                    "totalInningsPlayed": {
+                      "type": "float"
+                    },
+                    "totalHits": {
+                      "type": "int"
+                    },
+                    "totalRuns": {
+                      "type": "int"
+                    },
+                    "totalPlateAppearances": {
+                      "type": "int"
+                    },
+                    "totalPitchers": {
+                      "type": "int"
+                    },
+                    "totalPitches": {
+                      "type": "int"
+                    },
+                    "totalGames": {
+                      "type": "int"
+                    },
+                    "total7InnGames": {
+                      "type": "int"
+                    },
+                    "total9InnGames": {
+                      "type": "int"
+                    },
+                    "totalExtraInnGames": {
+                      "type": "int"
+                    },
+                    "timePerGame": {
+                      "type": "str"
+                    },
+                    "timePerPitch": {
+                      "type": "str"
+                    },
+                    "timePerHit": {
+                      "type": "str"
+                    },
+                    "timePerRun": {
+                      "type": "str"
+                    },
+                    "timePerPlateAppearance": {
+                      "type": "str"
+                    },
+                    "timePer9Inn": {
+                      "type": "str"
+                    },
+                    "timePer77PlateAppearances": {
+                      "type": "str"
+                    },
+                    "totalExtraInnTime": {
+                      "type": "str"
+                    },
+                    "timePer7InnGame": {
+                      "type": "str"
+                    },
+                    "timePer7InnGameWithoutExtraInn": {
+                      "type": "str"
+                    },
+                    "total7InnGamesScheduled": {
+                      "type": "int"
+                    },
+                    "total7InnGamesCompletedEarly": {
+                      "type": "int"
+                    },
+                    "total7InnGamesWithoutExtraInn": {
+                      "type": "int"
+                    },
+                    "total9InnGamesCompletedEarly": {
+                      "type": "int"
+                    },
+                    "total9InnGamesWithoutExtraInn": {
+                      "type": "int"
+                    },
+                    "total9InnGamesScheduled": {
+                      "type": "int"
+                    },
+                    "hitsPerRun": {
+                      "type": "float"
+                    },
+                    "pitchesPerPitcher": {
+                      "type": "float"
+                    },
+                    "season": {
+                      "type": "str"
+                    },
+                    "sport": {
+                      "type": "dict"
+                    },
+                    "prPortalCalculatedFields": {
+                      "type": "dict"
+                    }
                   }
                 }
-              },
+              ],
               "example_length": 10
             }
           }
@@ -1702,48 +2731,8 @@
         "content_type": "application/json;charset=UTF-8"
       }
     },
-    "highLow": {
-      "timestamp": "2025-01-17T15:00:49.761437",
-      "endpoint": {
-        "url": "https://statsapi.mlb.com/api/v1/homeRunDerby/{gamePk}{bracket}{pool}",
-        "description": "Get Home Run Derby information",
-        "required_params": [
-          "gamePk"
-        ],
-        "optional_params": [
-          "bracket",
-          "pool",
-          "fields"
-        ]
-      },
-      "response": {
-        "error": "HTTP 400",
-        "url": "https://statsapi.mlb.com/api/v1/highLow/%7BorgType%7D?season=2023",
-        "content_type": "application/json;charset=UTF-8"
-      }
-    },
-    "homeRunDerby": {
-      "timestamp": "2025-01-17T15:00:49.761439",
-      "endpoint": {
-        "url": "https://statsapi.mlb.com/api/v1/homeRunDerby/{gamePk}{bracket}{pool}",
-        "description": "Get Home Run Derby information",
-        "required_params": [
-          "gamePk"
-        ],
-        "optional_params": [
-          "bracket",
-          "pool",
-          "fields"
-        ]
-      },
-      "response": {
-        "error": "HTTP 400",
-        "url": "https://statsapi.mlb.com/api/v1/homeRunDerby/715705%7Bbracket%7D%7Bpool%7D?gamePk=715705",
-        "content_type": "application/json;charset=UTF-8"
-      }
-    },
     "league": {
-      "timestamp": "2025-01-17T15:00:52.265924",
+      "timestamp": "2025-01-18T19:06:02.460084",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/people",
         "description": "Get information about multiple people",
@@ -1766,71 +2755,191 @@
             },
             "leagues": {
               "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "int"
-                  },
-                  "name": {
-                    "type": "str"
-                  },
-                  "link": {
-                    "type": "str"
-                  },
-                  "abbreviation": {
-                    "type": "str"
-                  },
-                  "nameShort": {
-                    "type": "str"
-                  },
-                  "seasonState": {
-                    "type": "str"
-                  },
-                  "hasWildCard": {
-                    "type": "bool"
-                  },
-                  "hasSplitSeason": {
-                    "type": "bool"
-                  },
-                  "numGames": {
-                    "type": "int"
-                  },
-                  "hasPlayoffPoints": {
-                    "type": "bool"
-                  },
-                  "numTeams": {
-                    "type": "int"
-                  },
-                  "numWildcardTeams": {
-                    "type": "int"
-                  },
-                  "seasonDateInfo": {
-                    "type": "dict"
-                  },
-                  "season": {
-                    "type": "str"
-                  },
-                  "orgCode": {
-                    "type": "str"
-                  },
-                  "conferencesInUse": {
-                    "type": "bool"
-                  },
-                  "divisionsInUse": {
-                    "type": "bool"
-                  },
-                  "sport": {
-                    "type": "dict"
-                  },
-                  "sortOrder": {
-                    "type": "int"
-                  },
-                  "active": {
-                    "type": "bool"
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "int"
+                    },
+                    "name": {
+                      "type": "str"
+                    },
+                    "link": {
+                      "type": "str"
+                    },
+                    "abbreviation": {
+                      "type": "str"
+                    },
+                    "nameShort": {
+                      "type": "str"
+                    },
+                    "seasonState": {
+                      "type": "str"
+                    },
+                    "hasWildCard": {
+                      "type": "bool"
+                    },
+                    "hasSplitSeason": {
+                      "type": "bool"
+                    },
+                    "numGames": {
+                      "type": "int"
+                    },
+                    "hasPlayoffPoints": {
+                      "type": "bool"
+                    },
+                    "numTeams": {
+                      "type": "int"
+                    },
+                    "numWildcardTeams": {
+                      "type": "int"
+                    },
+                    "seasonDateInfo": {
+                      "type": "dict"
+                    },
+                    "season": {
+                      "type": "str"
+                    },
+                    "orgCode": {
+                      "type": "str"
+                    },
+                    "conferencesInUse": {
+                      "type": "bool"
+                    },
+                    "divisionsInUse": {
+                      "type": "bool"
+                    },
+                    "sport": {
+                      "type": "dict"
+                    },
+                    "sortOrder": {
+                      "type": "int"
+                    },
+                    "active": {
+                      "type": "bool"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "int"
+                    },
+                    "name": {
+                      "type": "str"
+                    },
+                    "link": {
+                      "type": "str"
+                    },
+                    "abbreviation": {
+                      "type": "str"
+                    },
+                    "nameShort": {
+                      "type": "str"
+                    },
+                    "seasonState": {
+                      "type": "str"
+                    },
+                    "hasWildCard": {
+                      "type": "bool"
+                    },
+                    "hasSplitSeason": {
+                      "type": "bool"
+                    },
+                    "numGames": {
+                      "type": "int"
+                    },
+                    "hasPlayoffPoints": {
+                      "type": "bool"
+                    },
+                    "numTeams": {
+                      "type": "int"
+                    },
+                    "numWildcardTeams": {
+                      "type": "int"
+                    },
+                    "seasonDateInfo": {
+                      "type": "dict"
+                    },
+                    "season": {
+                      "type": "str"
+                    },
+                    "orgCode": {
+                      "type": "str"
+                    },
+                    "conferencesInUse": {
+                      "type": "bool"
+                    },
+                    "divisionsInUse": {
+                      "type": "bool"
+                    },
+                    "sport": {
+                      "type": "dict"
+                    },
+                    "sortOrder": {
+                      "type": "int"
+                    },
+                    "active": {
+                      "type": "bool"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "int"
+                    },
+                    "name": {
+                      "type": "str"
+                    },
+                    "link": {
+                      "type": "str"
+                    },
+                    "abbreviation": {
+                      "type": "str"
+                    },
+                    "nameShort": {
+                      "type": "str"
+                    },
+                    "seasonState": {
+                      "type": "str"
+                    },
+                    "hasWildCard": {
+                      "type": "bool"
+                    },
+                    "hasSplitSeason": {
+                      "type": "bool"
+                    },
+                    "hasPlayoffPoints": {
+                      "type": "bool"
+                    },
+                    "seasonDateInfo": {
+                      "type": "dict"
+                    },
+                    "season": {
+                      "type": "str"
+                    },
+                    "orgCode": {
+                      "type": "str"
+                    },
+                    "conferencesInUse": {
+                      "type": "bool"
+                    },
+                    "divisionsInUse": {
+                      "type": "bool"
+                    },
+                    "sortOrder": {
+                      "type": "int"
+                    },
+                    "active": {
+                      "type": "bool"
+                    }
                   }
                 }
-              },
+              ],
               "example_length": 15
             }
           }
@@ -1839,7 +2948,7 @@
       }
     },
     "league_allStarBallot": {
-      "timestamp": "2025-01-17T15:00:52.265942",
+      "timestamp": "2025-01-18T19:06:02.460103",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/people",
         "description": "Get information about multiple people",
@@ -1862,122 +2971,353 @@
             },
             "people": {
               "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "int"
-                  },
-                  "fullName": {
-                    "type": "str"
-                  },
-                  "link": {
-                    "type": "str"
-                  },
-                  "firstName": {
-                    "type": "str"
-                  },
-                  "lastName": {
-                    "type": "str"
-                  },
-                  "primaryNumber": {
-                    "type": "str"
-                  },
-                  "birthDate": {
-                    "type": "str"
-                  },
-                  "currentAge": {
-                    "type": "int"
-                  },
-                  "birthCity": {
-                    "type": "str"
-                  },
-                  "birthCountry": {
-                    "type": "str"
-                  },
-                  "height": {
-                    "type": "str"
-                  },
-                  "weight": {
-                    "type": "int"
-                  },
-                  "active": {
-                    "type": "bool"
-                  },
-                  "primaryPosition": {
-                    "type": "dict"
-                  },
-                  "useName": {
-                    "type": "str"
-                  },
-                  "useLastName": {
-                    "type": "str"
-                  },
-                  "middleName": {
-                    "type": "str"
-                  },
-                  "boxscoreName": {
-                    "type": "str"
-                  },
-                  "nickName": {
-                    "type": "str"
-                  },
-                  "gender": {
-                    "type": "str"
-                  },
-                  "nameMatrilineal": {
-                    "type": "str"
-                  },
-                  "isPlayer": {
-                    "type": "bool"
-                  },
-                  "isVerified": {
-                    "type": "bool"
-                  },
-                  "pronunciation": {
-                    "type": "str"
-                  },
-                  "mlbDebutDate": {
-                    "type": "str"
-                  },
-                  "batSide": {
-                    "type": "dict"
-                  },
-                  "pitchHand": {
-                    "type": "dict"
-                  },
-                  "nameFirstLast": {
-                    "type": "str"
-                  },
-                  "nameSlug": {
-                    "type": "str"
-                  },
-                  "firstLastName": {
-                    "type": "str"
-                  },
-                  "lastFirstName": {
-                    "type": "str"
-                  },
-                  "lastInitName": {
-                    "type": "str"
-                  },
-                  "initLastName": {
-                    "type": "str"
-                  },
-                  "fullFMLName": {
-                    "type": "str"
-                  },
-                  "fullLFMName": {
-                    "type": "str"
-                  },
-                  "strikeZoneTop": {
-                    "type": "float"
-                  },
-                  "strikeZoneBottom": {
-                    "type": "float"
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "int"
+                    },
+                    "fullName": {
+                      "type": "str"
+                    },
+                    "link": {
+                      "type": "str"
+                    },
+                    "firstName": {
+                      "type": "str"
+                    },
+                    "lastName": {
+                      "type": "str"
+                    },
+                    "primaryNumber": {
+                      "type": "str"
+                    },
+                    "birthDate": {
+                      "type": "str"
+                    },
+                    "currentAge": {
+                      "type": "int"
+                    },
+                    "birthCity": {
+                      "type": "str"
+                    },
+                    "birthCountry": {
+                      "type": "str"
+                    },
+                    "height": {
+                      "type": "str"
+                    },
+                    "weight": {
+                      "type": "int"
+                    },
+                    "active": {
+                      "type": "bool"
+                    },
+                    "primaryPosition": {
+                      "type": "dict"
+                    },
+                    "useName": {
+                      "type": "str"
+                    },
+                    "useLastName": {
+                      "type": "str"
+                    },
+                    "middleName": {
+                      "type": "str"
+                    },
+                    "boxscoreName": {
+                      "type": "str"
+                    },
+                    "nickName": {
+                      "type": "str"
+                    },
+                    "gender": {
+                      "type": "str"
+                    },
+                    "nameMatrilineal": {
+                      "type": "str"
+                    },
+                    "isPlayer": {
+                      "type": "bool"
+                    },
+                    "isVerified": {
+                      "type": "bool"
+                    },
+                    "pronunciation": {
+                      "type": "str"
+                    },
+                    "mlbDebutDate": {
+                      "type": "str"
+                    },
+                    "batSide": {
+                      "type": "dict"
+                    },
+                    "pitchHand": {
+                      "type": "dict"
+                    },
+                    "nameFirstLast": {
+                      "type": "str"
+                    },
+                    "nameSlug": {
+                      "type": "str"
+                    },
+                    "firstLastName": {
+                      "type": "str"
+                    },
+                    "lastFirstName": {
+                      "type": "str"
+                    },
+                    "lastInitName": {
+                      "type": "str"
+                    },
+                    "initLastName": {
+                      "type": "str"
+                    },
+                    "fullFMLName": {
+                      "type": "str"
+                    },
+                    "fullLFMName": {
+                      "type": "str"
+                    },
+                    "strikeZoneTop": {
+                      "type": "float"
+                    },
+                    "strikeZoneBottom": {
+                      "type": "float"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "int"
+                    },
+                    "fullName": {
+                      "type": "str"
+                    },
+                    "link": {
+                      "type": "str"
+                    },
+                    "firstName": {
+                      "type": "str"
+                    },
+                    "lastName": {
+                      "type": "str"
+                    },
+                    "primaryNumber": {
+                      "type": "str"
+                    },
+                    "birthDate": {
+                      "type": "str"
+                    },
+                    "currentAge": {
+                      "type": "int"
+                    },
+                    "birthCity": {
+                      "type": "str"
+                    },
+                    "birthStateProvince": {
+                      "type": "str"
+                    },
+                    "birthCountry": {
+                      "type": "str"
+                    },
+                    "height": {
+                      "type": "str"
+                    },
+                    "weight": {
+                      "type": "int"
+                    },
+                    "active": {
+                      "type": "bool"
+                    },
+                    "primaryPosition": {
+                      "type": "dict"
+                    },
+                    "useName": {
+                      "type": "str"
+                    },
+                    "useLastName": {
+                      "type": "str"
+                    },
+                    "middleName": {
+                      "type": "str"
+                    },
+                    "boxscoreName": {
+                      "type": "str"
+                    },
+                    "gender": {
+                      "type": "str"
+                    },
+                    "isPlayer": {
+                      "type": "bool"
+                    },
+                    "isVerified": {
+                      "type": "bool"
+                    },
+                    "draftYear": {
+                      "type": "int"
+                    },
+                    "pronunciation": {
+                      "type": "str"
+                    },
+                    "mlbDebutDate": {
+                      "type": "str"
+                    },
+                    "batSide": {
+                      "type": "dict"
+                    },
+                    "pitchHand": {
+                      "type": "dict"
+                    },
+                    "nameFirstLast": {
+                      "type": "str"
+                    },
+                    "nameSlug": {
+                      "type": "str"
+                    },
+                    "firstLastName": {
+                      "type": "str"
+                    },
+                    "lastFirstName": {
+                      "type": "str"
+                    },
+                    "lastInitName": {
+                      "type": "str"
+                    },
+                    "initLastName": {
+                      "type": "str"
+                    },
+                    "fullFMLName": {
+                      "type": "str"
+                    },
+                    "fullLFMName": {
+                      "type": "str"
+                    },
+                    "strikeZoneTop": {
+                      "type": "float"
+                    },
+                    "strikeZoneBottom": {
+                      "type": "float"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "int"
+                    },
+                    "fullName": {
+                      "type": "str"
+                    },
+                    "link": {
+                      "type": "str"
+                    },
+                    "firstName": {
+                      "type": "str"
+                    },
+                    "lastName": {
+                      "type": "str"
+                    },
+                    "primaryNumber": {
+                      "type": "str"
+                    },
+                    "birthDate": {
+                      "type": "str"
+                    },
+                    "currentAge": {
+                      "type": "int"
+                    },
+                    "birthCity": {
+                      "type": "str"
+                    },
+                    "birthCountry": {
+                      "type": "str"
+                    },
+                    "height": {
+                      "type": "str"
+                    },
+                    "weight": {
+                      "type": "int"
+                    },
+                    "active": {
+                      "type": "bool"
+                    },
+                    "primaryPosition": {
+                      "type": "dict"
+                    },
+                    "useName": {
+                      "type": "str"
+                    },
+                    "useLastName": {
+                      "type": "str"
+                    },
+                    "boxscoreName": {
+                      "type": "str"
+                    },
+                    "nickName": {
+                      "type": "str"
+                    },
+                    "gender": {
+                      "type": "str"
+                    },
+                    "nameMatrilineal": {
+                      "type": "str"
+                    },
+                    "isPlayer": {
+                      "type": "bool"
+                    },
+                    "isVerified": {
+                      "type": "bool"
+                    },
+                    "pronunciation": {
+                      "type": "str"
+                    },
+                    "mlbDebutDate": {
+                      "type": "str"
+                    },
+                    "batSide": {
+                      "type": "dict"
+                    },
+                    "pitchHand": {
+                      "type": "dict"
+                    },
+                    "nameFirstLast": {
+                      "type": "str"
+                    },
+                    "nameSlug": {
+                      "type": "str"
+                    },
+                    "firstLastName": {
+                      "type": "str"
+                    },
+                    "lastFirstName": {
+                      "type": "str"
+                    },
+                    "lastInitName": {
+                      "type": "str"
+                    },
+                    "initLastName": {
+                      "type": "str"
+                    },
+                    "fullFMLName": {
+                      "type": "str"
+                    },
+                    "fullLFMName": {
+                      "type": "str"
+                    },
+                    "strikeZoneTop": {
+                      "type": "float"
+                    },
+                    "strikeZoneBottom": {
+                      "type": "float"
+                    }
                   }
                 }
-              },
+              ],
               "example_length": 135
             }
           }
@@ -1986,7 +3326,7 @@
       }
     },
     "league_allStarWriteIns": {
-      "timestamp": "2025-01-17T15:00:52.265944",
+      "timestamp": "2025-01-18T19:06:02.460106",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/people",
         "description": "Get information about multiple people",
@@ -2009,107 +3349,326 @@
             },
             "people": {
               "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "int"
-                  },
-                  "fullName": {
-                    "type": "str"
-                  },
-                  "link": {
-                    "type": "str"
-                  },
-                  "firstName": {
-                    "type": "str"
-                  },
-                  "lastName": {
-                    "type": "str"
-                  },
-                  "birthDate": {
-                    "type": "str"
-                  },
-                  "currentAge": {
-                    "type": "int"
-                  },
-                  "birthCity": {
-                    "type": "str"
-                  },
-                  "birthStateProvince": {
-                    "type": "str"
-                  },
-                  "birthCountry": {
-                    "type": "str"
-                  },
-                  "height": {
-                    "type": "str"
-                  },
-                  "weight": {
-                    "type": "int"
-                  },
-                  "active": {
-                    "type": "bool"
-                  },
-                  "useName": {
-                    "type": "str"
-                  },
-                  "useLastName": {
-                    "type": "str"
-                  },
-                  "boxscoreName": {
-                    "type": "str"
-                  },
-                  "gender": {
-                    "type": "str"
-                  },
-                  "isPlayer": {
-                    "type": "bool"
-                  },
-                  "isVerified": {
-                    "type": "bool"
-                  },
-                  "mlbDebutDate": {
-                    "type": "str"
-                  },
-                  "batSide": {
-                    "type": "dict"
-                  },
-                  "pitchHand": {
-                    "type": "dict"
-                  },
-                  "nameFirstLast": {
-                    "type": "str"
-                  },
-                  "nameSlug": {
-                    "type": "str"
-                  },
-                  "firstLastName": {
-                    "type": "str"
-                  },
-                  "lastFirstName": {
-                    "type": "str"
-                  },
-                  "lastInitName": {
-                    "type": "str"
-                  },
-                  "initLastName": {
-                    "type": "str"
-                  },
-                  "fullFMLName": {
-                    "type": "str"
-                  },
-                  "fullLFMName": {
-                    "type": "str"
-                  },
-                  "strikeZoneTop": {
-                    "type": "float"
-                  },
-                  "strikeZoneBottom": {
-                    "type": "float"
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "int"
+                    },
+                    "fullName": {
+                      "type": "str"
+                    },
+                    "link": {
+                      "type": "str"
+                    },
+                    "firstName": {
+                      "type": "str"
+                    },
+                    "lastName": {
+                      "type": "str"
+                    },
+                    "birthDate": {
+                      "type": "str"
+                    },
+                    "currentAge": {
+                      "type": "int"
+                    },
+                    "birthCity": {
+                      "type": "str"
+                    },
+                    "birthStateProvince": {
+                      "type": "str"
+                    },
+                    "birthCountry": {
+                      "type": "str"
+                    },
+                    "height": {
+                      "type": "str"
+                    },
+                    "weight": {
+                      "type": "int"
+                    },
+                    "active": {
+                      "type": "bool"
+                    },
+                    "useName": {
+                      "type": "str"
+                    },
+                    "useLastName": {
+                      "type": "str"
+                    },
+                    "boxscoreName": {
+                      "type": "str"
+                    },
+                    "gender": {
+                      "type": "str"
+                    },
+                    "isPlayer": {
+                      "type": "bool"
+                    },
+                    "isVerified": {
+                      "type": "bool"
+                    },
+                    "mlbDebutDate": {
+                      "type": "str"
+                    },
+                    "batSide": {
+                      "type": "dict"
+                    },
+                    "pitchHand": {
+                      "type": "dict"
+                    },
+                    "nameFirstLast": {
+                      "type": "str"
+                    },
+                    "nameSlug": {
+                      "type": "str"
+                    },
+                    "firstLastName": {
+                      "type": "str"
+                    },
+                    "lastFirstName": {
+                      "type": "str"
+                    },
+                    "lastInitName": {
+                      "type": "str"
+                    },
+                    "initLastName": {
+                      "type": "str"
+                    },
+                    "fullFMLName": {
+                      "type": "str"
+                    },
+                    "fullLFMName": {
+                      "type": "str"
+                    },
+                    "strikeZoneTop": {
+                      "type": "float"
+                    },
+                    "strikeZoneBottom": {
+                      "type": "float"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "int"
+                    },
+                    "fullName": {
+                      "type": "str"
+                    },
+                    "link": {
+                      "type": "str"
+                    },
+                    "firstName": {
+                      "type": "str"
+                    },
+                    "lastName": {
+                      "type": "str"
+                    },
+                    "primaryNumber": {
+                      "type": "str"
+                    },
+                    "birthDate": {
+                      "type": "str"
+                    },
+                    "currentAge": {
+                      "type": "int"
+                    },
+                    "birthCity": {
+                      "type": "str"
+                    },
+                    "birthStateProvince": {
+                      "type": "str"
+                    },
+                    "birthCountry": {
+                      "type": "str"
+                    },
+                    "height": {
+                      "type": "str"
+                    },
+                    "weight": {
+                      "type": "int"
+                    },
+                    "active": {
+                      "type": "bool"
+                    },
+                    "useName": {
+                      "type": "str"
+                    },
+                    "useLastName": {
+                      "type": "str"
+                    },
+                    "boxscoreName": {
+                      "type": "str"
+                    },
+                    "gender": {
+                      "type": "str"
+                    },
+                    "isPlayer": {
+                      "type": "bool"
+                    },
+                    "isVerified": {
+                      "type": "bool"
+                    },
+                    "draftYear": {
+                      "type": "int"
+                    },
+                    "mlbDebutDate": {
+                      "type": "str"
+                    },
+                    "batSide": {
+                      "type": "dict"
+                    },
+                    "pitchHand": {
+                      "type": "dict"
+                    },
+                    "nameFirstLast": {
+                      "type": "str"
+                    },
+                    "nameSlug": {
+                      "type": "str"
+                    },
+                    "firstLastName": {
+                      "type": "str"
+                    },
+                    "lastFirstName": {
+                      "type": "str"
+                    },
+                    "lastInitName": {
+                      "type": "str"
+                    },
+                    "initLastName": {
+                      "type": "str"
+                    },
+                    "fullFMLName": {
+                      "type": "str"
+                    },
+                    "fullLFMName": {
+                      "type": "str"
+                    },
+                    "strikeZoneTop": {
+                      "type": "float"
+                    },
+                    "strikeZoneBottom": {
+                      "type": "float"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "int"
+                    },
+                    "fullName": {
+                      "type": "str"
+                    },
+                    "link": {
+                      "type": "str"
+                    },
+                    "firstName": {
+                      "type": "str"
+                    },
+                    "lastName": {
+                      "type": "str"
+                    },
+                    "primaryNumber": {
+                      "type": "str"
+                    },
+                    "birthDate": {
+                      "type": "str"
+                    },
+                    "currentAge": {
+                      "type": "int"
+                    },
+                    "birthCity": {
+                      "type": "str"
+                    },
+                    "birthStateProvince": {
+                      "type": "str"
+                    },
+                    "birthCountry": {
+                      "type": "str"
+                    },
+                    "height": {
+                      "type": "str"
+                    },
+                    "weight": {
+                      "type": "int"
+                    },
+                    "active": {
+                      "type": "bool"
+                    },
+                    "useName": {
+                      "type": "str"
+                    },
+                    "useLastName": {
+                      "type": "str"
+                    },
+                    "middleName": {
+                      "type": "str"
+                    },
+                    "boxscoreName": {
+                      "type": "str"
+                    },
+                    "gender": {
+                      "type": "str"
+                    },
+                    "isPlayer": {
+                      "type": "bool"
+                    },
+                    "isVerified": {
+                      "type": "bool"
+                    },
+                    "draftYear": {
+                      "type": "int"
+                    },
+                    "mlbDebutDate": {
+                      "type": "str"
+                    },
+                    "batSide": {
+                      "type": "dict"
+                    },
+                    "pitchHand": {
+                      "type": "dict"
+                    },
+                    "nameFirstLast": {
+                      "type": "str"
+                    },
+                    "nameSlug": {
+                      "type": "str"
+                    },
+                    "firstLastName": {
+                      "type": "str"
+                    },
+                    "lastFirstName": {
+                      "type": "str"
+                    },
+                    "lastInitName": {
+                      "type": "str"
+                    },
+                    "initLastName": {
+                      "type": "str"
+                    },
+                    "fullFMLName": {
+                      "type": "str"
+                    },
+                    "fullLFMName": {
+                      "type": "str"
+                    },
+                    "strikeZoneTop": {
+                      "type": "float"
+                    },
+                    "strikeZoneBottom": {
+                      "type": "float"
+                    }
                   }
                 }
-              },
+              ],
               "example_length": 254
             }
           }
@@ -2118,7 +3677,7 @@
       }
     },
     "league_allStarFinalVote": {
-      "timestamp": "2025-01-17T15:00:52.265945",
+      "timestamp": "2025-01-18T19:06:02.460110",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/people",
         "description": "Get information about multiple people",
@@ -2141,116 +3700,350 @@
             },
             "people": {
               "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "int"
-                  },
-                  "fullName": {
-                    "type": "str"
-                  },
-                  "link": {
-                    "type": "str"
-                  },
-                  "firstName": {
-                    "type": "str"
-                  },
-                  "lastName": {
-                    "type": "str"
-                  },
-                  "primaryNumber": {
-                    "type": "str"
-                  },
-                  "birthDate": {
-                    "type": "str"
-                  },
-                  "currentAge": {
-                    "type": "int"
-                  },
-                  "birthCity": {
-                    "type": "str"
-                  },
-                  "birthCountry": {
-                    "type": "str"
-                  },
-                  "height": {
-                    "type": "str"
-                  },
-                  "weight": {
-                    "type": "int"
-                  },
-                  "active": {
-                    "type": "bool"
-                  },
-                  "primaryPosition": {
-                    "type": "dict"
-                  },
-                  "useName": {
-                    "type": "str"
-                  },
-                  "useLastName": {
-                    "type": "str"
-                  },
-                  "boxscoreName": {
-                    "type": "str"
-                  },
-                  "nickName": {
-                    "type": "str"
-                  },
-                  "gender": {
-                    "type": "str"
-                  },
-                  "isPlayer": {
-                    "type": "bool"
-                  },
-                  "isVerified": {
-                    "type": "bool"
-                  },
-                  "pronunciation": {
-                    "type": "str"
-                  },
-                  "mlbDebutDate": {
-                    "type": "str"
-                  },
-                  "batSide": {
-                    "type": "dict"
-                  },
-                  "pitchHand": {
-                    "type": "dict"
-                  },
-                  "nameFirstLast": {
-                    "type": "str"
-                  },
-                  "nameSlug": {
-                    "type": "str"
-                  },
-                  "firstLastName": {
-                    "type": "str"
-                  },
-                  "lastFirstName": {
-                    "type": "str"
-                  },
-                  "lastInitName": {
-                    "type": "str"
-                  },
-                  "initLastName": {
-                    "type": "str"
-                  },
-                  "fullFMLName": {
-                    "type": "str"
-                  },
-                  "fullLFMName": {
-                    "type": "str"
-                  },
-                  "strikeZoneTop": {
-                    "type": "float"
-                  },
-                  "strikeZoneBottom": {
-                    "type": "float"
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "int"
+                    },
+                    "fullName": {
+                      "type": "str"
+                    },
+                    "link": {
+                      "type": "str"
+                    },
+                    "firstName": {
+                      "type": "str"
+                    },
+                    "lastName": {
+                      "type": "str"
+                    },
+                    "primaryNumber": {
+                      "type": "str"
+                    },
+                    "birthDate": {
+                      "type": "str"
+                    },
+                    "currentAge": {
+                      "type": "int"
+                    },
+                    "birthCity": {
+                      "type": "str"
+                    },
+                    "birthCountry": {
+                      "type": "str"
+                    },
+                    "height": {
+                      "type": "str"
+                    },
+                    "weight": {
+                      "type": "int"
+                    },
+                    "active": {
+                      "type": "bool"
+                    },
+                    "primaryPosition": {
+                      "type": "dict"
+                    },
+                    "useName": {
+                      "type": "str"
+                    },
+                    "useLastName": {
+                      "type": "str"
+                    },
+                    "boxscoreName": {
+                      "type": "str"
+                    },
+                    "nickName": {
+                      "type": "str"
+                    },
+                    "gender": {
+                      "type": "str"
+                    },
+                    "isPlayer": {
+                      "type": "bool"
+                    },
+                    "isVerified": {
+                      "type": "bool"
+                    },
+                    "pronunciation": {
+                      "type": "str"
+                    },
+                    "mlbDebutDate": {
+                      "type": "str"
+                    },
+                    "batSide": {
+                      "type": "dict"
+                    },
+                    "pitchHand": {
+                      "type": "dict"
+                    },
+                    "nameFirstLast": {
+                      "type": "str"
+                    },
+                    "nameSlug": {
+                      "type": "str"
+                    },
+                    "firstLastName": {
+                      "type": "str"
+                    },
+                    "lastFirstName": {
+                      "type": "str"
+                    },
+                    "lastInitName": {
+                      "type": "str"
+                    },
+                    "initLastName": {
+                      "type": "str"
+                    },
+                    "fullFMLName": {
+                      "type": "str"
+                    },
+                    "fullLFMName": {
+                      "type": "str"
+                    },
+                    "strikeZoneTop": {
+                      "type": "float"
+                    },
+                    "strikeZoneBottom": {
+                      "type": "float"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "int"
+                    },
+                    "fullName": {
+                      "type": "str"
+                    },
+                    "link": {
+                      "type": "str"
+                    },
+                    "firstName": {
+                      "type": "str"
+                    },
+                    "lastName": {
+                      "type": "str"
+                    },
+                    "primaryNumber": {
+                      "type": "str"
+                    },
+                    "birthDate": {
+                      "type": "str"
+                    },
+                    "currentAge": {
+                      "type": "int"
+                    },
+                    "birthCity": {
+                      "type": "str"
+                    },
+                    "birthCountry": {
+                      "type": "str"
+                    },
+                    "height": {
+                      "type": "str"
+                    },
+                    "weight": {
+                      "type": "int"
+                    },
+                    "active": {
+                      "type": "bool"
+                    },
+                    "primaryPosition": {
+                      "type": "dict"
+                    },
+                    "useName": {
+                      "type": "str"
+                    },
+                    "useLastName": {
+                      "type": "str"
+                    },
+                    "boxscoreName": {
+                      "type": "str"
+                    },
+                    "nickName": {
+                      "type": "str"
+                    },
+                    "gender": {
+                      "type": "str"
+                    },
+                    "nameMatrilineal": {
+                      "type": "str"
+                    },
+                    "isPlayer": {
+                      "type": "bool"
+                    },
+                    "isVerified": {
+                      "type": "bool"
+                    },
+                    "pronunciation": {
+                      "type": "str"
+                    },
+                    "mlbDebutDate": {
+                      "type": "str"
+                    },
+                    "batSide": {
+                      "type": "dict"
+                    },
+                    "pitchHand": {
+                      "type": "dict"
+                    },
+                    "nameFirstLast": {
+                      "type": "str"
+                    },
+                    "nameSlug": {
+                      "type": "str"
+                    },
+                    "firstLastName": {
+                      "type": "str"
+                    },
+                    "lastFirstName": {
+                      "type": "str"
+                    },
+                    "lastInitName": {
+                      "type": "str"
+                    },
+                    "initLastName": {
+                      "type": "str"
+                    },
+                    "fullFMLName": {
+                      "type": "str"
+                    },
+                    "fullLFMName": {
+                      "type": "str"
+                    },
+                    "strikeZoneTop": {
+                      "type": "float"
+                    },
+                    "strikeZoneBottom": {
+                      "type": "float"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "int"
+                    },
+                    "fullName": {
+                      "type": "str"
+                    },
+                    "link": {
+                      "type": "str"
+                    },
+                    "firstName": {
+                      "type": "str"
+                    },
+                    "lastName": {
+                      "type": "str"
+                    },
+                    "primaryNumber": {
+                      "type": "str"
+                    },
+                    "birthDate": {
+                      "type": "str"
+                    },
+                    "currentAge": {
+                      "type": "int"
+                    },
+                    "birthCity": {
+                      "type": "str"
+                    },
+                    "birthStateProvince": {
+                      "type": "str"
+                    },
+                    "birthCountry": {
+                      "type": "str"
+                    },
+                    "height": {
+                      "type": "str"
+                    },
+                    "weight": {
+                      "type": "int"
+                    },
+                    "active": {
+                      "type": "bool"
+                    },
+                    "primaryPosition": {
+                      "type": "dict"
+                    },
+                    "useName": {
+                      "type": "str"
+                    },
+                    "useLastName": {
+                      "type": "str"
+                    },
+                    "boxscoreName": {
+                      "type": "str"
+                    },
+                    "nickName": {
+                      "type": "str"
+                    },
+                    "gender": {
+                      "type": "str"
+                    },
+                    "nameMatrilineal": {
+                      "type": "str"
+                    },
+                    "isPlayer": {
+                      "type": "bool"
+                    },
+                    "isVerified": {
+                      "type": "bool"
+                    },
+                    "mlbDebutDate": {
+                      "type": "str"
+                    },
+                    "batSide": {
+                      "type": "dict"
+                    },
+                    "pitchHand": {
+                      "type": "dict"
+                    },
+                    "nameFirstLast": {
+                      "type": "str"
+                    },
+                    "nameTitle": {
+                      "type": "str"
+                    },
+                    "nameSuffix": {
+                      "type": "str"
+                    },
+                    "nameSlug": {
+                      "type": "str"
+                    },
+                    "firstLastName": {
+                      "type": "str"
+                    },
+                    "lastFirstName": {
+                      "type": "str"
+                    },
+                    "lastInitName": {
+                      "type": "str"
+                    },
+                    "initLastName": {
+                      "type": "str"
+                    },
+                    "fullFMLName": {
+                      "type": "str"
+                    },
+                    "fullLFMName": {
+                      "type": "str"
+                    },
+                    "strikeZoneTop": {
+                      "type": "float"
+                    },
+                    "strikeZoneBottom": {
+                      "type": "float"
+                    }
                   }
                 }
-              },
+              ],
               "example_length": 17
             }
           }
@@ -2258,67 +4051,8 @@
         "content_type": "application/json;charset=UTF-8"
       }
     },
-    "people": {
-      "timestamp": "2025-01-17T15:00:52.265946",
-      "endpoint": {
-        "url": "https://statsapi.mlb.com/api/v1/people",
-        "description": "Get information about multiple people",
-        "required_params": [
-          "personIds"
-        ],
-        "optional_params": [
-          "hydrate",
-          "fields"
-        ]
-      },
-      "response": {
-        "error": "HTTP 400",
-        "url": "https://statsapi.mlb.com/api/v1/people",
-        "content_type": "application/json;charset=UTF-8"
-      }
-    },
-    "people_changes": {
-      "timestamp": "2025-01-17T15:00:54.771763",
-      "endpoint": {
-        "url": "https://statsapi.mlb.com/api/v1/jobs",
-        "description": "Get jobs information",
-        "required_params": [
-          "jobType"
-        ],
-        "optional_params": [
-          "sportId",
-          "date",
-          "fields"
-        ]
-      },
-      "response": {
-        "error": "HTTP 400",
-        "url": "https://statsapi.mlb.com/api/v1/people/changes",
-        "content_type": "application/json;charset=UTF-8"
-      }
-    },
-    "people_freeAgents": {
-      "timestamp": "2025-01-17T15:00:54.771774",
-      "endpoint": {
-        "url": "https://statsapi.mlb.com/api/v1/jobs",
-        "description": "Get jobs information",
-        "required_params": [
-          "jobType"
-        ],
-        "optional_params": [
-          "sportId",
-          "date",
-          "fields"
-        ]
-      },
-      "response": {
-        "error": "HTTP 400",
-        "url": "https://statsapi.mlb.com/api/v1/people/freeAgents?leagueId=103",
-        "content_type": "application/json;charset=UTF-8"
-      }
-    },
     "person": {
-      "timestamp": "2025-01-17T15:00:54.771776",
+      "timestamp": "2025-01-18T19:06:07.465292",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/jobs",
         "description": "Get jobs information",
@@ -2463,7 +4197,7 @@
       }
     },
     "person_stats": {
-      "timestamp": "2025-01-17T15:00:54.771779",
+      "timestamp": "2025-01-18T19:06:07.465305",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/jobs",
         "description": "Get jobs information",
@@ -2511,28 +4245,8 @@
         "content_type": "application/json;charset=UTF-8"
       }
     },
-    "jobs": {
-      "timestamp": "2025-01-17T15:00:54.771780",
-      "endpoint": {
-        "url": "https://statsapi.mlb.com/api/v1/jobs",
-        "description": "Get jobs information",
-        "required_params": [
-          "jobType"
-        ],
-        "optional_params": [
-          "sportId",
-          "date",
-          "fields"
-        ]
-      },
-      "response": {
-        "error": "HTTP 400",
-        "url": "https://statsapi.mlb.com/api/v1/jobs",
-        "content_type": "application/json;charset=UTF-8"
-      }
-    },
     "jobs_umpires": {
-      "timestamp": "2025-01-17T15:00:57.276784",
+      "timestamp": "2025-01-18T19:06:12.471172",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/schedule",
         "description": "Get schedule information",
@@ -2568,26 +4282,68 @@
             },
             "roster": {
               "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "person": {
-                    "type": "dict"
-                  },
-                  "jerseyNumber": {
-                    "type": "str"
-                  },
-                  "job": {
-                    "type": "str"
-                  },
-                  "jobId": {
-                    "type": "str"
-                  },
-                  "title": {
-                    "type": "str"
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "person": {
+                      "type": "dict"
+                    },
+                    "jerseyNumber": {
+                      "type": "str"
+                    },
+                    "job": {
+                      "type": "str"
+                    },
+                    "jobId": {
+                      "type": "str"
+                    },
+                    "title": {
+                      "type": "str"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "person": {
+                      "type": "dict"
+                    },
+                    "jerseyNumber": {
+                      "type": "str"
+                    },
+                    "job": {
+                      "type": "str"
+                    },
+                    "jobId": {
+                      "type": "str"
+                    },
+                    "title": {
+                      "type": "str"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "person": {
+                      "type": "dict"
+                    },
+                    "jerseyNumber": {
+                      "type": "str"
+                    },
+                    "job": {
+                      "type": "str"
+                    },
+                    "jobId": {
+                      "type": "str"
+                    },
+                    "title": {
+                      "type": "str"
+                    }
                   }
                 }
-              },
+              ],
               "example_length": 102
             }
           }
@@ -2595,40 +4351,8 @@
         "content_type": "application/json;charset=UTF-8"
       }
     },
-    "jobs_umpire_games": {
-      "timestamp": "2025-01-17T15:00:57.276794",
-      "endpoint": {
-        "url": "https://statsapi.mlb.com/api/v1/schedule",
-        "description": "Get schedule information",
-        "required_params": [
-          "sportId",
-          "gamePk",
-          "gamePks"
-        ],
-        "optional_params": [
-          "scheduleType",
-          "eventTypes",
-          "hydrate",
-          "teamId",
-          "leagueId",
-          "venueIds",
-          "gameTypes",
-          "date",
-          "startDate",
-          "endDate",
-          "season",
-          "opponentId",
-          "fields"
-        ]
-      },
-      "response": {
-        "error": "HTTP 401",
-        "url": "https://statsapi.mlb.com/api/v1/jobs/umpires/games/%7BumpireId%7D?season=2023",
-        "content_type": "text/html;charset=UTF-8"
-      }
-    },
     "jobs_datacasters": {
-      "timestamp": "2025-01-17T15:00:57.276796",
+      "timestamp": "2025-01-18T19:06:12.471277",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/schedule",
         "description": "Get schedule information",
@@ -2664,26 +4388,68 @@
             },
             "roster": {
               "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "person": {
-                    "type": "dict"
-                  },
-                  "jerseyNumber": {
-                    "type": "str"
-                  },
-                  "job": {
-                    "type": "str"
-                  },
-                  "jobId": {
-                    "type": "str"
-                  },
-                  "title": {
-                    "type": "str"
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "person": {
+                      "type": "dict"
+                    },
+                    "jerseyNumber": {
+                      "type": "str"
+                    },
+                    "job": {
+                      "type": "str"
+                    },
+                    "jobId": {
+                      "type": "str"
+                    },
+                    "title": {
+                      "type": "str"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "person": {
+                      "type": "dict"
+                    },
+                    "jerseyNumber": {
+                      "type": "str"
+                    },
+                    "job": {
+                      "type": "str"
+                    },
+                    "jobId": {
+                      "type": "str"
+                    },
+                    "title": {
+                      "type": "str"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "person": {
+                      "type": "dict"
+                    },
+                    "jerseyNumber": {
+                      "type": "str"
+                    },
+                    "job": {
+                      "type": "str"
+                    },
+                    "jobId": {
+                      "type": "str"
+                    },
+                    "title": {
+                      "type": "str"
+                    }
                   }
                 }
-              },
+              ],
               "example_length": 160
             }
           }
@@ -2692,7 +4458,7 @@
       }
     },
     "jobs_officialScorers": {
-      "timestamp": "2025-01-17T15:00:57.276797",
+      "timestamp": "2025-01-18T19:06:12.471283",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/schedule",
         "description": "Get schedule information",
@@ -2728,26 +4494,68 @@
             },
             "roster": {
               "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "person": {
-                    "type": "dict"
-                  },
-                  "jerseyNumber": {
-                    "type": "str"
-                  },
-                  "job": {
-                    "type": "str"
-                  },
-                  "jobId": {
-                    "type": "str"
-                  },
-                  "title": {
-                    "type": "str"
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "person": {
+                      "type": "dict"
+                    },
+                    "jerseyNumber": {
+                      "type": "str"
+                    },
+                    "job": {
+                      "type": "str"
+                    },
+                    "jobId": {
+                      "type": "str"
+                    },
+                    "title": {
+                      "type": "str"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "person": {
+                      "type": "dict"
+                    },
+                    "jerseyNumber": {
+                      "type": "str"
+                    },
+                    "job": {
+                      "type": "str"
+                    },
+                    "jobId": {
+                      "type": "str"
+                    },
+                    "title": {
+                      "type": "str"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "person": {
+                      "type": "dict"
+                    },
+                    "jerseyNumber": {
+                      "type": "str"
+                    },
+                    "job": {
+                      "type": "str"
+                    },
+                    "jobId": {
+                      "type": "str"
+                    },
+                    "title": {
+                      "type": "str"
+                    }
                   }
                 }
-              },
+              ],
               "example_length": 173
             }
           }
@@ -2756,7 +4564,7 @@
       }
     },
     "schedule": {
-      "timestamp": "2025-01-17T15:00:57.276798",
+      "timestamp": "2025-01-18T19:06:12.471285",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/schedule",
         "description": "Get schedule information",
@@ -2816,7 +4624,7 @@
       }
     },
     "schedule_tied": {
-      "timestamp": "2025-01-17T15:00:59.781786",
+      "timestamp": "2025-01-18T19:06:17.476820",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/seasons/{seasonId}",
         "description": "Get specific season information",
@@ -2865,7 +4673,7 @@
       }
     },
     "schedule_postseason": {
-      "timestamp": "2025-01-17T15:00:59.781796",
+      "timestamp": "2025-01-18T19:06:17.476829",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/seasons/{seasonId}",
         "description": "Get specific season information",
@@ -2918,7 +4726,7 @@
       }
     },
     "schedule_postseason_series": {
-      "timestamp": "2025-01-17T15:00:59.781798",
+      "timestamp": "2025-01-18T19:06:17.476831",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/seasons/{seasonId}",
         "description": "Get specific season information",
@@ -2970,29 +4778,8 @@
         "content_type": "application/json;charset=UTF-8"
       }
     },
-    "seasons": {
-      "timestamp": "2025-01-17T15:00:59.781799",
-      "endpoint": {
-        "url": "https://statsapi.mlb.com/api/v1/seasons/{seasonId}",
-        "description": "Get specific season information",
-        "required_params": [
-          "seasonId",
-          "sportId"
-        ],
-        "optional_params": [
-          "seasonId",
-          "sportId",
-          "fields"
-        ]
-      },
-      "response": {
-        "error": "HTTP 404",
-        "url": "https://statsapi.mlb.com/api/v1/seasons%7B/all%7D?sportId=1",
-        "content_type": "application/json;charset=UTF-8"
-      }
-    },
     "season": {
-      "timestamp": "2025-01-17T15:00:59.781800",
+      "timestamp": "2025-01-18T19:06:17.476882",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/seasons/{seasonId}",
         "description": "Get specific season information",
@@ -3025,7 +4812,7 @@
       }
     },
     "stats": {
-      "timestamp": "2025-01-17T15:01:02.287226",
+      "timestamp": "2025-01-18T19:06:22.482260",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/teams/stats",
         "description": "Get team statistics",
@@ -3095,7 +4882,7 @@
       }
     },
     "stats_leaders": {
-      "timestamp": "2025-01-17T15:01:02.287252",
+      "timestamp": "2025-01-18T19:06:22.482270",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/teams/stats",
         "description": "Get team statistics",
@@ -3128,26 +4915,68 @@
             },
             "leagueLeaders": {
               "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "leaderCategory": {
-                    "type": "str"
-                  },
-                  "gameType": {
-                    "type": "dict"
-                  },
-                  "leaders": {
-                    "type": "list"
-                  },
-                  "statGroup": {
-                    "type": "str"
-                  },
-                  "totalSplits": {
-                    "type": "int"
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "leaderCategory": {
+                      "type": "str"
+                    },
+                    "gameType": {
+                      "type": "dict"
+                    },
+                    "leaders": {
+                      "type": "list"
+                    },
+                    "statGroup": {
+                      "type": "str"
+                    },
+                    "totalSplits": {
+                      "type": "int"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "leaderCategory": {
+                      "type": "str"
+                    },
+                    "gameType": {
+                      "type": "dict"
+                    },
+                    "leaders": {
+                      "type": "list"
+                    },
+                    "statGroup": {
+                      "type": "str"
+                    },
+                    "totalSplits": {
+                      "type": "int"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "leaderCategory": {
+                      "type": "str"
+                    },
+                    "gameType": {
+                      "type": "dict"
+                    },
+                    "leaders": {
+                      "type": "list"
+                    },
+                    "statGroup": {
+                      "type": "str"
+                    },
+                    "totalSplits": {
+                      "type": "int"
+                    }
                   }
                 }
-              },
+              ],
               "example_length": 3
             }
           }
@@ -3155,66 +4984,8 @@
         "content_type": "application/json;charset=UTF-8"
       }
     },
-    "stats_streaks": {
-      "timestamp": "2025-01-17T15:01:02.287256",
-      "endpoint": {
-        "url": "https://statsapi.mlb.com/api/v1/teams/stats",
-        "description": "Get team statistics",
-        "required_params": [
-          "season",
-          "group",
-          "stats"
-        ],
-        "optional_params": [
-          "season",
-          "sportIds",
-          "group",
-          "gameType",
-          "stats",
-          "order",
-          "sortStat",
-          "fields",
-          "startDate",
-          "endDate"
-        ]
-      },
-      "response": {
-        "error": "HTTP 404",
-        "url": "https://statsapi.mlb.com/api/v1/stats/streaks?season=2023&sportId=1",
-        "content_type": "application/json;charset=UTF-8"
-      }
-    },
-    "teams_history": {
-      "timestamp": "2025-01-17T15:01:02.287259",
-      "endpoint": {
-        "url": "https://statsapi.mlb.com/api/v1/teams/stats",
-        "description": "Get team statistics",
-        "required_params": [
-          "season",
-          "group",
-          "stats"
-        ],
-        "optional_params": [
-          "season",
-          "sportIds",
-          "group",
-          "gameType",
-          "stats",
-          "order",
-          "sortStat",
-          "fields",
-          "startDate",
-          "endDate"
-        ]
-      },
-      "response": {
-        "error": "HTTP 404",
-        "url": "https://statsapi.mlb.com/api/v1/teams/history",
-        "content_type": "application/json;charset=UTF-8"
-      }
-    },
     "teams_stats": {
-      "timestamp": "2025-01-17T15:01:02.287261",
+      "timestamp": "2025-01-18T19:06:22.482332",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/teams/stats",
         "description": "Get team statistics",
@@ -3277,7 +5048,7 @@
       }
     },
     "team_personnel": {
-      "timestamp": "2025-01-17T15:01:03.790655",
+      "timestamp": "2025-01-18T19:06:25.485486",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/teams/{teamId}/stats",
         "description": "Get specific team statistics",
@@ -3310,7 +5081,7 @@
       }
     },
     "team_leaders": {
-      "timestamp": "2025-01-17T15:01:03.790667",
+      "timestamp": "2025-01-18T19:06:25.485496",
       "endpoint": {
         "url": "https://statsapi.mlb.com/api/v1/teams/{teamId}/stats",
         "description": "Get specific team statistics",
@@ -3339,61 +5110,90 @@
             },
             "teamLeaders": {
               "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "leaderCategory": {
-                    "type": "str"
-                  },
-                  "season": {
-                    "type": "str"
-                  },
-                  "gameType": {
-                    "type": "dict"
-                  },
-                  "leaders": {
-                    "type": "list"
-                  },
-                  "statGroup": {
-                    "type": "str"
-                  },
-                  "team": {
-                    "type": "dict"
-                  },
-                  "totalSplits": {
-                    "type": "int"
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "leaderCategory": {
+                      "type": "str"
+                    },
+                    "season": {
+                      "type": "str"
+                    },
+                    "gameType": {
+                      "type": "dict"
+                    },
+                    "leaders": {
+                      "type": "list"
+                    },
+                    "statGroup": {
+                      "type": "str"
+                    },
+                    "team": {
+                      "type": "dict"
+                    },
+                    "totalSplits": {
+                      "type": "int"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "leaderCategory": {
+                      "type": "str"
+                    },
+                    "season": {
+                      "type": "str"
+                    },
+                    "gameType": {
+                      "type": "dict"
+                    },
+                    "leaders": {
+                      "type": "list"
+                    },
+                    "statGroup": {
+                      "type": "str"
+                    },
+                    "team": {
+                      "type": "dict"
+                    },
+                    "totalSplits": {
+                      "type": "int"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "leaderCategory": {
+                      "type": "str"
+                    },
+                    "season": {
+                      "type": "str"
+                    },
+                    "gameType": {
+                      "type": "dict"
+                    },
+                    "leaders": {
+                      "type": "list"
+                    },
+                    "statGroup": {
+                      "type": "str"
+                    },
+                    "team": {
+                      "type": "dict"
+                    },
+                    "totalSplits": {
+                      "type": "int"
+                    }
                   }
                 }
-              },
+              ],
               "example_length": 3
             }
           }
         },
-        "content_type": "application/json;charset=UTF-8"
-      }
-    },
-    "team_stats": {
-      "timestamp": "2025-01-17T15:01:03.790669",
-      "endpoint": {
-        "url": "https://statsapi.mlb.com/api/v1/teams/{teamId}/stats",
-        "description": "Get specific team statistics",
-        "required_params": [
-          "teamId"
-        ],
-        "optional_params": [
-          "teamId",
-          "season",
-          "statGroup",
-          "gameType",
-          "stats",
-          "sportIds",
-          "sitCodes",
-          "fields"
-        ]
-      },
-      "response": {
-        "error": "HTTP 400",
-        "url": "https://statsapi.mlb.com/api/v1/teams/137/stats?teamId=137",
         "content_type": "application/json;charset=UTF-8"
       }
     }

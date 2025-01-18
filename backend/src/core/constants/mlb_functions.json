@@ -1,0 +1,967 @@
+{
+  "version": "1.0",
+  "generated_at": "2025-01-18T19:26:50.297969",
+  "functions": [
+    {
+      "name": "roster",
+      "description": "Get the roster for a given team.",
+      "signature": "statsapi.roster(teamId, rosterType=None, season=datetime.now().year, date=None)",
+      "parameters": [
+          {
+              "name": "teamId",
+              "type": "int",
+              "default": "None",
+              "description": "ID of the team to get roster for"
+          },
+          {
+              "name": "rosterType",
+              "type": "Optional[str]", 
+              "default": "None",
+              "description": "Type of roster to return. Default is 'active'. Get available types from meta endpoint with type=rosterTypes"
+          },
+          {
+              "name": "season",
+              "type": "int",
+              "default": "datetime.now().year",
+              "description": "Season to get roster for"
+          },
+          {
+              "name": "date",
+              "type": "Optional[str]",
+              "default": "None", 
+              "description": "Date in MM/DD/YYYY format, e.g. 04/24/2019"
+          }
+      ],
+      "return_value": {
+          "type": "str",
+          "description": "Formatted string containing roster information with player numbers, positions and names"
+      },
+      "notes": [
+          "Get a list of available rosterTypes by calling the meta endpoint with type=rosterTypes. Default rosterType=active",
+          "Format for date = MM/DD/YYYY, e.g. 04/24/2019"
+      ]
+  },
+  {
+    "name": "schedule",
+    "description": "Get list of games for a given date/range and/or team/opponent.",
+    "signature": "statsapi.schedule(date=None, start_date=None, end_date=None, team=\"\", opponent=\"\", sportId=1, game_id=None)",
+    "parameters": [
+        {
+            "name": "date",
+            "type": "Optional[str]",
+            "default": "None",
+            "description": "Single date to get games for"
+        },
+        {
+            "name": "start_date",
+            "type": "Optional[str]",
+            "default": "None",
+            "description": "Start date of date range"
+        },
+        {
+            "name": "end_date",
+            "type": "Optional[str]",
+            "default": "None", 
+            "description": "End date of date range"
+        },
+        {
+            "name": "team",
+            "type": "str",
+            "default": "\"\"",
+            "description": "Team to get games for"
+        },
+        {
+            "name": "opponent",
+            "type": "str",
+            "default": "\"\"",
+            "description": "Opponent team to filter by"
+        },
+        {
+            "name": "sportId",
+            "type": "int",
+            "default": "1",
+            "description": "Sport ID (default is MLB)"
+        },
+        {
+            "name": "game_id",
+            "type": "Optional[int]",
+            "default": "None",
+            "description": "Specific game ID to get data for"
+        }
+    ],
+    "return_value": {
+        "type": "List[Dict]",
+        "description": "List of dictionaries containing detailed game information including IDs, scores, teams, status, etc."
+    },
+    "notes": [
+        "Include a game_id to get data for that game"
+    ]
+},
+{
+  "name": "standings",
+  "description": "Get formatted standings for a given league/division and season.",
+  "signature": "statsapi.standings(leagueId=\"103,104\", division=\"all\", include_wildcard=True, season=None, standingsTypes=None, date=None)",
+  "parameters": [
+      {
+          "name": "leagueId",
+          "type": "str",
+          "default": "\"103,104\"",
+          "description": "League IDs (103=AL, 104=NL)"
+      },
+      {
+          "name": "division",
+          "type": "str",
+          "default": "\"all\"",
+          "description": "Division to get standings for ('all' or specific division)"
+      },
+      {
+          "name": "include_wildcard",
+          "type": "bool",
+          "default": "True",
+          "description": "Whether to include wildcard standings"
+      },
+      {
+          "name": "season",
+          "type": "Optional[int]",
+          "default": "None",
+          "description": "Season to get standings for"
+      },
+      {
+          "name": "standingsTypes",
+          "type": "Optional[str]",
+          "default": "None",
+          "description": "Type of standings to retrieve"
+      },
+      {
+          "name": "date",
+          "type": "Optional[str]",
+          "default": "None",
+          "description": "Date in MM/DD/YYYY format, e.g. 04/24/2019"
+      }
+  ],
+  "return_value": {
+      "type": "str",
+      "description": "Formatted string containing standings tables for divisions and wildcards"
+  },
+  "notes": [
+      "To retrieve the data used to build the formatted text, see Function: standings_data",
+      "Using both leagueId and divisionId is fine, as long as the division belongs to the specified league",
+      "Return value will be a formatted table including division and wildcard standings, unless include_wildcard=False",
+      "Format for date = MM/DD/YYYY, e.g. 04/24/2019"
+  ]
+},
+    {
+      "name": "boxscore",
+      "description": "Get a formatted boxscore for a given game.",
+      "signature": "statsapi.boxscore(gamePk, battingBox=True, battingInfo=True, fieldingInfo=True, pitchingBox=True, gameInfo=True, timecode=None)",
+      "parameters": [
+        {
+          "name": "gamePk",
+          "type": "int",
+          "default": "null",
+          "description": "GamePk of the game"
+        },
+        {
+          "name": "battingBox",
+          "type": "bool",
+          "default": "True",
+          "description": "Whether to include batting box"
+        },
+        {
+          "name": "battingInfo",
+          "type": "bool",
+          "default": "True",
+          "description": "Whether to include batting info"
+        },
+        {
+          "name": "fieldingInfo",
+          "type": "bool",
+          "default": "True",
+          "description": "Whether to include fielding info"
+        },
+        {
+          "name": "pitchingBox",
+          "type": "bool",
+          "default": "True",
+          "description": "Whether to include pitching box"
+        },
+        {
+          "name": "gameInfo",
+          "type": "bool",
+          "default": "True",
+          "description": "Whether to include game info"
+        },
+        {
+          "name": "timecode",
+          "type": "str",
+          "default": "None",
+          "description": "Timestamp in YYYYMMDD_HHMMSS format (UTC timezone) to retrieve boxscore as it existed at a specific time"
+        }
+      ],
+      "return_value": {
+        "type": "str",
+        "description": "Formatted boxscore string"
+      },
+      "notes": [
+        "To retrieve the data used to build the formatted text, see Function: boxscore_data",
+        "This function uses the game endpoint instead of game_box, because game_box does not contain the players' names as they should be displayed in the box score (e.g. Last name only or Last, F)"
+      ]
+    },
+    {
+      "name": "boxscore_data",
+      "description": "Returns a python dict containing boxscore data for a given game.",
+      "signature": "statsapi.boxscore_data(gamePk, timecode=None)",
+      "parameters": [
+        {
+          "name": "gamePk",
+          "type": "int",
+          "default": "null",
+          "description": "null"
+        },
+        {
+          "name": "timecode",
+          "type": "str",
+          "default": "None",
+          "description": "Timestamp in the format YYYYMMDD_HHMMSS (UTC timezone) representing a specific time to retrieve the boxscore.  If not provided, the latest boxscore is returned."
+        }
+      ],
+      "return_value": {
+        "type": "Dict",
+        "description": "A python dictionary containing boxscore data for the given game."
+      },
+      "notes": [
+        "To retrieve a formatted text version of the box score, see Function: boxscore.",
+        "This function uses the game endpoint instead of game_box, because game_box does not contain the players' names as they should be displayed in the box score (e.g. Last name only or Last, F)."
+      ]
+    },
+    {
+      "name": "game_highlight_data",
+      "description": "Get a Python list of highlight data for a given game",
+      "signature": "statsapi.game_highlight_data(gamePk)",
+      "parameters": [
+        {
+          "name": "gamePk",
+          "type": "int",
+          "default": "null",
+          "description": "null"
+        }
+      ],
+      "return_value": {
+        "type": "List[Dict]",
+        "description": "null"
+      },
+      "notes": [
+        "To retrieve a formatted text version of a game's highlights, see [Function: game_highlights](https://github.com/toddrob99/MLB-StatsAPI/wiki/Function:-game_highlights)"
+      ]
+    },
+    {
+      "name": "game_highlights",
+      "description": "Get the highlight video links for a given game",
+      "signature": "statsapi.game_highlights(gamePk)",
+      "parameters": [
+        {
+          "name": "gamePk",
+          "type": "int",
+          "default": "null",
+          "description": "GamePk of the game to retrieve highlights for"
+        }
+      ],
+      "return_value": {
+        "type": "List[str]",
+        "description": "A list of strings, where each string is a highlight video link"
+      },
+      "notes": [
+        "To retrieve the data used to build the formatted text, see [Function: game_highlight_data](https://github.com/toddrob99/MLB-StatsAPI/wiki/Function:-game_highlight_data)"
+      ]
+    },
+    {
+      "name": "game_pace",
+      "description": "Get a text-formatted list about pace of game for a given season (back to 1999).",
+      "signature": "statsapi.game_pace(season=datetime.now().year, sportId=1)",
+      "parameters": [
+        {
+          "name": "season",
+          "type": "int",
+          "default": "datetime.now().year",
+          "description": "The year of the season.  Defaults to the current calendar year. From January 1 until each season starts, this may result in unexpected results. Therefore, it is best to include the season parameter explicitly."
+        },
+        {
+          "name": "sportId",
+          "type": "int",
+          "default": "1",
+          "description": null
+        }
+      ],
+      "return_value": {
+        "type": "str",
+        "description": "A text-formatted string containing pace of game stats for the given season."
+      },
+      "notes": [
+        "To retrieve the data used to build the formatted text, see [Function: game_pace_data](https://github.com/toddrob99/MLB-StatsAPI/wiki/Function:-game_pace_data)"
+      ]
+    },
+    {
+      "name": "game_pace_data",
+      "description": "Returns a Python dict containing data about pace of game for a given season (back to 1999).",
+      "signature": "statsapi.game_pace_data(season=datetime.now().year, sportId=1)",
+      "parameters": [
+        {
+          "name": "season",
+          "type": "int",
+          "default": "datetime.now().year",
+          "description": "The year of the season. From January 1 until each season starts, using the default value may result in unexpected results.  It is best to include this parameter explicitly."
+        },
+        {
+          "name": "sportId",
+          "type": "int",
+          "default": "1",
+          "description": null
+        }
+      ],
+      "return_value": {
+        "type": "Dict",
+        "description": "A Python dict containing data about pace of game for a given season."
+      },
+      "notes": [
+        "To retrieve a formatted text version, see https://github.com/toddrob99/MLB-StatsAPI/wiki/Function:-game_pace",
+        "The season parameter will default to the current calendar year. From January 1 until each season starts, this may result in unexpected results. Therefore, it is best to include the season parameter explicitly."
+      ]
+    },
+    {
+      "name": "game_scoring_play_data",
+      "description": "Returns a python dict of scoring plays for a given game.",
+      "signature": "statsapi.game_scoring_play_data(gamePk)",
+      "parameters": [
+        {
+          "name": "gamePk",
+          "type": "int",
+          "default": "null",
+          "description": "GamePk of the game to retrieve scoring plays for."
+        }
+      ],
+      "return_value": {
+        "type": "Dict",
+        "description": "A dict containing 3 keys: home - home team data, away - away team data, plays - sorted list of scoring play data"
+      },
+      "notes": [
+        "Note: This method is broken as of 7/25/2020 due to a change in the data returned by the `schedule` endpoint. Please update to v0.1.9 for the fix.",
+        "Note: To retrieve a formatted text version, see https://github.com/toddrob99/MLB-StatsAPI/wiki/Function:-game_scoring_plays"
+      ]
+    },
+    {
+      "name": "game_scoring_plays",
+      "description": "Get a text-formatted list of scoring plays for a given game",
+      "signature": "statsapi.game_scoring_plays(gamePk)",
+      "parameters": [
+        {
+          "name": "gamePk",
+          "type": "int",
+          "default": "null",
+          "description": "GamePk of the game to retrieve scoring plays for"
+        }
+      ],
+      "return_value": {
+        "type": "str",
+        "description": "A text-formatted list of scoring plays"
+      },
+      "notes": [
+        "Note: This method is broken as of 7/25/2020 due to a change in the data returned by the `schedule` endpoint. Please update to v0.1.9 for the fix",
+        "Note: To retrieve the data used to build the formatted text, see [Function: game_scoring_play_data](https://github.com/toddrob99/MLB-StatsAPI/wiki/Function:-game_scoring_play_data)"
+      ]
+    },
+    {
+      "name": "statsapi.get",
+      "description": "Call MLB StatsAPI and return JSON data.\n\nThis function is for advanced querying of the MLB StatsAPI, and is used by the functions in this library.",
+      "signature": "statsapi.get(endpoint, params, force=False)",
+      "parameters": [
+        {
+          "name": "endpoint",
+          "type": "str",
+          "default": "null",
+          "description": "one of the keys in the [ENDPOINT dict](https://github.com/toddrob99/MLB-StatsAPI/wiki/Endpoints)"
+        },
+        {
+          "name": "params",
+          "type": "Dict",
+          "default": "{}",
+          "description": "is a dict of parameters, as defined in the `ENDPOINT` dict for each endpoint."
+        },
+        {
+          "name": "force",
+          "type": "bool",
+          "default": "False",
+          "description": "force unrecognized parameters into the query string, and ignore parameter requirements.\n> *Note*: results from Stats API may not be as expected when forcing."
+        }
+      ],
+      "return_value": {
+        "type": "Dict",
+        "description": "raw response from MLB Stats API in json format"
+      },
+      "notes": [
+        "results from Stats API may not be as expected when forcing"
+      ]
+    },
+    {
+      "name": "last_game",
+      "description": "Get the gamePk for the given team's most recent completed game.",
+      "signature": "statsapi.last_game(teamId)",
+      "parameters": [
+        {
+          "name": "teamId",
+          "type": "int",
+          "default": "null",
+          "description": "The team ID."
+        }
+      ],
+      "return_value": {
+        "type": "int",
+        "description": "The gamePk of the team's most recent completed game."
+      },
+      "notes": []
+    },
+    {
+      "name": "latest_season",
+      "description": "Get data about the latest season for a given sportId.",
+      "signature": "statsapi.latest_season(sportId=1)",
+      "parameters": [
+        {
+          "name": "sportId",
+          "type": "int",
+          "default": "1",
+          "description": "The sport ID.  Defaults to 1 (MLB)."
+        }
+      ],
+      "return_value": {
+        "type": "Dict",
+        "description": "A dictionary containing data about the latest season.  The example shows accessing the 'seasonId' key."
+      },
+      "notes": [
+        "Added in v1.5"
+      ]
+    },
+    {
+      "name": "league_leader_data",
+      "description": "Get a python list of stat leaders overall or for a given league (103=AL, 104=NL).",
+      "signature": "statsapi.league_leader_data(leaderCategories, season=None, limit=10, statGroup=None, leagueId=None, gameTypes=None, playerPool=None, sportId=1, statType=None)",
+      "parameters": [
+        {
+          "name": "leaderCategories",
+          "type": "str",
+          "default": "null",
+          "description": "Categories of leaders to retrieve.  Get a list of available leaderCategories by calling the meta endpoint with type=leagueLeaderTypes"
+        },
+        {
+          "name": "season",
+          "type": "Optional[int]",
+          "default": "None",
+          "description": "Season for which to retrieve leaders. If not specified, defaults to current season."
+        },
+        {
+          "name": "limit",
+          "type": "int",
+          "default": "10",
+          "description": "Number of leaders to retrieve (default is 10)."
+        },
+        {
+          "name": "statGroup",
+          "type": "Optional[str]",
+          "default": "None",
+          "description": "Stat group to filter by. Get a list of available statGroups by calling the meta endpoint with type=statGroups. Note that excluding statGroup may return unexpected results. For example leaderCategories='earnedRunAverage' will return different results with statGroup='pitching' and statGroup='catching'."
+        },
+        {
+          "name": "leagueId",
+          "type": "Optional[int]",
+          "default": "None",
+          "description": "League ID to filter by (103=AL, 104=NL)."
+        },
+        {
+          "name": "gameTypes",
+          "type": "Optional[str]",
+          "default": "None",
+          "description": "Game types to filter by. Get a list of available gameTypes by calling the meta endpoint with type=gameTypes"
+        },
+        {
+          "name": "playerPool",
+          "type": "Optional[str]",
+          "default": "None",
+          "description": "Player pool to filter by. Available values: ['all','qualified','rookies'] (default is qualified)"
+        },
+        {
+          "name": "sportId",
+          "type": "int",
+          "default": "1",
+          "description": "Sport ID (default is 1 for MLB)."
+        },
+        {
+          "name": "statType",
+          "type": "Optional[str]",
+          "default": "None",
+          "description": "Type of stats to retrieve.  Get a list of available statTypes by calling the meta endpoint with type=statTypes. Note: StatsAPI does not appear to be supporting the statType=statsSingleSeason at this time, despite this appearing in the documentation as a best practice for all time leaders. Be sure to specify a season or other statType such as 'career', or the default will be current season leaders."
+        }
+      ],
+      "return_value": {
+        "type": "List[Dict]",
+        "description": "A python list of stat leaders."
+      },
+      "notes": [
+        "To retrieve a formatted text version, see Function: league_leaders",
+        "StatsAPI does not appear to be supporting the statType=statsSingleSeason at this time, despite this appearing in the documentation as a best practice for all time leaders. Be sure to specify a season or other statType such as 'career', or the default will be current season leaders.",
+        "Get a list of available leaderCategories by calling the meta endpoint with type=leagueLeaderTypes",
+        "Get a list of available statGroups by calling the meta endpoint with type=statGroups",
+        "Get a list of available gameTypes by calling the meta endpoint with type=gameTypes",
+        "Get a list of available statTypes by calling the meta endpoint with type=statTypes",
+        "Available playerPool values: ['all','qualified','rookies'] (default is qualified)"
+      ]
+    },
+    {
+      "name": "league_leaders",
+      "description": "Get stat leaders overall or for a given league (103=AL, 104=NL).",
+      "signature": "statsapi.league_leaders(leaderCategories, season=None, limit=10, statGroup=None, leagueId=None, gameTypes=None, playerPool=None, sportId=1, statType=None)",
+      "parameters": [
+        {
+          "name": "leaderCategories",
+          "type": "str",
+          "default": "null",
+          "description": "The stat category to find leaders for.  Get a list of available leaderCategories by calling the meta endpoint with type=leagueLeaderTypes"
+        },
+        {
+          "name": "season",
+          "type": "Optional[int]",
+          "default": "None",
+          "description": "The season to filter by.  If not specified, defaults to the current season."
+        },
+        {
+          "name": "limit",
+          "type": "int",
+          "default": "10",
+          "description": "The maximum number of leaders to return."
+        },
+        {
+          "name": "statGroup",
+          "type": "Optional[str]",
+          "default": "None",
+          "description": "The stat group to filter by. Get a list of available statGroups by calling the meta endpoint with type=statGroups. Note that excluding statGroup may return unexpected results. For example leaderCategories='earnedRunAverage' will return different results with statGroup='pitching' and statGroup='catching'."
+        },
+        {
+          "name": "leagueId",
+          "type": "Optional[int]",
+          "default": "None",
+          "description": "The league ID to filter by (103=AL, 104=NL)."
+        },
+        {
+          "name": "gameTypes",
+          "type": "Optional[str]",
+          "default": "None",
+          "description": "The game type to filter by. Get a list of available gameTypes by calling the meta endpoint with type=gameTypes"
+        },
+        {
+          "name": "playerPool",
+          "type": "Optional[str]",
+          "default": "None",
+          "description": "Available playerPool values: ['all','qualified','rookies'] (default is qualified)"
+        },
+        {
+          "name": "sportId",
+          "type": "int",
+          "default": "1",
+          "description": "null"
+        },
+        {
+          "name": "statType",
+          "type": "Optional[str]",
+          "default": "None",
+          "description": "The stat type to filter by. Get a list of available statTypes by calling the meta endpoint with type=statTypes. Note: StatsAPI does not appear to be supporting the statType=statsSingleSeason at this time, despite this appearing in the documentation as a best practice for all time leaders. Be sure to specify a season or other statType such as 'career', or the default will be current season leaders."
+        }
+      ],
+      "return_value": {
+        "type": "List[Dict]",
+        "description": "A list of dictionaries, where each dictionary represents a stat leader.  Each dictionary contains at least the keys 'Rank', 'Name', 'Team', and 'Value'."
+      },
+      "notes": [
+        "To retrieve the data used to build the formatted text, see Function: league_leader_data",
+        "StatsAPI does not appear to be supporting the statType=statsSingleSeason at this time, despite this appearing in the documentation as a best practice for all time leaders. Be sure to specify a season or other statType such as 'career', or the default will be current season leaders.",
+        "Get a list of available leaderCategories by calling the meta endpoint with type=leagueLeaderTypes",
+        "Get a list of available statGroups by calling the meta endpoint with type=statGroups",
+        "Get a list of available gameTypes by calling the meta endpoint with type=gameTypes",
+        "Get a list of available statTypes by calling the meta endpoint with type=statTypes",
+        "Available playerPool values: ['all','qualified','rookies'] (default is qualified)"
+      ]
+    },
+    {
+      "name": "linescore",
+      "description": "Get formatted linescore for a given game.",
+      "signature": "statsapi.linescore(gamePk, timecode=None)",
+      "parameters": [
+        {
+          "name": "gamePk",
+          "type": "int",
+          "default": "null",
+          "description": "null"
+        },
+        {
+          "name": "timecode",
+          "type": "str",
+          "default": "None",
+          "description": "The timecode should be in the format YYYYMMDD_HHMMSS, and in the UTC timezone. For example, 4/24/19 10:32:40 EDT (-4) would be: 20190425_012240"
+        }
+      ],
+      "return_value": {
+        "type": "null",
+        "description": "Formatted linescore for a given game."
+      },
+      "notes": [
+        "This function uses the game endpoint instead of game_linescore, because game_linescore does not contain the team names or game status and it's better to make one call instead of two. All of this data can also be retrieved through the schedule endpoint using hydrate=linescore, but the schedule endpoint does not support the timecode parameter.",
+        "It is possible to get the linescore as it existed at a specific time by including the timestamp in the timecode parameter. A list of timestamps for game events can be found through the game_timestamps endpoint: statsapi.get('game_timestamps',{'gamePk':565997})"
+      ]
+    },
+    {
+      "name": "lookup_player",
+      "description": "Get data about players based on first, last, or full name.",
+      "signature": "statsapi.lookup_player(lookup_value, gameType=\"R\", season=None, sportId=1)",
+      "parameters": [
+        {
+          "name": "lookup_value",
+          "type": "str",
+          "default": "null",
+          "description": "Player's first, last, or full name.  If using a full last name that could be part of another player's last name, include a comma at the end to match on the `initLastName` field."
+        },
+        {
+          "name": "gameType",
+          "type": "str",
+          "default": "\"R\"",
+          "description": "null"
+        },
+        {
+          "name": "season",
+          "type": "Optional[int]",
+          "default": "None",
+          "description": "null"
+        },
+        {
+          "name": "sportId",
+          "type": "int",
+          "default": "1",
+          "description": "null"
+        }
+      ],
+      "return_value": {
+        "type": "List[Dict]",
+        "description": "A list of dictionaries, where each dictionary contains information about a player."
+      },
+      "notes": [
+        "If using a full last name as the lookup_value and that last name could be part of another player's lastname, e.g. `Nola` is part of `Nolan`, include a comma on the end of the last name in order to match on the `initLastName` field which looks like `Nola, A`"
+      ]
+    },
+    {
+      "name": "lookup_team",
+      "description": "Get a info about a team or teams based on the team name, city, abbreviation, or file code.",
+      "signature": "statsapi.lookup_team(lookup_value, activeStatus=\"Y\", season=None, sportIds=1)",
+      "parameters": [
+        {
+          "name": "lookup_value",
+          "type": "str",
+          "default": "null",
+          "description": "team name, city, abbreviation, or file code"
+        },
+        {
+          "name": "activeStatus",
+          "type": "str",
+          "default": "\"Y\"",
+          "description": "filter teams by active status. Values: \"Y\", \"N\", \"B\" (Both)"
+        },
+        {
+          "name": "season",
+          "type": "Optional[int]",
+          "default": "None",
+          "description": "null"
+        },
+        {
+          "name": "sportIds",
+          "type": "int",
+          "default": "1",
+          "description": "null"
+        }
+      ],
+      "return_value": {
+        "type": "List[Dict]",
+        "description": "a list of teams matching the lookup_value. If no matches are found, an empty list will be returned."
+      },
+      "notes": [
+        "Values for activeStatus: \"Y\", \"N\", \"B\" (Both)",
+        "Return value will be a list of teams matching the lookup_value. If no matches are found, an empty list will be returned."
+      ]
+    },
+    {
+      "name": "statsapi.meta",
+      "description": "Get available values from StatsAPI for use in other queries, or look up descriptions for values found in API results.",
+      "signature": "statsapi.meta(type, fields=None)",
+      "parameters": [
+        {
+          "name": "type",
+          "type": "str",
+          "default": "null",
+          "description": "The type of metadata to retrieve.  See Known `type`s for available options."
+        },
+        {
+          "name": "fields",
+          "type": "str",
+          "default": "None",
+          "description": "Limit the fields returned by providing a comma-separated list in the `fields` parameter. Get the field names from the un-limited response for the same `type`."
+        }
+      ],
+      "return_value": {
+        "type": "null",
+        "description": "The function's return value is not specified in the documentation."
+      },
+      "notes": [
+        "Limit the fields returned by providing a comma-separated list in the `fields` parameter. Get the field names from the un-limited response for the same `type`."
+      ]
+    },
+    {
+      "name": "next_game",
+      "description": "Get the gamePk for the given team's next unstarted game.",
+      "signature": "statsapi.next_game(teamId)",
+      "parameters": [
+        {
+          "name": "teamId",
+          "type": "int",
+          "default": "null",
+          "description": "The team ID."
+        }
+      ],
+      "return_value": {
+        "type": "int",
+        "description": "The gamePk of the team's next unstarted game, or null if no such game exists."
+      },
+      "notes": []
+    },
+    {
+      "name": "player_stat_data",
+      "description": "Get a Python dict of current season or career stat data for a given player.",
+      "signature": "statsapi.player_stat_data(personId, group=\"[hitting,pitching,fielding]\", type=\"season\", sportId=1)",
+      "parameters": [
+        {
+          "name": "personId",
+          "type": "int",
+          "default": "null",
+          "description": "null"
+        },
+        {
+          "name": "group",
+          "type": "str",
+          "default": "[hitting,pitching,fielding]",
+          "description": "use `hitting`, `pitching`, or `fielding`. Include multiple groups in the following format (this is a string, not actually a list): `group='[hitting,pitching]'`"
+        },
+        {
+          "name": "type",
+          "type": "str",
+          "default": "season",
+          "description": "use `career` or `season` or `yearByYear` (as of v0.1.7). Include multiple types in the following format (this is a string, not actually a list): `group='[career,season,yearByYear]'`"
+        },
+        {
+          "name": "sportId",
+          "type": "int",
+          "default": "1",
+          "description": "null"
+        }
+      ],
+      "return_value": {
+        "type": "Dict",
+        "description": "a Python dict of current season or career stat data for a given player"
+      },
+      "notes": [
+        "To retrieve a formatted text version, see [Function: player_stats](https://github.com/toddrob99/MLB-StatsAPI/wiki/Function:-player_stats)",
+        "For group use `hitting`, `pitching`, or `fielding`. Include multiple groups in the following format (this is a string, not actually a list): `group='[hitting,pitching]'`",
+        "For type use `career` or `season` or `yearByYear` (as of v0.1.7). Include multiple types in the following format (this is a string, not actually a list): `group='[career,season,yearByYear]'`"
+      ]
+    },
+    {
+      "name": "player_stats",
+      "description": "Get current season or career stats for a given player.",
+      "signature": "statsapi.player_stats(personId, group=\"[hitting,pitching,fielding]\", type=\"season\")",
+      "parameters": [
+        {
+          "name": "personId",
+          "type": "int",
+          "default": "null",
+          "description": "The ID of the player to retrieve stats for."
+        },
+        {
+          "name": "group",
+          "type": "str",
+          "default": "[hitting,pitching,fielding]",
+          "description": "The type of stats to retrieve. Can be 'hitting', 'pitching', or 'fielding'. Multiple groups can be specified as a string in the format '[hitting,pitching]'"
+        },
+        {
+          "name": "type",
+          "type": "str",
+          "default": "season",
+          "description": "The type of stats to retrieve. Can be 'career' or 'season'. Multiple types can be specified as a string in the format '[career,season]'"
+        }
+      ],
+      "return_value": {
+        "type": "null",
+        "description": "The function's return value is not explicitly specified in the documentation.  The example shows it returns a formatted string."
+      },
+      "notes": [
+        "To retrieve the data used to build the formatted text, see [Function: player_stat_data](https://github.com/toddrob99/MLB-StatsAPI/wiki/Function:-player_stat_data).",
+        "For group use `hitting`, `pitching`, or `fielding`. Include multiple groups in the following format (this is a string, not actually a list): `group='[hitting,pitching]'`",
+        "For type use `career` or `season`. Include multiple types in the following format (this is a string, not actually a list): `group='[career,season]'`"
+      ]
+    },
+    {
+      "name": "standings_data",
+      "description": "Get a dict of standings data for a given league/division and season.",
+      "signature": "statsapi.standings_data(leagueId=\"103,104\", division=\"all\", include_wildcard=True, season=None, standingsTypes=None, date=None)",
+      "parameters": [
+        {
+          "name": "leagueId",
+          "type": "str",
+          "default": "\"103,104\"",
+          "description": "League ID.  Using both leagueId and divisionId is fine, as long as the division belongs to the specified league"
+        },
+        {
+          "name": "division",
+          "type": "str",
+          "default": "\"all\"",
+          "description": "Division. Accepts \"all\" or a specific division abbreviation or id (string or integer), e.g. \"nle\", \"alw\", 200, 204, etc."
+        },
+        {
+          "name": "include_wildcard",
+          "type": "bool",
+          "default": "True",
+          "description": "Include wildcard teams.  Return value will be a dict including division and wildcard standings, regardless of include_wildcard value (parameter still included to avoid breaking anyone's code, even though it does not do anything)"
+        },
+        {
+          "name": "season",
+          "type": "Optional[int]",
+          "default": "None",
+          "description": null
+        },
+        {
+          "name": "standingsTypes",
+          "type": "Optional[str]",
+          "default": "None",
+          "description": null
+        },
+        {
+          "name": "date",
+          "type": "Optional[str]",
+          "default": "None",
+          "description": "Format for date = MM/DD/YYYY, e.g. 04/24/2019"
+        }
+      ],
+      "return_value": {
+        "type": "Dict",
+        "description": "A dict including division and wildcard standings"
+      },
+      "notes": [
+        "To retrieve a formatted text version, see Function: standings https://github.com/toddrob99/MLB-StatsAPI/wiki/Function:-standings",
+        "Using both leagueId and divisionId is fine, as long as the division belongs to the specified league",
+        "Format for date = MM/DD/YYYY, e.g. 04/24/2019",
+        "The division parameter accepts all or a specific division abbreviation or id (string or integer), e.g. nle, alw, 200, 204, etc.",
+        "Return value will be a dict including division and wildcard standings, regardless of include_wildcard value (parameter still included to avoid breaking anyone's code, even though it does not do anything)"
+      ]
+    },
+    {
+      "name": "team_leader_data",
+      "description": "Get a python list of stat leader data for a given team.",
+      "signature": "statsapi.team_leader_data(teamId, leaderCategories, season=datetime.now().year, leaderGameTypes=\"R\", limit=10)",
+      "parameters": [
+        {
+          "name": "teamId",
+          "type": "int",
+          "default": "null",
+          "description": "null"
+        },
+        {
+          "name": "leaderCategories",
+          "type": "List[str]",
+          "default": "null",
+          "description": "null"
+        },
+        {
+          "name": "season",
+          "type": "int",
+          "default": "datetime.now().year",
+          "description": "null"
+        },
+        {
+          "name": "leaderGameTypes",
+          "type": "str",
+          "default": "\"R\"",
+          "description": "null"
+        },
+        {
+          "name": "limit",
+          "type": "int",
+          "default": "10",
+          "description": "null"
+        }
+      ],
+      "return_value": {
+        "type": "List[Dict]",
+        "description": "a list of stat leader data for a given team"
+      },
+      "notes": [
+        "To retrieve a formatted text version, see [Function: team_leaders](https://github.com/toddrob99/MLB-StatsAPI/wiki/Function:-team_leaders).",
+        "Get a list of available leaderCategories by calling the meta endpoint with type=leagueLeaderTypes"
+      ]
+    },
+    {
+      "name": "team_leaders",
+      "description": "Get stat leaders for a given team.",
+      "signature": "statsapi.team_leaders(teamId, leaderCategories, season=datetime.now().year, leaderGameTypes=\"R\", limit=10)",
+      "parameters": [
+        {
+          "name": "teamId",
+          "type": "int",
+          "default": "null",
+          "description": "null"
+        },
+        {
+          "name": "leaderCategories",
+          "type": "str",
+          "default": "null",
+          "description": "null"
+        },
+        {
+          "name": "season",
+          "type": "int",
+          "default": "datetime.now().year",
+          "description": "null"
+        },
+        {
+          "name": "leaderGameTypes",
+          "type": "str",
+          "default": "\"R\"",
+          "description": "null"
+        },
+        {
+          "name": "limit",
+          "type": "int",
+          "default": "10",
+          "description": "null"
+        }
+      ],
+      "return_value": {
+        "type": "List[Dict]",
+        "description": "A list of dictionaries, where each dictionary represents a team leader.  The exact keys within each dictionary are not specified in the documentation, but based on the example, it likely includes at least 'Rank', 'Name', and 'Value'."
+      },
+      "notes": [
+        "To retrieve the data used to build the formatted text, see [Function: team_leader_data](https://github.com/toddrob99/MLB-StatsAPI/wiki/Function:-team_leader_data).",
+        "Get a list of available leaderCategories by calling the meta endpoint with type=leagueLeaderTypes"
+      ]
+    }
+  ],
+  "type_mappings": {
+    "common_types": {
+      "GameID": "str",
+      "PlayerID": "int",
+      "TeamID": "int",
+      "Date": "str (YYYY-MM-DD)",
+      "Season": "int",
+      "LeagueID": "int"
+    }
+  }
+}

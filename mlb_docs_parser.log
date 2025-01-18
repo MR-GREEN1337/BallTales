@@ -1,0 +1,1714 @@
+2025-01-18 19:25:19,781 - INFO - Found 27 markdown files to process
+2025-01-18 19:25:19,781 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-boxscore.md
+2025-01-18 19:25:20,490 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-boxscore.md: 400 Json mode is not enabled for models/gemini-1.0-pro
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.InvalidArgument: 400 Json mode is not enabled for models/gemini-1.0-pro
+2025-01-18 19:25:20,494 - WARNING - ✗ Failed to process Function:-boxscore.md
+2025-01-18 19:25:20,495 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-boxscore_data.md
+2025-01-18 19:25:20,637 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-boxscore_data.md: 400 Json mode is not enabled for models/gemini-1.0-pro
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.InvalidArgument: 400 Json mode is not enabled for models/gemini-1.0-pro
+2025-01-18 19:25:20,638 - WARNING - ✗ Failed to process Function:-boxscore_data.md
+2025-01-18 19:25:20,638 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-game_highlight_data.md
+2025-01-18 19:25:21,106 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-game_highlight_data.md: 400 Json mode is not enabled for models/gemini-1.0-pro
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.InvalidArgument: 400 Json mode is not enabled for models/gemini-1.0-pro
+2025-01-18 19:25:21,110 - WARNING - ✗ Failed to process Function:-game_highlight_data.md
+2025-01-18 19:25:21,110 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-game_highlights.md
+2025-01-18 19:25:21,259 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-game_highlights.md: 400 Json mode is not enabled for models/gemini-1.0-pro
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.InvalidArgument: 400 Json mode is not enabled for models/gemini-1.0-pro
+2025-01-18 19:25:21,263 - WARNING - ✗ Failed to process Function:-game_highlights.md
+2025-01-18 19:25:21,263 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-game_pace.md
+2025-01-18 19:25:21,646 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-game_pace.md: 400 Json mode is not enabled for models/gemini-1.0-pro
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.InvalidArgument: 400 Json mode is not enabled for models/gemini-1.0-pro
+2025-01-18 19:25:21,650 - WARNING - ✗ Failed to process Function:-game_pace.md
+2025-01-18 19:25:21,650 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-game_pace_data.md
+2025-01-18 19:25:21,797 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-game_pace_data.md: 400 Json mode is not enabled for models/gemini-1.0-pro
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.InvalidArgument: 400 Json mode is not enabled for models/gemini-1.0-pro
+2025-01-18 19:25:21,801 - WARNING - ✗ Failed to process Function:-game_pace_data.md
+2025-01-18 19:25:21,802 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-game_scoring_play_data.md
+2025-01-18 19:25:22,195 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-game_scoring_play_data.md: 400 Json mode is not enabled for models/gemini-1.0-pro
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.InvalidArgument: 400 Json mode is not enabled for models/gemini-1.0-pro
+2025-01-18 19:25:22,198 - WARNING - ✗ Failed to process Function:-game_scoring_play_data.md
+2025-01-18 19:25:22,199 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-game_scoring_plays.md
+2025-01-18 19:25:22,346 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-game_scoring_plays.md: 400 Json mode is not enabled for models/gemini-1.0-pro
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.InvalidArgument: 400 Json mode is not enabled for models/gemini-1.0-pro
+2025-01-18 19:25:22,351 - WARNING - ✗ Failed to process Function:-game_scoring_plays.md
+2025-01-18 19:25:22,351 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-get.md
+2025-01-18 19:25:22,742 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-get.md: 400 Json mode is not enabled for models/gemini-1.0-pro
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.InvalidArgument: 400 Json mode is not enabled for models/gemini-1.0-pro
+2025-01-18 19:25:22,746 - WARNING - ✗ Failed to process Function:-get.md
+2025-01-18 19:25:22,746 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-last_game.md
+2025-01-18 19:25:22,896 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-last_game.md: 400 Json mode is not enabled for models/gemini-1.0-pro
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.InvalidArgument: 400 Json mode is not enabled for models/gemini-1.0-pro
+2025-01-18 19:25:22,900 - WARNING - ✗ Failed to process Function:-last_game.md
+2025-01-18 19:25:22,900 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-latest_season.md
+2025-01-18 19:25:23,130 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-latest_season.md: 400 Json mode is not enabled for models/gemini-1.0-pro
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.InvalidArgument: 400 Json mode is not enabled for models/gemini-1.0-pro
+2025-01-18 19:25:23,134 - WARNING - ✗ Failed to process Function:-latest_season.md
+2025-01-18 19:25:23,134 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-league_leader_data.md
+2025-01-18 19:25:23,286 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-league_leader_data.md: 400 Json mode is not enabled for models/gemini-1.0-pro
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.InvalidArgument: 400 Json mode is not enabled for models/gemini-1.0-pro
+2025-01-18 19:25:23,287 - WARNING - ✗ Failed to process Function:-league_leader_data.md
+2025-01-18 19:25:23,287 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-league_leaders.md
+2025-01-18 19:25:23,449 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-league_leaders.md: 400 Json mode is not enabled for models/gemini-1.0-pro
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.InvalidArgument: 400 Json mode is not enabled for models/gemini-1.0-pro
+2025-01-18 19:25:23,453 - WARNING - ✗ Failed to process Function:-league_leaders.md
+2025-01-18 19:25:23,453 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-linescore.md
+2025-01-18 19:25:23,600 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-linescore.md: 400 Json mode is not enabled for models/gemini-1.0-pro
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.InvalidArgument: 400 Json mode is not enabled for models/gemini-1.0-pro
+2025-01-18 19:25:23,604 - WARNING - ✗ Failed to process Function:-linescore.md
+2025-01-18 19:25:23,604 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-lookup_player.md
+2025-01-18 19:25:23,765 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-lookup_player.md: 400 Json mode is not enabled for models/gemini-1.0-pro
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.InvalidArgument: 400 Json mode is not enabled for models/gemini-1.0-pro
+2025-01-18 19:25:23,769 - WARNING - ✗ Failed to process Function:-lookup_player.md
+2025-01-18 19:25:23,770 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-lookup_team.md
+2025-01-18 19:25:23,916 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-lookup_team.md: 429 Resource has been exhausted (e.g. check quota).
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.ResourceExhausted: 429 Resource has been exhausted (e.g. check quota).
+2025-01-18 19:25:23,920 - WARNING - ✗ Failed to process Function:-lookup_team.md
+2025-01-18 19:25:23,920 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-meta.md
+2025-01-18 19:25:24,075 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-meta.md: 429 Resource has been exhausted (e.g. check quota).
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.ResourceExhausted: 429 Resource has been exhausted (e.g. check quota).
+2025-01-18 19:25:24,079 - WARNING - ✗ Failed to process Function:-meta.md
+2025-01-18 19:25:24,079 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-next_game.md
+2025-01-18 19:25:24,229 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-next_game.md: 429 Resource has been exhausted (e.g. check quota).
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.ResourceExhausted: 429 Resource has been exhausted (e.g. check quota).
+2025-01-18 19:25:24,234 - WARNING - ✗ Failed to process Function:-next_game.md
+2025-01-18 19:25:24,235 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-notes.md
+2025-01-18 19:25:24,356 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-notes.md: 429 Resource has been exhausted (e.g. check quota).
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.ResourceExhausted: 429 Resource has been exhausted (e.g. check quota).
+2025-01-18 19:25:24,360 - WARNING - ✗ Failed to process Function:-notes.md
+2025-01-18 19:25:24,361 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-player_stat_data.md
+2025-01-18 19:25:24,492 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-player_stat_data.md: 429 Resource has been exhausted (e.g. check quota).
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.ResourceExhausted: 429 Resource has been exhausted (e.g. check quota).
+2025-01-18 19:25:24,493 - WARNING - ✗ Failed to process Function:-player_stat_data.md
+2025-01-18 19:25:24,493 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-player_stats.md
+2025-01-18 19:25:24,612 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-player_stats.md: 429 Resource has been exhausted (e.g. check quota).
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.ResourceExhausted: 429 Resource has been exhausted (e.g. check quota).
+2025-01-18 19:25:24,615 - WARNING - ✗ Failed to process Function:-player_stats.md
+2025-01-18 19:25:24,615 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-roster.md
+2025-01-18 19:25:24,788 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-roster.md: 429 Resource has been exhausted (e.g. check quota).
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.ResourceExhausted: 429 Resource has been exhausted (e.g. check quota).
+2025-01-18 19:25:24,792 - WARNING - ✗ Failed to process Function:-roster.md
+2025-01-18 19:25:24,792 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-schedule.md
+2025-01-18 19:25:24,939 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-schedule.md: 429 Resource has been exhausted (e.g. check quota).
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.ResourceExhausted: 429 Resource has been exhausted (e.g. check quota).
+2025-01-18 19:25:24,943 - WARNING - ✗ Failed to process Function:-schedule.md
+2025-01-18 19:25:24,943 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-standings.md
+2025-01-18 19:25:25,067 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-standings.md: 429 Resource has been exhausted (e.g. check quota).
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.ResourceExhausted: 429 Resource has been exhausted (e.g. check quota).
+2025-01-18 19:25:25,072 - WARNING - ✗ Failed to process Function:-standings.md
+2025-01-18 19:25:25,072 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-standings_data.md
+2025-01-18 19:25:25,194 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-standings_data.md: 429 Resource has been exhausted (e.g. check quota).
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.ResourceExhausted: 429 Resource has been exhausted (e.g. check quota).
+2025-01-18 19:25:25,196 - WARNING - ✗ Failed to process Function:-standings_data.md
+2025-01-18 19:25:25,197 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-team_leader_data.md
+2025-01-18 19:25:25,305 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-team_leader_data.md: 429 Resource has been exhausted (e.g. check quota).
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.ResourceExhausted: 429 Resource has been exhausted (e.g. check quota).
+2025-01-18 19:25:25,309 - WARNING - ✗ Failed to process Function:-team_leader_data.md
+2025-01-18 19:25:25,309 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-team_leaders.md
+2025-01-18 19:25:25,457 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-team_leaders.md: 429 Resource has been exhausted (e.g. check quota).
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.ResourceExhausted: 429 Resource has been exhausted (e.g. check quota).
+2025-01-18 19:25:25,460 - WARNING - ✗ Failed to process Function:-team_leaders.md
+2025-01-18 19:25:47,486 - INFO - Found 27 markdown files to process
+2025-01-18 19:25:47,487 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-boxscore.md
+2025-01-18 19:25:51,006 - INFO - Successfully parsed backend/src/core/constants/functions-wiki/Function:-boxscore.md
+2025-01-18 19:25:51,006 - INFO - ✓ Processed Function:-boxscore.md
+2025-01-18 19:25:51,007 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-boxscore_data.md
+2025-01-18 19:25:52,878 - INFO - Successfully parsed backend/src/core/constants/functions-wiki/Function:-boxscore_data.md
+2025-01-18 19:25:52,879 - INFO - ✓ Processed Function:-boxscore_data.md
+2025-01-18 19:25:52,879 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-game_highlight_data.md
+2025-01-18 19:25:54,130 - INFO - Successfully parsed backend/src/core/constants/functions-wiki/Function:-game_highlight_data.md
+2025-01-18 19:25:54,130 - INFO - ✓ Processed Function:-game_highlight_data.md
+2025-01-18 19:25:54,131 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-game_highlights.md
+2025-01-18 19:25:55,614 - INFO - Successfully parsed backend/src/core/constants/functions-wiki/Function:-game_highlights.md
+2025-01-18 19:25:55,614 - INFO - ✓ Processed Function:-game_highlights.md
+2025-01-18 19:25:55,615 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-game_pace.md
+2025-01-18 19:25:57,559 - INFO - Successfully parsed backend/src/core/constants/functions-wiki/Function:-game_pace.md
+2025-01-18 19:25:57,560 - INFO - ✓ Processed Function:-game_pace.md
+2025-01-18 19:25:57,561 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-game_pace_data.md
+2025-01-18 19:25:59,606 - INFO - Successfully parsed backend/src/core/constants/functions-wiki/Function:-game_pace_data.md
+2025-01-18 19:25:59,606 - INFO - ✓ Processed Function:-game_pace_data.md
+2025-01-18 19:25:59,607 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-game_scoring_play_data.md
+2025-01-18 19:26:01,348 - INFO - Successfully parsed backend/src/core/constants/functions-wiki/Function:-game_scoring_play_data.md
+2025-01-18 19:26:01,349 - INFO - ✓ Processed Function:-game_scoring_play_data.md
+2025-01-18 19:26:01,349 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-game_scoring_plays.md
+2025-01-18 19:26:03,088 - INFO - Successfully parsed backend/src/core/constants/functions-wiki/Function:-game_scoring_plays.md
+2025-01-18 19:26:03,088 - INFO - ✓ Processed Function:-game_scoring_plays.md
+2025-01-18 19:26:03,089 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-get.md
+2025-01-18 19:26:05,445 - INFO - Successfully parsed backend/src/core/constants/functions-wiki/Function:-get.md
+2025-01-18 19:26:05,445 - INFO - ✓ Processed Function:-get.md
+2025-01-18 19:26:05,446 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-last_game.md
+2025-01-18 19:26:06,958 - INFO - Successfully parsed backend/src/core/constants/functions-wiki/Function:-last_game.md
+2025-01-18 19:26:06,959 - INFO - ✓ Processed Function:-last_game.md
+2025-01-18 19:26:06,959 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-latest_season.md
+2025-01-18 19:26:08,207 - INFO - Successfully parsed backend/src/core/constants/functions-wiki/Function:-latest_season.md
+2025-01-18 19:26:08,207 - INFO - ✓ Processed Function:-latest_season.md
+2025-01-18 19:26:08,208 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-league_leader_data.md
+2025-01-18 19:26:13,929 - INFO - Successfully parsed backend/src/core/constants/functions-wiki/Function:-league_leader_data.md
+2025-01-18 19:26:13,929 - INFO - ✓ Processed Function:-league_leader_data.md
+2025-01-18 19:26:13,930 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-league_leaders.md
+2025-01-18 19:26:23,662 - INFO - Successfully parsed backend/src/core/constants/functions-wiki/Function:-league_leaders.md
+2025-01-18 19:26:23,663 - INFO - ✓ Processed Function:-league_leaders.md
+2025-01-18 19:26:23,663 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-linescore.md
+2025-01-18 19:26:26,231 - INFO - Successfully parsed backend/src/core/constants/functions-wiki/Function:-linescore.md
+2025-01-18 19:26:26,231 - INFO - ✓ Processed Function:-linescore.md
+2025-01-18 19:26:26,232 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-lookup_player.md
+2025-01-18 19:26:28,791 - INFO - Successfully parsed backend/src/core/constants/functions-wiki/Function:-lookup_player.md
+2025-01-18 19:26:28,791 - INFO - ✓ Processed Function:-lookup_player.md
+2025-01-18 19:26:28,792 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-lookup_team.md
+2025-01-18 19:26:31,249 - INFO - Successfully parsed backend/src/core/constants/functions-wiki/Function:-lookup_team.md
+2025-01-18 19:26:31,249 - INFO - ✓ Processed Function:-lookup_team.md
+2025-01-18 19:26:31,250 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-meta.md
+2025-01-18 19:26:33,053 - INFO - Successfully parsed backend/src/core/constants/functions-wiki/Function:-meta.md
+2025-01-18 19:26:33,054 - INFO - ✓ Processed Function:-meta.md
+2025-01-18 19:26:33,055 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-next_game.md
+2025-01-18 19:26:34,181 - INFO - Successfully parsed backend/src/core/constants/functions-wiki/Function:-next_game.md
+2025-01-18 19:26:34,181 - INFO - ✓ Processed Function:-next_game.md
+2025-01-18 19:26:34,181 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-notes.md
+2025-01-18 19:26:34,298 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-notes.md: 429 Resource has been exhausted (e.g. check quota).
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.ResourceExhausted: 429 Resource has been exhausted (e.g. check quota).
+2025-01-18 19:26:34,302 - WARNING - ✗ Failed to process Function:-notes.md
+2025-01-18 19:26:34,302 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-player_stat_data.md
+2025-01-18 19:26:37,700 - INFO - Successfully parsed backend/src/core/constants/functions-wiki/Function:-player_stat_data.md
+2025-01-18 19:26:37,700 - INFO - ✓ Processed Function:-player_stat_data.md
+2025-01-18 19:26:37,701 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-player_stats.md
+2025-01-18 19:26:40,772 - INFO - Successfully parsed backend/src/core/constants/functions-wiki/Function:-player_stats.md
+2025-01-18 19:26:40,773 - INFO - ✓ Processed Function:-player_stats.md
+2025-01-18 19:26:40,773 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-roster.md
+2025-01-18 19:26:40,896 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-roster.md: 429 Resource has been exhausted (e.g. check quota).
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.ResourceExhausted: 429 Resource has been exhausted (e.g. check quota).
+2025-01-18 19:26:40,901 - WARNING - ✗ Failed to process Function:-roster.md
+2025-01-18 19:26:40,902 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-schedule.md
+2025-01-18 19:26:41,031 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-schedule.md: 429 Resource has been exhausted (e.g. check quota).
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.ResourceExhausted: 429 Resource has been exhausted (e.g. check quota).
+2025-01-18 19:26:41,035 - WARNING - ✗ Failed to process Function:-schedule.md
+2025-01-18 19:26:41,036 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-standings.md
+2025-01-18 19:26:41,150 - ERROR - Error processing backend/src/core/constants/functions-wiki/Function:-standings.md: 429 Resource has been exhausted (e.g. check quota).
+Traceback (most recent call last):
+  File "/Users/islam/dev/mlb-demo/backend/src/scripts/wiki_functions_md_to_json.py", line 68, in parse_function_doc
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/generativeai/generative_models.py", line 331, in generate_content
+    response = self._client.generate_content(
+        request,
+        **request_options,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/ai/generativelanguage_v1beta/services/generative_service/client.py", line 830, in generate_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 293, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 153, in retry_target
+    _retry_error_helper(
+    ~~~~~~~~~~~~~~~~~~~^
+        exc,
+        ^^^^
+    ...<6 lines>...
+        timeout,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_base.py", line 212, in _retry_error_helper
+    raise final_exc from source_exc
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py", line 144, in retry_target
+    result = target()
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/timeout.py", line 120, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/Users/islam/dev/mlb-demo/backend/venv/lib/python3.13/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.ResourceExhausted: 429 Resource has been exhausted (e.g. check quota).
+2025-01-18 19:26:41,154 - WARNING - ✗ Failed to process Function:-standings.md
+2025-01-18 19:26:41,155 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-standings_data.md
+2025-01-18 19:26:45,280 - INFO - Successfully parsed backend/src/core/constants/functions-wiki/Function:-standings_data.md
+2025-01-18 19:26:45,281 - INFO - ✓ Processed Function:-standings_data.md
+2025-01-18 19:26:45,282 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-team_leader_data.md
+2025-01-18 19:26:47,735 - INFO - Successfully parsed backend/src/core/constants/functions-wiki/Function:-team_leader_data.md
+2025-01-18 19:26:47,735 - INFO - ✓ Processed Function:-team_leader_data.md
+2025-01-18 19:26:47,736 - INFO - Processing file: backend/src/core/constants/functions-wiki/Function:-team_leaders.md
+2025-01-18 19:26:50,297 - INFO - Successfully parsed backend/src/core/constants/functions-wiki/Function:-team_leaders.md
+2025-01-18 19:26:50,297 - INFO - ✓ Processed Function:-team_leaders.md

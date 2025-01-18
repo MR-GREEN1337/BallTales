@@ -1,4 +1,4 @@
-.
+backend/src
 ├── __init__.py
 ├── __pycache__
 │   ├── __init__.cpython-313.pyc
@@ -7,13 +7,6 @@
 │   ├── __init__.py
 │   ├── __pycache__
 │   │   └── __init__.cpython-313.pyc
-│   ├── crud
-│   │   ├── __init__.py
-│   │   ├── __pycache__
-│   │   │   ├── __init__.cpython-313.pyc
-│   │   │   └── game.cpython-313.pyc
-│   │   ├── game.py
-│   │   └── stats.py
 │   ├── models
 │   │   ├── __init__.py
 │   │   ├── __pycache__
@@ -25,16 +18,17 @@
 │       ├── __pycache__
 │       │   ├── __init__.cpython-313.pyc
 │       │   └── agent.cpython-313.pyc
-│       ├── agent.py
 │       └── onboarding
 │           ├── __init__.py
 │           ├── __pycache__
 │           │   ├── __init__.cpython-313.pyc
 │           │   ├── agent.cpython-313.pyc
 │           │   ├── models.cpython-313.pyc
+│           │   ├── repl.cpython-313.pyc
 │           │   └── router.cpython-313.pyc
 │           ├── agent.py
 │           ├── models.py
+│           ├── repl.py
 │           └── router.py
 ├── core
 │   ├── __init__.py
@@ -43,12 +37,43 @@
 │   │   └── settings.cpython-313.pyc
 │   ├── constants
 │   │   ├── endpoints.json
+│   │   ├── functions-wiki
+│   │   │   ├── Function:-boxscore.md
+│   │   │   ├── Function:-boxscore_data.md
+│   │   │   ├── Function:-game_highlight_data.md
+│   │   │   ├── Function:-game_highlights.md
+│   │   │   ├── Function:-game_pace.md
+│   │   │   ├── Function:-game_pace_data.md
+│   │   │   ├── Function:-game_scoring_play_data.md
+│   │   │   ├── Function:-game_scoring_plays.md
+│   │   │   ├── Function:-get.md
+│   │   │   ├── Function:-last_game.md
+│   │   │   ├── Function:-latest_season.md
+│   │   │   ├── Function:-league_leader_data.md
+│   │   │   ├── Function:-league_leaders.md
+│   │   │   ├── Function:-linescore.md
+│   │   │   ├── Function:-lookup_player.md
+│   │   │   ├── Function:-lookup_team.md
+│   │   │   ├── Function:-meta.md
+│   │   │   ├── Function:-next_game.md
+│   │   │   ├── Function:-notes.md
+│   │   │   ├── Function:-player_stat_data.md
+│   │   │   ├── Function:-player_stats.md
+│   │   │   ├── Function:-roster.md
+│   │   │   ├── Function:-schedule.md
+│   │   │   ├── Function:-standings.md
+│   │   │   ├── Function:-standings_data.md
+│   │   │   ├── Function:-team_leader_data.md
+│   │   │   └── Function:-team_leaders.md
+│   │   ├── mlb_api_responses.json
 │   │   └── mlb_homeruns.csv
 │   └── settings.py
 ├── main.py
+├── mlb_api_extractor.log
 └── scripts
     ├── __init__.py
     ├── endpoints_with_example_outputs.py
-    └── index_mlb_homeruns.py
+    ├── index_mlb_homeruns.py
+    └── wiki_functions_md_to_json.py
 
-16 directories, 36 files
+15 directories, 62 files

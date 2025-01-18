@@ -112,7 +112,7 @@ const OnboardingChat = () => {
           className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
         >
           <Save className="w-4 h-4" />
-          Save & Proceed
+          Save
           <ChevronRight className="w-4 h-4" />
         </Button>
       </div>
