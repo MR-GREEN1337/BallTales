@@ -6,6 +6,8 @@ import { UserCircle2, Bot, Send, ChevronRight, Save } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { toast } from 'sonner'
+import axios from 'axios'
+import MLBProfile from './_components/MLBProfile'
 
 interface Message {
   id: string
@@ -16,6 +18,28 @@ interface Message {
   selection?: {
     type: 'teams' | 'players' | 'preferences'
     items: { id: string; name: string; image?: string }[]
+  }
+  suggestions?: string[]
+  media?: {
+    type: string
+    url: string
+    thumbnail: string
+    description: string
+  }
+}
+
+interface MLBResponse {
+  message: string
+  conversation: string
+  data_type: string
+  data: any
+  context: any
+  suggestions: string[]
+  media?: {
+    type: string
+    url: string
+    thumbnail: string
+    description: string
   }
 }
 
@@ -29,9 +53,7 @@ const OnboardingChat = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    // Set initial loaded state for background transition
     setIsLoaded(true)
-    // Initialize with welcome message
     setMessages([{
       id: 'welcome-message',
       content: "Hey there! I'm your baseball buddy, here to chat about the game we love! 💫⚾️ Tell me, what got you into baseball?",
@@ -52,57 +74,103 @@ const OnboardingChat = () => {
     scrollToBottom()
   }, [messages])
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!inputText.trim()) return
 
-    addMessage({
+    // Add user message
+    const userMessage = {
       id: `user-${Date.now()}`,
       content: inputText,
       sender: 'user',
-      type: 'text'
-    })
+      type: 'text' as const
+    }
+    addMessage(userMessage as any)
     setInputText('')
     setIsTyping(true)
 
-    // Simulate bot thinking and response
-    setTimeout(() => {
-      setIsTyping(false)
-      processUserInput(inputText)
-    }, 1500)
-  }
+    try {
+      // Make API call to the MLB endpoint
+      const response = await axios.post<MLBResponse>(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/onboarding/chat`, {
+        message: inputText
+      })
 
-  const processUserInput = (text: string) => {
-    // Simple keyword-based responses for demo
-    const lowerText = text.toLowerCase()
-    
-    if (lowerText.includes('yankees') || lowerText.includes('red sox') || lowerText.includes('team')) {
+      // Add bot response
+      const botMessage: Message = {
+        id: `bot-${Date.now()}`,
+        content: response.data.conversation || response.data.message,
+        sender: 'bot',
+        type: 'text',
+        suggestions: response.data.suggestions,
+        media: response.data.media
+      }
+
+      setIsTyping(false)
+      addMessage(botMessage)
+
+      // Show suggestions if available
+      if (response.data.suggestions?.length) {
+        addMessage({
+          id: `suggestions-${Date.now()}`,
+          content: "You might also be interested in:",
+          sender: 'bot',
+          type: 'options',
+          options: response.data.suggestions
+        })
+      }
+
+      // Handle any errors in the response
+      if (response.data.data_type === 'error') {
+        toast.error(response.data.message)
+      }
+
+    } catch (error) {
+      console.error('Chat API error:', error)
+      setIsTyping(false)
+      
+      // Add error message
       addMessage({
-        id: `bot-team-${Date.now()}`,
-        content: "That's a great team! Who's your favorite player from the roster?",
+        id: `error-${Date.now()}`,
+        content: "I'm having trouble connecting to the baseball data. Can you try asking that again?",
         sender: 'bot',
         type: 'text'
       })
-    } else if (lowerText.includes('player') || lowerText.includes('favorite')) {
-      setPreferences((prev: any) => ({...prev, mentionedPlayer: true}))
-      addMessage({
-        id: `bot-player-${Date.now()}`,
-        content: "Amazing choice! Would you like to hear about some iconic moments from their career? Or maybe learn about similar players you might enjoy watching?",
-        sender: 'bot',
-        type: 'options',
-        options: ['Iconic Moments', 'Similar Players']
-      })
-    } else {
-      addMessage({
-        id: `bot-default-${Date.now()}`,
-        content: "Tell me more! What aspects of baseball interest you the most? The strategy, the statistics, the history, or the live action?",
-        sender: 'bot',
-        type: 'text'
-      })
+      
+      toast.error('Failed to get response from MLB chat')
     }
   }
 
-  const handleSaveProgress = () => {
-    toast.success("Progress saved! You can continue chatting or proceed to the dashboard.")
+  const user = {
+    name: "Jane Smith",
+    email: "jane@mlb.fan",
+    avatar: "/user.png" // Using placeholder for demo
+  }
+
+  // Example preferences collected during chat
+  const user_preferences = {
+    favoriteTeam: "New York Yankees",
+    favoritePlayer: "Aaron Judge",
+    favoriteHomeRun: "Judge's 62nd HR of 2022 Season",
+    stats: {
+      messagesExchanged: 145,
+      queriesAnswered: 72,
+      daysActive: 30
+    },
+    preferences: {
+      language: "English",
+      statsPreference: "Advanced",
+      notificationPreference: "Game Time Only"
+    }
+  }
+
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setInputText(suggestion)
+    handleSend()
+  }
+
+  const handleLogout = () => {
+    toast.success("Successfully logged out")
+    // Add your logout logic here
   }
 
   return (
@@ -116,16 +184,12 @@ const OnboardingChat = () => {
         backgroundBlendMode: 'multiply'
       }}
     >
-      {/* Fixed Save & Proceed Button */}
       <div className="fixed top-4 right-4 z-50">
-        <Button
-          onClick={handleSaveProgress}
-          className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
-        >
-          <Save className="w-4 h-4" />
-          Save
-          <ChevronRight className="w-4 h-4" />
-        </Button>
+        <MLBProfile 
+          user={user}
+          preferences={user_preferences}
+          onLogout={handleLogout}
+        />
       </div>
 
       {/* Chat Container */}
@@ -168,6 +232,20 @@ const OnboardingChat = () => {
                         {message.content}
                       </div>
                       
+                      {/* Display Media if available */}
+                      {message.media && (
+                        <div className="mt-4">
+                          {message.media.type === 'image' && (
+                            <img 
+                              src={message.media.url} 
+                              alt={message.media.description}
+                              className="rounded-lg max-w-full h-auto"
+                            />
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Display Options/Suggestions */}
                       {message.options && (
                         <div className="mt-4 flex flex-wrap gap-2">
                           {message.options.map((option) => (
@@ -175,7 +253,7 @@ const OnboardingChat = () => {
                               key={`${message.id}-${option}`}
                               variant="outline"
                               className="bg-white/10 hover:bg-white/20 border-white/20 text-white"
-                              onClick={() => processUserInput(option)}
+                              onClick={() => handleSuggestionClick(option)}
                             >
                               {option}
                             </Button>
@@ -219,7 +297,7 @@ const OnboardingChat = () => {
               className="bg-white/5 border-white/20 text-white placeholder:text-gray-400 backdrop-blur-sm"
             />
             <Button
-              onClick={handleSend}
+              onClick={() => handleSend()}
               className="bg-blue-600 hover:bg-blue-700 text-white px-6"
             >
               <Send className="w-5 h-5" />

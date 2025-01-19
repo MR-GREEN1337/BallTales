@@ -56,12 +56,6 @@ class Complexity(enum.Enum):
     MODERATE = "moderate"
     COMPLEX = "complex"
 
-class ComparisonType(enum.Enum):
-    NONE = "none"
-    PLAYER_VS_PLAYER = "player_vs_player"
-    TEAM_VS_TEAM = "team_vs_team"
-    HISTORICAL = "historical"
-
 class StatFocus(enum.Enum):
     NONE = "none"
     OFFENSIVE = "offensive"
@@ -91,7 +85,6 @@ class Entities(TypedDict):
 
 class Context(TypedDict):
     time_frame: Timeframe
-    comparison_type: ComparisonType
     stat_focus: StatFocus
     sentiment: Sentiment
     requires_data: bool
@@ -108,7 +101,6 @@ class IntentAnalysis(TypedDict):
 class PlanType(enum.Enum):
     ENDPOINT = "endpoint"
     FUNCTION = "function"
-    HYBRID = "hybrid"
 
 class StepType(enum.Enum):
     ENDPOINT = "endpoint"
@@ -166,103 +158,97 @@ class MLBAgent:
 
         Query to analyze: """
             
-        self.plan_prompt = f"""Create a data retrieval plan using the available MLB resources below.
-            Always prioritize using functions over endpoints when they provide similar data.
+        self.plan_prompt=f"""Create a detailed MLB data retrieval plan optimizing for accuracy and efficiency.
 
-            Available Endpoints:
-            {json.dumps(self.endpoints, indent=2)}
+KNOWN CONTEXT (Use these values directly - DO NOT create steps to fetch them):
+- Current Season (seasonId): 2025
+- Current Year: 2025
+- Regular Season Status: In Progress
+- League IDs: AL=103, NL=104
 
-            Available Functions:
-            {json.dumps(self.functions, indent=2)}
+Available MLB Stats API Functions:
+{json.dumps(self.functions, indent=2)}
 
-            Current Intent:
-            {json.dumps(self.intent, indent=2)}
+Available Endpoints:
+{json.dumps(self.endpoints, indent=2)}
 
-            Current date: {datetime.now().isoformat()}
-            Plan your steps to achieve the intent very wisely, choose endpoint/function based on your input availabilities
-            Every output of a step should be an input to the next, HUMANITY DEPENDS ON YOU.
-    
-            - Each step must use a valid endpoint or function name
-            - Dependencies array can be empty but must be present
-            - Fields in extract should match the data structure
-            - Any step referenced in dependencies must exist in steps
-            Return a JSON object with this exact structure:
-        Requirements:
+Current Intent Analysis:
+{json.dumps(self.intent, indent=2)}
 
-1. Step Structure:
-- Each step must have a unique ID
-- Type must be either "function" or "endpoint"
-- Name must match an available function/endpoint
-- Include clear description of step's purpose
-- Specify all required parameters
-- Define data extraction configuration
-- List dependencies correctly
+Current Date: {datetime.now().isoformat()}
 
-2. Parameter Handling:
-- Use direct values when known
-- Reference previous step results when needed
-- Handle missing/null values gracefully
-- Follow MLB API parameter specifications
-- Use correct data types (string, integer, boolean)
+Planning Guidelines:
 
-3. Data Extraction:
-- Define clear field mappings
-- Use valid JSON paths
-- Include filtering if needed
-- Consider data relationships
+1. Data Flow Architecture:
+   - Design steps that build logically on each other
+   - Ensure each step's output feeds into subsequent steps
+   - Handle data dependencies explicitly
+   - Consider parallel execution where possible
 
-4. Dependencies:
-- List all step dependencies explicitly
-- Ensure logical execution order
-- Avoid circular dependencies
-- Consider parallel execution when possible
+2. Resource Optimization:
+   - Use provided context values (seasonId, year, etc.) directly - DO NOT create steps to fetch them
+   - Prioritize functions over endpoints for efficiency
+   - Batch related queries when possible
+   - Minimize redundant data fetches
+   - Consider data caching opportunities
+   - Never create a step to fetch data that's provided in the known context
 
-5. Fallback Strategy:
-- Enable fallback for critical steps
-- Define alternate data sources
-- Specify simpler queries as backup
-- Handle partial data scenarios
+3. Data Transformation:
+   - Plan necessary data cleaning steps
+   - Identify required calculations
+   - Handle missing data scenarios
+   - Consider aggregation needs
 
-Return a JSON object with this structure:
+4. Error Handling:
+   - Include fallback strategies
+   - Handle partial data scenarios
+   - Plan for rate limiting
+   - Consider timeout scenarios
+
+5. Parameter Resolution:
+   - Resolve all required parameters
+   - Handle dynamic parameter generation
+   - Validate parameter types
+   - Consider parameter dependencies
+
+Your plan must follow this exact schema:
 {{
-    "plan_type": "endpoint" | "function",
+    "plan_type": "string",        # Must be one of: "endpoint", "function"
     "steps": [
         {{
-            "id": string,          # Unique step identifier
-            "type": string,        # "endpoint" or "function"
-            "name": string,        # Valid endpoint/function name
-            "description": string, # Purpose of this step
-            "parameters": {{       # Parameters matching MLB API specs, key is method param name, value is your chosen value
-                "param_name": "value" | {{
-                    "source_step": string,
-                    "source_path": string,
-                    "value": any
+            "id": "string",       # Unique step identifier
+            "type": "string",     # Must be either "endpoint" or "function"
+            "name": "string",     # Valid endpoint/function name from available endpoints/functions
+            "description": "string", # Purpose of this step
+            "parameters": {{
+                "param_name": {{   # Parameter name matches API/function spec
+                    "source_step": "string?",  # Optional reference to prior step
+                    "source_path": "string?",  # Optional JSON path to value
+                    "value": "any"            # Direct value if not from prior step
                 }}
             }},
             "extract": {{
-                "fields": {{        # Target field to source path mapping
+                "fields": {{        # Mapping of target fields to source paths
                     "field_name": "json.path"
                 }},
-                "filter": string   # Optional filter condition
+                "filter": "string?" # Optional filter condition
             }},
-            "depends_on": [string] # Array of step IDs this depends on
+            "depends_on": ["string"] # Array of step IDs this depends on
         }}
     ],
     "fallback": {{
-        "enabled": boolean,
-        "strategy": string,
-        "steps": [...]            # Same structure as primary steps
+        "enabled": true,         # Whether fallback is enabled
+        "strategy": "string",    # Description of fallback strategy
+        "steps": []             # Same structure as primary steps
     }}
 }}
 
 Focus on:
-1. Efficient data retrieval order
-2. Proper parameter validation
-3. Clear data extraction paths
-4. Robust error handling
-5. Logical step dependencies
-            """
-
+1. Logical data flow
+2. Efficient resource use
+3. Error handling
+4. Data transformation
+5. Parameter resolution"""
         self.response_prompt = """You create natural, informative responses from MLB data.
             Return structured response with summary, details, and optional stats and media.
             Follow the schema exactly for all fields."""
@@ -291,7 +277,7 @@ Focus on:
             
             Query: "What's the weather like?"
             Response: "While I can't check the weather, I can tell you it's always a perfect day for baseball! Would you like to know which games are scheduled today?" """
-            
+ 
         self.conversation_prompt = """You are a friendly baseball-loving AI assistant. 
             Generate a warm, conversational response to the user's query.
             Even if the query isn't baseball-related, respond in a helpful and engaging way,
@@ -320,6 +306,7 @@ Focus on:
                 )
 
                 parsed_result = json.loads(result.text)
+                print(parsed_result)
                 # Convert enum strings to enum values
                 parsed_result["intent"]["type"] = IntentType(parsed_result["intent"]["type"])
                 parsed_result["intent"]["specificity"] = Specificity(parsed_result["intent"]["specificity"])
@@ -327,7 +314,6 @@ Focus on:
                 parsed_result["intent"]["complexity"] = Complexity(parsed_result["intent"]["complexity"])
                 
                 parsed_result["context"]["time_frame"] = Timeframe(parsed_result["context"]["time_frame"])
-                parsed_result["context"]["comparison_type"] = ComparisonType(parsed_result["context"]["comparison_type"])
                 parsed_result["context"]["stat_focus"] = StatFocus(parsed_result["context"]["stat_focus"])
                 parsed_result["context"]["sentiment"] = Sentiment(parsed_result["context"]["sentiment"])
 
@@ -357,7 +343,6 @@ Focus on:
                     },
                     "context": {
                         "time_frame": Timeframe.CURRENT,
-                        "comparison_type": ComparisonType.NONE,
                         "stat_focus": StatFocus.NONE,
                         "sentiment": Sentiment.NEUTRAL,
                         "requires_data": False,
@@ -609,7 +594,7 @@ Focus on:
             # Execute current step
             print(step)
             raw_result = await self._execute_step(deps, step, results)
-            print(f"State at {step["id"]} is {self.state}")
+            #print(f"State at {step["id"]} is {self.state}")
             if not raw_result:
                 continue
                 
@@ -709,11 +694,11 @@ Focus on:
             # Execute based on method type
             if method_type == "function":
                 result = await self._execute_function_step(deps, step, prior_results)
-                self.state |= step | {"output": result["output"]}
+                self.state |= step | (result if isinstance(result, dict) else {})
                 return result
             elif method_type == "endpoint":
                 result = await self._execute_endpoint_step(deps, step, prior_results)
-                self.state |= step | {"output": result["output"]}
+                self.state |= step | (result if isinstance(result, dict) else {})
                 return result
             else:
                 print(f"Unknown method type: {method_type}")
@@ -784,13 +769,14 @@ Focus on:
                 
                 #TODO: If result is large than a threshold, continue, but if less, route to LLM to extract params for next steps
                 # Process data extraction if specified
-                if step.get('dataExtraction'):
-                    result = await self._process_extraction(result, step['dataExtraction'])
+                if step.get('extract').get("filter"):
+                    result = await self._apply_filtering(result, step['extract'])
+                    
                     
                 # Apply filtering if specified
-                if step.get('filtering') and step['filtering'].lower() != 'none':
-                    result = await self._apply_filtering(result, step['filtering'])
-                    
+                if step.get('extract'):
+                    result = await self._process_extraction(result, step['extract'])
+                
                 return result
                 
             except json.JSONDecodeError as e:
@@ -919,39 +905,69 @@ Focus on:
     async def _process_extraction(
         self, 
         data: Any, 
-        extraction_info: str
+        extraction_info: str,
+        size_threshold: int = 500_000  # Default threshold in characters, chosen hazardly
     ) -> Any:
-        """Process data extraction based on extraction info"""
-        # Use LLM to generate extraction code
-        prompt = f"""Generate Python code to extract data according to this specification:
-        
-        Data structure:
-        {json.dumps(data)[:1000] if isinstance(data, (dict, list)) else str(data)[:1000]}
-        
-        Extraction needed:
-        {extraction_info}
-        
-        Return a Python function named extract_data that takes the data as input and returns the extracted result.
-        """
-        
-        try:
-            result = await asyncio.to_thread(
-                self.code_model.generate_content,
-                prompt,
-                generation_config=genai.GenerationConfig(
-                    response_mime_type='text/plain'
-                )
-            )
+        """Process data extraction based on extraction info and data size"""
+        data_size = len(json.dumps(data)) if isinstance(data, (dict, list)) else len(str(data))
+        print("data size", data_size)
+        if data_size <= size_threshold:
+            # For small data, use LLM directly
+            prompt = f"""Given this data:
+            {json.dumps(data) if isinstance(data, (dict, list)) else str(data)}
             
-            extraction_code = result.text.strip().replace('```python', '').replace('```', '')
-            print(extraction_code)
-            # Execute extraction
-            with tempfile.TemporaryDirectory() as temp_dir:
-                data_file = os.path.join(temp_dir, 'data.json')
-                with open(data_file, 'w') as f:
-                    json.dump(data, f)
-                    
-                execution_code = f"""
+            Extract the following:
+            {extraction_info}
+            
+            Return only the extracted data in valid JSON format.
+            """
+            
+            try:
+                result = await asyncio.to_thread(
+                    self.code_model.generate_content,
+                    prompt,
+                    generation_config=genai.GenerationConfig(
+                        response_mime_type='text/plain',
+                    )
+                )
+                #print(result)
+                dict_result = result.text.strip().replace('```json\n', '').replace('```', '').replace('\n', '')
+                result = json.loads(dict_result)
+                print("extracted result is: ", result)
+                return result
+            except (json.JSONDecodeError, Exception) as e:
+                print(f"Direct extraction error: {str(e)}")
+                return data
+        else:
+            # For large data, use REPL approach
+            prompt = f"""Generate Python code to extract data according to this specification:
+            
+            Data structure:
+            {json.dumps(data)[:10000] if isinstance(data, (dict, list)) else str(data)[:10000]}
+            
+            Extraction needed:
+            {extraction_info}
+            
+            Return a Python function named extract_data that takes the data as input and returns the extracted result.
+            """
+            
+            try:
+                result = await asyncio.to_thread(
+                    self.code_model.generate_content,
+                    prompt,
+                    generation_config=genai.GenerationConfig(
+                        response_mime_type='text/plain'
+                    )
+                )
+                
+                extraction_code = result.text.strip().replace('```python', '').replace('```', '')
+                
+                with tempfile.TemporaryDirectory() as temp_dir:
+                    data_file = os.path.join(temp_dir, 'data.json')
+                    with open(data_file, 'w') as f:
+                        json.dump(data, f)
+                        
+                    execution_code = f"""
     import json
 
     {extraction_code}
@@ -959,75 +975,99 @@ Focus on:
     try:
         with open('{data_file}', 'r') as f:
             data = json.load(f)
-            
+        
         result = extract_data(data)
         print(json.dumps(result))
     except Exception as e:
         print(json.dumps({{"error": str(e)}}))
     """
-                print(execution_code)
-                repl_result = await self.repl(code=execution_code)
-                
-                if repl_result.get('status') == 'error':
-                    raise RuntimeError(f"Extraction failed: {repl_result.get('error')}")
+                    repl_result = await self.repl(code=execution_code)
                     
-                try:
-                    output = repl_result.get('output')
-                    if not output:
-                        raise ValueError("No output from extraction")
+                    if repl_result.get('status') == 'error':
+                        raise RuntimeError(f"Extraction failed: {repl_result.get('error')}")
                         
-                    result = json.loads(output)
-                    if isinstance(result, dict) and "error" in result:
-                        raise RuntimeError(f"Extraction error: {result['error']}")
+                    try:
+                        output = repl_result.get('output')
+                        if not output:
+                            raise ValueError("No output from extraction")
+                            
+                        result = json.loads(output)
+                        if isinstance(result, dict) and "error" in result:
+                            raise RuntimeError(f"Extraction error: {result['error']}")
+                            
+                        return result
                         
-                    return result
-                    
-                except json.JSONDecodeError:
-                    return data  # Return original data if extraction fails
-                    
-        except Exception as e:
-            print(f"Extraction error: {str(e)}")
-            return data
-            
+                    except json.JSONDecodeError:
+                        return data
+                        
+            except Exception as e:
+                print(f"Extraction error: {str(e)}")
+                return data
+
     async def _apply_filtering(
         self, 
         data: Any, 
-        filtering_info: str
+        filtering_info: str,
+        size_threshold: int = 10000  # Default threshold in characters
     ) -> Any:
-        """Apply filtering based on filtering info"""
+        """Apply filtering based on filtering info and data size"""
         if not filtering_info or filtering_info.lower() == 'none':
             return data
             
-        # Use LLM to generate filtering code
-        prompt = f"""Generate Python code to filter data according to this specification:
+        data_size = len(json.dumps(data)) if isinstance(data, (dict, list)) else len(str(data))
         
-        Data structure:
-        {json.dumps(data)[:1000] if isinstance(data, (dict, list)) else str(data)[:1000]}
-        
-        Filtering needed:
-        {filtering_info}
-        
-        Return a Python function named filter_data that takes the data as input and returns the filtered result.
-        """
-        
-        try:
-            result = await asyncio.to_thread(
-                self.code_model.generate_content,
-                prompt,
-                generation_config=genai.GenerationConfig(
-                    response_mime_type='text/plain'
+        if data_size <= size_threshold:
+            # For small data, use LLM directly
+            prompt = f"""Given this data:
+            {json.dumps(data) if isinstance(data, (dict, list)) else str(data)}
+            
+            Apply this filtering:
+            {filtering_info}
+            
+            Return only the filtered data in valid JSON format."""
+            
+            try:
+                result = await asyncio.to_thread(
+                    self.code_model.generate_content,
+                    prompt,
+                    generation_config=genai.GenerationConfig(
+                        response_mime_type='text/plain'
+                    )
                 )
-            )
+                return json.loads(result.text.strip())
+            except (json.JSONDecodeError, Exception) as e:
+                print(f"Direct filtering error: {str(e)}")
+                return data
+        else:
+            # For large data, use REPL approach
+            prompt = f"""Generate Python code to filter data according to this specification:
             
-            filtering_code = result.text.strip().replace('```python', '').replace('```', '')
+            Data structure:
+            {json.dumps(data)[:1000] if isinstance(data, (dict, list)) else str(data)[:1000]}
             
-            # Execute filtering
-            with tempfile.TemporaryDirectory() as temp_dir:
-                data_file = os.path.join(temp_dir, 'data.json')
-                with open(data_file, 'w') as f:
-                    json.dump(data, f)
-                    
-                execution_code = f"""
+            Filtering needed:
+            {filtering_info}
+            
+            Return a Python function named filter_data that takes the data as input and returns the filtered result.
+            """
+            
+            try:
+                result = await asyncio.to_thread(
+                    self.code_model.generate_content,
+                    prompt,
+                    generation_config=genai.GenerationConfig(
+                        response_mime_type='text/plain'
+                    )
+                )
+                
+                filtering_code = result.text.strip().replace('```python', '').replace('```', '')
+                
+                with tempfile.TemporaryDirectory() as temp_dir:
+                    data_file = os.path.join(temp_dir, 'data.json')
+                    with open(data_file, 'w') as f:
+                        json.dump(data, f)
+                        
+                    execution_code = f"""
     import json
 
     {filtering_code}
@@ -1042,28 +1082,28 @@ Focus on:
         print(json.dumps({{"error": str(e)}}))
     """
 
-                repl_result = await self.repl(code=execution_code)
-                
-                if repl_result.get('status') == 'error':
-                    raise RuntimeError(f"Filtering failed: {repl_result.get('error')}")
+                    repl_result = await self.repl(code=execution_code)
                     
-                try:
-                    output = repl_result.get('output')
-                    if not output:
-                        raise ValueError("No output from filtering")
+                    if repl_result.get('status') == 'error':
+                        raise RuntimeError(f"Filtering failed: {repl_result.get('error')}")
                         
-                    result = json.loads(output)
-                    if isinstance(result, dict) and "error" in result:
-                        raise RuntimeError(f"Filtering error: {result['error']}")
+                    try:
+                        output = repl_result.get('output')
+                        if not output:
+                            raise ValueError("No output from filtering")
+                            
+                        result = json.loads(output)
+                        if isinstance(result, dict) and "error" in result:
+                            raise RuntimeError(f"Filtering error: {result['error']}")
+                            
+                        return result
                         
-                    return result
-                    
-                except json.JSONDecodeError:
-                    return data  # Return original data if filtering fails
-                    
-        except Exception as e:
-            print(f"Filtering error: {str(e)}")
-            return data
+                    except json.JSONDecodeError:
+                        return data
+                        
+            except Exception as e:
+                print(f"Filtering error: {str(e)}")
+                return data
     async def get_formatted_url(
         self,
         endpoint_name: str,
@@ -1307,13 +1347,14 @@ Focus on:
         return json.loads(result.text)
 
     async def process_message(self, deps: MLBDeps, message: str) -> MLBResponse:
-            """Process message with improved intent handling"""
-            try:
-                # Get intent analysis
-                intent = await self.analyze_intent(message)
-                
-                # MLB-related query path
-                if intent["is_mlb_related"] and intent.get("requires_data", True):
+        """Process message with Gemini-powered error handling"""
+        try:
+            # Get intent analysis
+            intent = await self.analyze_intent(message)
+            
+            # MLB-related query path
+            if intent["is_mlb_related"] and intent.get("requires_data", True):
+                try:
                     # Full MLB processing path
                     plan = await self.create_data_plan(intent)
                     self.state = plan
@@ -1331,40 +1372,77 @@ Focus on:
                         "suggestions": suggestions,
                         "media": response_data.get('media'),
                     }
-                
-                # Non-MLB or simple MLB conversation path
-                else:
-                    conversation = await self.generate_conversation(message, intent)
+                except Exception as execution_error:
+                    print(f"Execution error: {str(execution_error)}")
                     
-                    # Generate contextual suggestions
-                    suggestions = []
-                    if intent.get("sentiment") == "negative":
-                        suggestions = [
-                            "Let me show you some exciting game highlights",
-                            "Would you like to see today's matchups?",
-                            "I can tell you about recent thrilling games"
-                        ]
-                    else:
-                        suggestions = [
-                            "Ask about today's games",
-                            "Look up your favorite team",
-                            "Check player stats"
-                        ]
-                    
-                    return {
-                        "message": intent.get("intent_description", "Let's talk baseball!"),
-                        "conversation": conversation,
-                        "data_type": "conversation",
-                        "data": {},
-                        "context": {"intent": intent},
-                        "suggestions": suggestions,
-                        "media": None,
-                        "actions": []
-                    }
+                    # Use Gemini to analyze error and generate helpful response
+                    error_prompt = f"""You are an MLB query assistant handling an execution error.
+                    Generate a helpful, baseball-focused response explaining the issue and suggesting alternatives.
 
-            except Exception as e:
-                print(f"Error in process_message: {str(e)}")
-                return self._create_error_response(message, str(e))
+                    User Query: {message}
+
+                    Intent Analysis:
+                    {json.dumps(intent, indent=2)}
+
+                    Execution State:
+                    {json.dumps(self.state, indent=2)}
+
+                    Error: {str(execution_error)}
+
+                    Return response as JSON with this structure:
+                    {{
+                        "message": "Technical summary of the issue",
+                        "conversation": "Natural, baseball-focused response explaining the issue and offering alternatives",
+                        "suggestions": ["3-5 relevant alternative queries based on the original intent and available state"]
+                    }}"""
+
+                    try:
+                        error_response = await asyncio.to_thread(
+                            self.model.generate_content,
+                            error_prompt,
+                            generation_config=genai.GenerationConfig(
+                                temperature=0.2,
+                                response_mime_type="application/json"
+                            )
+                        )
+                        
+                        parsed_error = json.loads(error_response.text)
+                        print(error_response)
+                        return {
+                            "message": parsed_error['message'],
+                            "conversation": parsed_error['conversation'],
+                            "data_type": "error",
+                            "data": {"error": str(execution_error), "state": self.state},
+                            "context": {"intent": intent},
+                            "suggestions": parsed_error['suggestions'],
+                            "media": None
+                        }
+                    except Exception as gemini_error:
+                        print(f"Failed to generate Gemini error response: {str(gemini_error)}")
+                        # Fall back to basic error response
+                        return self._create_error_response(message, str(execution_error))
+            
+            # Non-MLB or simple MLB conversation path  
+            else:
+                conversation = await self.generate_conversation(message, intent)
+                suggestions = await self._generate_suggestions(intent, {})
+                print(conversation)
+                print(suggestions)
+                return {
+                    "message": intent.get("intent_description", "Let's talk baseball!"),
+                    "conversation": conversation,
+                    "data_type": "conversation",
+                    "data": {},
+                    "context": {"intent": intent},
+                    "suggestions": suggestions,
+                    "media": None,
+                    "actions": []
+                }
+
+        except Exception as e:
+            print(f"Critical error in process_message: {str(e)}")
+            return self._create_error_response(message, str(e))
+
     def _extract_and_filter(
         self,
         data: Any,
