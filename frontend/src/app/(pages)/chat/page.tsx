@@ -25,9 +25,12 @@ const OnboardingChat = () => {
   const [isTyping, setIsTyping] = useState(false)
   const [preferences, setPreferences] = useState<any>({})
   const [hasInitialized, setHasInitialized] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    // Set initial loaded state for background transition
+    setIsLoaded(true)
     // Initialize with welcome message
     setMessages([{
       id: 'welcome-message',
@@ -99,12 +102,20 @@ const OnboardingChat = () => {
   }
 
   const handleSaveProgress = () => {
-    // Save preferences logic here
     toast.success("Progress saved! You can continue chatting or proceed to the dashboard.")
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-blue-900 relative">
+    <div 
+      className={`min-h-screen relative bg-cover bg-center transition-all duration-700 ease-in-out ${
+        isLoaded ? 'opacity-100' : 'opacity-0'
+      }`}
+      style={{
+        backgroundImage: 'url(/chat.jpg)',
+        backgroundColor: 'rgba(17, 24, 39, 0.85)',
+        backgroundBlendMode: 'multiply'
+      }}
+    >
       {/* Fixed Save & Proceed Button */}
       <div className="fixed top-4 right-4 z-50">
         <Button
@@ -124,6 +135,7 @@ const OnboardingChat = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
             className="text-center"
           >
             <h1 className="text-4xl font-bold text-white mb-2">Welcome to BallTales</h1>
@@ -147,9 +159,9 @@ const OnboardingChat = () => {
                       <UserCircle2 className="w-8 h-8 text-gray-400 mt-1" />
                     )}
                     
-                    <div className={`rounded-2xl p-4 ${
+                    <div className={`rounded-2xl p-4 backdrop-blur-sm ${
                       message.sender === 'user' 
-                        ? 'bg-blue-600 text-white'
+                        ? 'bg-blue-600/90 text-white'
                         : 'bg-white/10 text-white'
                     }`}>
                       <div className="prose prose-invert">
@@ -182,7 +194,7 @@ const OnboardingChat = () => {
                   className="flex items-start gap-3"
                 >
                   <Bot className="w-8 h-8 text-blue-400 mt-1" />
-                  <div className="bg-white/10 rounded-2xl p-4">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
                     <div className="flex space-x-2">
                       <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" />
                       <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce delay-100" />
@@ -204,7 +216,7 @@ const OnboardingChat = () => {
               onChange={(e) => setInputText(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSend()}
               placeholder="Type anything about baseball..."
-              className="bg-white/5 border-white/20 text-white placeholder:text-gray-400"
+              className="bg-white/5 border-white/20 text-white placeholder:text-gray-400 backdrop-blur-sm"
             />
             <Button
               onClick={handleSend}

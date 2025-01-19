@@ -1,6 +1,10 @@
 import asyncio
+from datetime import datetime
+import difflib
+import enum
 import os
 import tempfile
+import typing_extensions as typing
 from typing import TypedDict, List, Optional, Dict, Any, Literal
 from dataclasses import dataclass
 import json
@@ -15,54 +19,6 @@ class MLBDeps:
     season: int = 2025
     endpoints: Dict[str, Any] = None
 
-class EntityDict(TypedDict, total=False):
-    team: Optional[str]
-    player: Optional[str]
-    date: Optional[str]
-    season: Optional[int]
-    game_id: Optional[str]
-
-class IntentAnalysis(TypedDict):
-    primary_intent: Literal['team_info', 'player_info', 'game_info', 'stats', 
-                          'standings', 'schedule', 'highlights']
-    entities: EntityDict
-    time_context: Literal['recent', 'historical', 'upcoming', 'current', 'season']
-    data_requirements: List[str]
-
-class APIStep(TypedDict):
-    id: str
-    endpoint: str
-    parameters: Dict[str, Any]
-    depends_on: List[str]
-    required_for: List[str]
-
-class DataRetrievalPlan(TypedDict):
-    steps: List[APIStep]
-    dependencies: Dict[str, List[str]]
-
-class Stats(TypedDict, total=False):
-    batting: Optional[Dict[str, Any]]
-    pitching: Optional[Dict[str, Any]]
-    fielding: Optional[Dict[str, Any]]
-    team: Optional[Dict[str, Any]]
-
-class MediaContent(TypedDict, total=False):
-    type: str
-    url: Optional[str]
-    thumbnail: Optional[str]
-    description: Optional[str]
-
-class ResponseData(TypedDict):
-    summary: str
-    details: Dict[str, Any]
-    stats: Optional[Stats]
-    media: Optional[MediaContent]
-
-class Action(TypedDict):
-    type: str
-    label: str
-    data: Dict[str, Any]
-
 class MLBResponse(TypedDict):
     message: str  # Technical/data summary
     conversation: str  # Friendly AI response
@@ -71,71 +27,242 @@ class MLBResponse(TypedDict):
     context: Dict[str, Any]
     suggestions: List[str]
     media: Optional[Dict[str, Any]]
-    actions: List[Action]
+
+class IntentType(enum.Enum):
+    TEAM_INFO = "team_info"
+    PLAYER_INFO = "player_info"
+    GAME_INFO = "game_info"
+    STATS = "stats"
+    STANDINGS = "standings"
+    SCHEDULE = "schedule"
+    HIGHLIGHTS = "highlights"
+    CONVERSATION = "conversation"
+
+class Specificity(enum.Enum):
+    GENERAL = "general"
+    SPECIFIC = "specific"
+    COMPARATIVE = "comparative"
+    ANALYTICAL = "analytical"
+
+class Timeframe(enum.Enum):
+    HISTORICAL = "historical"
+    CURRENT = "current"
+    UPCOMING = "upcoming"
+    SEASON = "season"
+    CAREER = "career"
+
+class Complexity(enum.Enum):
+    SIMPLE = "simple"
+    MODERATE = "moderate"
+    COMPLEX = "complex"
+
+class ComparisonType(enum.Enum):
+    NONE = "none"
+    PLAYER_VS_PLAYER = "player_vs_player"
+    TEAM_VS_TEAM = "team_vs_team"
+    HISTORICAL = "historical"
+
+class StatFocus(enum.Enum):
+    NONE = "none"
+    OFFENSIVE = "offensive"
+    DEFENSIVE = "defensive"
+    BOTH = "both"
+
+class Sentiment(enum.Enum):
+    NEUTRAL = "neutral"
+    POSITIVE = "positive"
+    NEGATIVE = "negative"
+
+# TypedDict definitions
+class IntentDetails(TypedDict):
+    type: IntentType
+    description: str
+    specificity: Specificity
+    timeframe: Timeframe
+    complexity: Complexity
+
+class Entities(TypedDict):
+    teams: List[str]
+    players: List[str]
+    dates: List[str]
+    stats: List[str]
+    locations: List[str]
+    events: List[str]
+
+class Context(TypedDict):
+    time_frame: Timeframe
+    comparison_type: ComparisonType
+    stat_focus: StatFocus
+    sentiment: Sentiment
+    requires_data: bool
+    follow_up: bool
+    data_requirements: List[str]
+
+class IntentAnalysis(TypedDict):
+    intent: IntentDetails
+    entities: Entities
+    context: Context
+    is_mlb_related: bool
+
+# Data Plan Enums
+class PlanType(enum.Enum):
+    ENDPOINT = "endpoint"
+    FUNCTION = "function"
+    HYBRID = "hybrid"
+
+class StepType(enum.Enum):
+    ENDPOINT = "endpoint"
+    FUNCTION = "function"
+
+# Data Plan TypedDicts
+class ParameterSource(typing.TypedDict):
+    value: dict
+    source_step: str
+    source_path: str
+    transform: str
+
+class ExtractConfig(typing.TypedDict):
+    fields: dict[str, str]
+    filter: str
+
+class PlanStep(typing.TypedDict):
+    id: str
+    type: StepType
+    name: str
+    description: str
+    parameters: dict[str, ParameterSource]
+    extract: ExtractConfig
+    depends_on: list[str]
+    required_for: list[str]
+
+class FallbackPlan(typing.TypedDict):
+    enabled: bool
+    strategy: str
+    steps: list[PlanStep]
+
+class DataRetrievalPlan(typing.TypedDict):
+    plan_type: PlanType
+    steps: list[PlanStep]
+    fallback: FallbackPlan
 
 class MLBAgent:
-    def __init__(self, api_key: str, endpoints_json: str):
+    def __init__(self, api_key: str, endpoints_json: str, functions_json: str):
         genai.configure(api_key=api_key)
         
         self.model = genai.GenerativeModel("gemini-1.5-flash")
         self.code_model = genai.GenerativeModel("gemini-1.5-pro")
         self.endpoints = json.loads(endpoints_json)["endpoints"]
+        self.functions = json.loads(functions_json)["functions"]
         self.intent = None;
         self.plan = None;
-
+        self.state: Dict[str, Any] = {}
         self.repl = MLBPythonREPL(timeout=8)
         
         self._setup_prompts()
 
     def _setup_prompts(self):
         '''Set up all prompts used by the agent'''
-        self.intent_prompt = """You analyze MLB queries to determine intent and data needs.
-            Return structured analysis with primary intent, entities, time context,
-            and required data types. Ensure all fields match the schema exactly."""
+        self.intent_prompt = """Please analyze the baseball query and return a structured JSON response with detailed intent analysis, and if mlb related.
+
+        Query to analyze: """
             
-        self.plan_prompt = """You create data retrieval plans using MLB API endpoints.
-            Available endpoints: {list(self.endpoints.keys())}
-            
-            IMPORTANT RULES FOR SEQUENTIAL DATA FLOW:
-            1. First step MUST use an endpoint with NO required parameters (e.g., teams list, search)
-            2. Each step must specify:
-               - How to filter/extract data from previous step's response
-               - Exact fields needed for next step's parameters
-            3. Use this format for parameters:
-               "parameters": {
-                   "param_name": {
-                       "source_step": "step_id",
-                       "source_path": "path.to.field",
-                       "filter_condition": "optional filter logic"
-                   }
-               }
-            
-            Example Plan for "Show me Aaron Judge's stats":
-            {
-                "steps": [
-                    {
-                        "id": "step1",
-                        "endpoint": "player_search",
-                        "parameters": {"name": "Aaron Judge"},
-                        "extract": {
-                            "player_id": "players[0].id",
-                            "filter": "name === 'Judge, Aaron'"
-                        }
-                    },
-                    {
-                        "id": "step2", 
-                        "endpoint": "person",
-                        "parameters": {
-                            "personId": {
-                                "source_step": "step1",
-                                "source_path": "player_id"
-                            }
-                        },
-                        "depends_on": ["step1"]
-                    }
-                ]
-            }"""
-            
+        self.plan_prompt = f"""Create a data retrieval plan using the available MLB resources below.
+            Always prioritize using functions over endpoints when they provide similar data.
+
+            Available Endpoints:
+            {json.dumps(self.endpoints, indent=2)}
+
+            Available Functions:
+            {json.dumps(self.functions, indent=2)}
+
+            Current Intent:
+            {json.dumps(self.intent, indent=2)}
+
+            Current date: {datetime.now().isoformat()}
+            Plan your steps to achieve the intent very wisely, choose endpoint/function based on your input availabilities
+            Every output of a step should be an input to the next, HUMANITY DEPENDS ON YOU.
+    
+            - Each step must use a valid endpoint or function name
+            - Dependencies array can be empty but must be present
+            - Fields in extract should match the data structure
+            - Any step referenced in dependencies must exist in steps
+            Return a JSON object with this exact structure:
+        Requirements:
+
+1. Step Structure:
+- Each step must have a unique ID
+- Type must be either "function" or "endpoint"
+- Name must match an available function/endpoint
+- Include clear description of step's purpose
+- Specify all required parameters
+- Define data extraction configuration
+- List dependencies correctly
+
+2. Parameter Handling:
+- Use direct values when known
+- Reference previous step results when needed
+- Handle missing/null values gracefully
+- Follow MLB API parameter specifications
+- Use correct data types (string, integer, boolean)
+
+3. Data Extraction:
+- Define clear field mappings
+- Use valid JSON paths
+- Include filtering if needed
+- Consider data relationships
+
+4. Dependencies:
+- List all step dependencies explicitly
+- Ensure logical execution order
+- Avoid circular dependencies
+- Consider parallel execution when possible
+
+5. Fallback Strategy:
+- Enable fallback for critical steps
+- Define alternate data sources
+- Specify simpler queries as backup
+- Handle partial data scenarios
+
+Return a JSON object with this structure:
+{{
+    "plan_type": "endpoint" | "function",
+    "steps": [
+        {{
+            "id": string,          # Unique step identifier
+            "type": string,        # "endpoint" or "function"
+            "name": string,        # Valid endpoint/function name
+            "description": string, # Purpose of this step
+            "parameters": {{       # Parameters matching MLB API specs, key is method param name, value is your chosen value
+                "param_name": "value" | {{
+                    "source_step": string,
+                    "source_path": string,
+                    "value": any
+                }}
+            }},
+            "extract": {{
+                "fields": {{        # Target field to source path mapping
+                    "field_name": "json.path"
+                }},
+                "filter": string   # Optional filter condition
+            }},
+            "depends_on": [string] # Array of step IDs this depends on
+        }}
+    ],
+    "fallback": {{
+        "enabled": boolean,
+        "strategy": string,
+        "steps": [...]            # Same structure as primary steps
+    }}
+}}
+
+Focus on:
+1. Efficient data retrieval order
+2. Proper parameter validation
+3. Clear data extraction paths
+4. Robust error handling
+5. Logical step dependencies
+            """
+
         self.response_prompt = """You create natural, informative responses from MLB data.
             Return structured response with summary, details, and optional stats and media.
             Follow the schema exactly for all fields."""
@@ -181,245 +308,308 @@ class MLBAgent:
             Return a string with your conversational response."""
 
     async def analyze_intent(self, query: str) -> IntentAnalysis:
-        '''Get structured intent analysis'''
+            """Enhanced intent analysis with structured schema"""
+            try:
+                result = await asyncio.to_thread(
+                    self.model.generate_content,
+                    f"{self.intent_prompt}\n{query}",
+                    generation_config=genai.GenerationConfig(
+                        response_mime_type='application/json',
+                        response_schema=IntentAnalysis
+                    )
+                )
+
+                parsed_result = json.loads(result.text)
+                # Convert enum strings to enum values
+                parsed_result["intent"]["type"] = IntentType(parsed_result["intent"]["type"])
+                parsed_result["intent"]["specificity"] = Specificity(parsed_result["intent"]["specificity"])
+                parsed_result["intent"]["timeframe"] = Timeframe(parsed_result["intent"]["timeframe"])
+                parsed_result["intent"]["complexity"] = Complexity(parsed_result["intent"]["complexity"])
+                
+                parsed_result["context"]["time_frame"] = Timeframe(parsed_result["context"]["time_frame"])
+                parsed_result["context"]["comparison_type"] = ComparisonType(parsed_result["context"]["comparison_type"])
+                parsed_result["context"]["stat_focus"] = StatFocus(parsed_result["context"]["stat_focus"])
+                parsed_result["context"]["sentiment"] = Sentiment(parsed_result["context"]["sentiment"])
+
+                # Validate and clean entities
+                entities = parsed_result.get("entities", {})
+                for key in entities:
+                    if not isinstance(entities[key], list):
+                        entities[key] = [entities[key]] if entities[key] else []
+
+                return parsed_result
+
+            except Exception as e:
+                print(f"Error in analyze_intent: {str(e)}")
+                # Return default fallback intent
+                return {
+                    "mlb_query": False,
+                    "intent": {
+                        "type": IntentType.CONVERSATION,
+                        "description": "General conversation",
+                        "specificity": Specificity.GENERAL,
+                        "timeframe": Timeframe.CURRENT,
+                        "complexity": Complexity.SIMPLE
+                    },
+                    "entities": {
+                        "teams": [], "players": [], "dates": [],
+                        "stats": [], "locations": [], "events": []
+                    },
+                    "context": {
+                        "time_frame": Timeframe.CURRENT,
+                        "comparison_type": ComparisonType.NONE,
+                        "stat_focus": StatFocus.NONE,
+                        "sentiment": Sentiment.NEUTRAL,
+                        "requires_data": False,
+                        "follow_up": False,
+                        "data_requirements": []
+                    }
+                }
+
+    def _create_error_response(self, message: str, error: str) -> MLBResponse:
+        """Create a graceful error response"""
+        return {
+            "message": "I encountered an issue processing your request.",
+            "conversation": "I apologize, but I ran into a technical issue. Could you try rephrasing your question?",
+            "data_type": "error",
+            "data": {"error": error},
+            "context": {},
+            "suggestions": [
+                "Try asking about today's games",
+                "Look up a specific player",
+                "Check team standings"
+            ],
+            "media": None
+        }
+
+    def _create_fallback_response(self, message: str, intent: IntentAnalysis) -> MLBResponse:
+        """Create a response when MLB data processing fails"""
+        return {
+            "message": "I couldn't retrieve the specific baseball data you requested.",
+            "conversation": "I understand you're asking about baseball, but I'm having trouble getting that specific information. Could you try asking in a different way?",
+            "data_type": intent.get('intent', {}).get('type', 'general').value,
+            "data": {},
+            "context": {"intent": intent},
+            "suggestions": [
+                "Try a simpler query",
+                "Ask about basic stats",
+                "Look up general team info"
+            ],
+            "media": None
+        }
+    async def create_data_plan(self, intent: IntentAnalysis) -> DataRetrievalPlan:
+        """Generate structured data retrieval plan with improved schema validation"""
         try:
-            result = await asyncio.to_thread(
-                self.model.generate_content,
-                f"{self.intent_prompt}\n\nAnalyze this MLB query: '{query}'",
-                generation_config=genai.GenerationConfig(
-                    response_mime_type="application/json",
-                    response_schema={
-                    "type": "object",
-                    "properties": {
-                        "primary_intent": {
-                            "type": "string",
-                            "enum": ["team_info", "player_info", "game_info", "stats", 
-                                   "standings", "schedule", "highlights"]
-                        },
-                        "entities": {
-                            "type": "object",
-                            "properties": {
-                                "team": {"type": "string"},
-                                "player": {"type": "string"},
-                                "date": {"type": "string"},
-                                "season": {"type": "integer"},
-                                "game_id": {"type": "string"}
+            # Compile available resources
+            available_endpoints = list(self.endpoints.keys())
+            available_functions = [f["name"] for f in self.functions]
+
+            # Define valid types and methods statically
+            valid_types = {
+                "endpoint": True,
+                "function": True
+            }
+            
+            valid_methods = {
+                method: True for method in available_endpoints
+            }
+            valid_methods.update({
+                method: True for method in available_functions
+            })
+            
+            plan_types = {
+                "endpoint": True,
+                "function": True,
+            }
+
+            # Define response schema
+            response_schema = {
+            "type": "object",
+            "properties": {
+                "plan_type": {
+                    "type": "string"
+                },
+                "steps": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "id": {"type": "string"},
+                            "type": {
+                                "type": "string"
+                            },
+                            "name": {"type": "string"},
+                            "description": {"type": "string"},
+                            "parameters": {
+                                "type": "object",
+                                "properties": {
+                                    "source_step": {"type": "string"},
+                                    "source_path": {"type": "string"},
+                                    "filter": {"type": "string"},
+                                    "value": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "extract": {
+                                "type": "object",
+                                "properties": {
+                                    "fields": {
+                                        "type": "object",
+                                        "properties": {
+                                            "player_ids": {"type": "string"},
+                                            "names": {"type": "string"},
+                                            "stats": {"type": "string"},
+                                            "info": {"type": "string"},
+                                            "team_ids": {"type": "string"},
+                                            "game_ids": {"type": "string"},
+                                            "dates": {"type": "string"},
+                                            "scores": {"type": "string"}
+                                        },
+                                    },
+                                    "filter": {"type": "string"}
+                                },
+                                "required": ["fields"]
+                            },
+                            "depends_on": {
+                                "type": "array",
+                                "items": {"type": "string"}
+                            },
+                            "required_for": {
+                                "type": "array",
+                                "items": {"type": "string"}
                             }
                         },
-                        "time_context": {
-                            "type": "string",
-                            "enum": ["recent", "historical", "upcoming", "current", "season"]
+                        "required": ["id", "type", "name", "description", "parameters", "extract", "depends_on"]
+                    }
+                },
+"fallback": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {"type": "boolean"},
+                        "strategy": {"type": "string"},
+                        "steps": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "id": {"type": "string"},
+                                    "endpoint": {"type": "string"},
+                                    "parameters": {
+                                        "type": "object",
+                                        "properties": {
+                                            "source_step": {"type": "string"},
+                                            "source_path": {"type": "string"},
+                                            "filter": {"type": "string"}
+                                        }
+                                    },
+                                    "extract": {
+                                        "type": "object",
+                                        "properties": {
+                                            "fields": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "player_ids": {"type": "string"},
+                                                    "names": {"type": "string"},
+                                                    "stats": {"type": "string"},
+                                                    "info": {"type": "string"}
+                                                }
+                                            },
+                                            "filter": {"type": "string"}
+                                        },
+                                        "required": ["fields"]
+                                    },
+                                    "depends_on": {
+                                        "type": "array",
+                                        "items": {"type": "string"}
+                                    }
+                                },
+                                "required": ["id", "endpoint", "parameters", "extract", "depends_on"]
+                            }
+                        }
+                    },
+                    "required": ["enabled", "strategy", "steps"]
+                },
+                "dependencies": {
+                    "type": "object",
+                    "properties": {
+                        "step1": {
+                            "type": "array",
+                            "items": {"type": "string"}
                         },
-                        "data_requirements": {
+                        "step2": {
                             "type": "array",
                             "items": {"type": "string"}
                         }
-                    },
-                    "required": ["primary_intent", "entities", "time_context", "data_requirements"]
+                    }
                 }
-            )
-        )
-            parsed_result = json.loads(result.text)
-            print(f"Parsed intent result: {parsed_result}")  # Debug log
-            return parsed_result
-        except Exception as e:
-            print(f"Error in analyze_intent: {str(e)}, Response: {result.text if hasattr(result, 'text') else 'No text'}")
-            raise
-
-    async def create_data_plan(self, intent: IntentAnalysis) -> DataRetrievalPlan:
-        """Generate structured data retrieval plan using exact endpoint keys with improved error handling"""
-        
-        # First get available endpoints
-        available_endpoints = list(self.endpoints.keys())
-        
-        # Clean and validate intent entities
-        cleaned_entities = {}
-        for key, value in intent.get('entities', {}).items():
-            if value and value.lower() != 'null':
-                cleaned_entities[key] = value
-        
-        # Create base prompt with sanitized json
-        intent_dict = {
-            "primary_intent": intent.get('primary_intent', ''),
-            "entities": cleaned_entities,
-            "time_context": intent.get('time_context', ''),
-            "data_requirements": list(intent.get('data_requirements', []))  # Convert to list explicitly
+            },
+            "required": ["plan_type", "steps", "fallback", "dependencies"]
         }
-        
-        prompt = f"""Create a data retrieval plan using ONLY these exact MLB API endpoint keys:
-        {available_endpoints}
+    
+            # Define available methods statically to avoid list concatenation
+            valid_methods = {
+                method: True for method in available_endpoints
+            }
+            valid_methods.update({
+                method: True for method in available_functions
+            })
 
-        Current Intent: {json.dumps(intent_dict, default=str)}
-
-        IMPORTANT: Only use endpoint names from the list above - they must match exactly.
-        Do not modify or make up new endpoint names. Always start with endpoints not requiring any params nor queries.
-        
-        For general player info queries without a specific player, use these steps:
-        1. Get list of top players (based on stats/awards)
-        2. Get details for those players
-        3. Get their recent achievements
-        
-        Return a plan as JSON with steps using these exact endpoint keys."""
-
-        try:
+            # Generate plan using LLM
             result = await asyncio.to_thread(
                 self.model.generate_content,
-                prompt,
+                self.plan_prompt,
                 generation_config=genai.GenerationConfig(
+                    temperature=0.2,
                     response_mime_type="application/json",
-                    response_schema={
-                        "type": "object",
-                        "properties": {
-                            "steps": {
-                                "type": "array",
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "id": {"type": "string"},
-                                        "endpoint": {
-                                            "type": "string",
-                                            "enum": available_endpoints
-                                        },
-                                        "parameters": {
-                                            "type": "object",
-                                            "properties": {
-                                                "source_step": {"type": "string"},
-                                                "source_path": {"type": "string"},
-                                                "filter": {"type": "string"}
-                                            }
-                                        },
-                                        "extract": {
-                                            "type": "object",
-                                            "properties": {
-                                                "fields": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "player_ids": { "type": "string" },
-                                                        "names": { "type": "string" },
-                                                        "stats": { "type": "string" },
-                                                        "info": { "type": "string" }
-                                                    }
-                                                },
-                                                "filter": {"type": "string"}
-                                            },
-                                            "required": ["fields"]
-                                        },
-                                        "depends_on": {
-                                            "type": "array", 
-                                            "items": {"type": "string"}
-                                        },
-                                        "required_for": {
-                                            "type": "array",
-                                            "items": {"type": "string"}
-                                        }
-                                    },
-                                    "required": ["id", "endpoint", "parameters", "extract", "depends_on"]
-                                }
-                            },
-                            "dependencies": {
-                                "type": "object",
-                                "properties": {
-                                    "step1": {
-                                        "type": "array",
-                                        "items": { "type": "string" }
-                                    },
-                                    "step2": {
-                                        "type": "array",
-                                        "items": { "type": "string" }
-                                    }
-                                }
-                            }
-                        },
-                        "required": ["steps", "dependencies"]
-                    }
+                    response_schema=response_schema
                 )
             )
 
             parsed_result = json.loads(result.text)
+            print(parsed_result)
+            # Validate plan type
+            if parsed_result["plan_type"] not in plan_types:
+                raise ValueError(f"Invalid plan type: {parsed_result['plan_type']}")
             
-            # Validate endpoints
-            for step in parsed_result.get('steps', []):
-                if step['endpoint'] not in self.endpoints:
-                    print(f"Warning: Generated invalid endpoint {step['endpoint']}")
-                    # Replace with closest matching endpoint
-                    for available in available_endpoints:
-                        if step['endpoint'].lower() in available.lower():
-                            step['endpoint'] = available
-                            break
+            # Process steps
+            for step in parsed_result["steps"]:
+                if step["type"] not in valid_types:
+                    raise ValueError(f"Invalid step type: {step['type']}")
+                if step["name"] not in valid_methods:
+                    raise ValueError(f"Invalid step name: {step['name']}")
+                
+            # Process fallback steps
+            if parsed_result["fallback"]["steps"]:
+                for step in parsed_result["fallback"]["steps"]:
+                    if step["type"] not in valid_types:
+                        raise ValueError(f"Invalid fallback step type: {step['type']}")
+                    if step["name"] not in valid_methods:
+                        raise ValueError(f"Invalid fallback step name: {step['name']}")
+                    
+            # Validate dependencies
+            step_ids = {step["id"]: True for step in parsed_result["steps"]}
+            for step_deps in parsed_result["dependencies"].values():
+                for dep_id in step_deps:
+                    if dep_id not in step_ids:
+                        raise ValueError(f"Invalid dependency ID: {dep_id}")
             
-            # Ensure required fields exist
-            for step in parsed_result.get('steps', []):
-                if 'depends_on' not in step:
-                    step['depends_on'] = []
-                if 'required_for' not in step:
-                    step['required_for'] = []
-                if 'extract' not in step:
-                    step['extract'] = {
-                        "fields": {},
-                        "filter": None
-                    }
-            
-            print("Parsed data plan: ", parsed_result)
             return parsed_result
-
+            
         except Exception as e:
             print(f"Error in create_data_plan: {str(e)}")
-            # Return a safe default plan for player info
-            return {
-                "steps": [
-                    {
-                        "id": "step1",
-                        "endpoint": "stats_leaders",
-                        "parameters": {
-                            "season": 2024,
-                            "leaderCategories": "homeRuns",  # Single category to avoid list issues
-                            "statType": "yearByYear",
-                            "limit": 5
-                        },
-                        "extract": {
-                            "fields": {
-                                "player_ids": "leaders[*].person.id",
-                                "names": "leaders[*].person.fullName"
-                            },
-                            "filter": None
-                        },
-                        "depends_on": [],
-                        "required_for": ["step2"]
-                    },
-                    {
-                        "id": "step2",
-                        "endpoint": "people",
-                        "parameters": {
-                            "personId": {
-                                "source_step": "step1",
-                                "source_path": "leaders[0].person.id",
-                                "filter": None
-                            }
-                        },
-                        "extract": {
-                            "fields": {
-                                "info": "people[*]",
-                                "stats": "stats"
-                            },
-                            "filter": None
-                        },
-                        "depends_on": ["step1"],
-                        "required_for": []
-                    }
-                ],
-                "dependencies": {
-                    "step1": [],
-                    "step2": ["step1"]
-                }
-            }
+            # Return simplified fallback plan
+            return self._create_fallback_plan(intent)
+
     async def execute_plan(self, deps: MLBDeps, plan: DataRetrievalPlan) -> Dict[str, Any]:
         '''Execute the retrieval plan with data filtering and extraction'''
         results = {}
         
         for step in plan['steps']:
             # Execute current step
+            print(step)
             raw_result = await self._execute_step(deps, step, results)
-            
+            print(f"State at {step["id"]} is {self.state}")
             if not raw_result:
                 continue
                 
@@ -506,126 +696,374 @@ class MLBAgent:
     async def _execute_step(
         self, 
         deps: MLBDeps, 
-        step: APIStep,
+        step: Dict[str, Any],
         prior_results: Dict[str, Any]
     ) -> Optional[Dict[str, Any]]:
-        """Execute API step with improved error handling and parameter validation"""
+        """Execute step based on method type (function or endpoint)"""
         try:
-            # Get endpoint info
-            endpoint_info = self.endpoints.get(step['endpoint'])
-            if not endpoint_info:
-                raise ValueError(f"Invalid endpoint: {step['endpoint']}")
-
-            # Validate and resolve parameters
-            resolved_params = {}
-            for param_name, param_value in step['parameters'].items():
-                # Skip null parameters
-                if param_value is None or param_value == 'null':
-                    continue
+            # Resolve basic parameters
+            method_type = step.get('type', '')
+            params = step.get('parameters', {})
+            print(method_type)
+            print(params)
+            # Execute based on method type
+            if method_type == "function":
+                result = await self._execute_function_step(deps, step, prior_results)
+                self.state |= step | {"output": result["output"]}
+                return result
+            elif method_type == "endpoint":
+                result = await self._execute_endpoint_step(deps, step, prior_results)
+                self.state |= step | {"output": result["output"]}
+                return result
+            else:
+                print(f"Unknown method type: {method_type}")
+                return None
+        except Exception as e:
+            print(f"Error executing step {step.get('stepNumber')}: {str(e)}")
+            
+            # Try fallback if specified
+            if step.get('fallback'):
+                try:
+                    print(f"Attempting fallback for step {step.get('stepNumber')}")
+                    return await self._execute_fallback(deps, step, prior_results)
+                except Exception as fallback_error:
+                    print(f"Fallback failed: {str(fallback_error)}")
                     
-                if isinstance(param_value, str) and '_from_step' in param_value:
-                    source_step = param_value.split('_from_step')[1]
-                    if source_step not in prior_results:
-                        continue  # Skip if dependent result not available
-                        
-                    source_data = prior_results[source_step]
-                    if isinstance(source_data, dict):
-                        # Try direct key match
-                        if param_name.lower() in source_data:
-                            resolved_params[param_name] = source_data[param_name.lower()]
-                        # Try nested data
-                        else:
-                            for key, value in source_data.items():
-                                if isinstance(value, dict) and param_name.lower() in value:
-                                    resolved_params[param_name] = value[param_name.lower()]
-                                    break
-                else:
-                    resolved_params[param_name] = param_value
+            return None
 
-            # Skip step if required parameters are missing
-            if endpoint_info.get('required_params'):
-                missing_params = [p for p in endpoint_info['required_params'] 
-                                if p not in resolved_params]
-                if missing_params:
-                    print(f"Skipping step {step['id']} - missing required params: {missing_params}")
-                    return None
+    async def _execute_function_step(
+        self,
+        deps: MLBDeps, 
+        step: Dict[str, Any],
+        prior_results: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
+        """Execute MLB stats function"""
+        try:
+            # Get function name from parameters
+            function_name = step['name'] #.get('function')
+            if not function_name or function_name.lower() == 'none':
+                # Handle custom processing functions
+                return await self._execute_custom_processing(step, prior_results)
+            #print("lj", function_name)
+            # Find function info
+            function_info = next((f for f in self.functions if f['name'] == function_name), None)
+            if not function_info:
+                raise ValueError(f"Invalid function: {function_name}")
 
+            # Prepare function parameters
+            resolved_params = self._resolve_parameters(step['parameters'], prior_results)
+            
+            # Generate function execution code
+            execution_code = f"""
+    import statsapi
+
+    try:
+        result = statsapi.{function_name}({resolved_params["value"]})
+        print(json.dumps(result))
+    except Exception as e:
+        print(json.dumps({{"error": str(e)}}))
+    """
+
+            print(execution_code)
+            # Execute function using REPL
+            repl_result = await self.repl(code=execution_code)
+            print("repl result:", repl_result)
+            
+            if repl_result.get('status') == 'error':
+                raise RuntimeError(f"Function execution failed: {repl_result.get('error')}")
+                
+            # Process result
+            try:
+                output = repl_result.get('output')
+                if not output:
+                    raise ValueError("No output from function execution")
+                    
+                result = json.loads(output)
+                if isinstance(result, dict) and "error" in result:
+                    raise RuntimeError(f"Function error: {result['error']}")
+                
+                #TODO: If result is large than a threshold, continue, but if less, route to LLM to extract params for next steps
+                # Process data extraction if specified
+                if step.get('dataExtraction'):
+                    result = await self._process_extraction(result, step['dataExtraction'])
+                    
+                # Apply filtering if specified
+                if step.get('filtering') and step['filtering'].lower() != 'none':
+                    result = await self._apply_filtering(result, step['filtering'])
+                    
+                return result
+                
+            except json.JSONDecodeError as e:
+                raise ValueError(f"Failed to parse function result: {repl_result}")
+                
+        except Exception as e:
+            print(f"Function execution error: {str(e)}")
+            return None
+
+    async def _execute_endpoint_step(
+        self,
+        deps: MLBDeps,
+        step: Dict[str, Any],
+        prior_results: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
+        """Execute MLB API endpoint"""
+        try:
+            # Get endpoint from parameters
+            endpoint_name = step['parameters'].get('endpoint')
+            if not endpoint_name:
+                raise ValueError("No endpoint specified")
+                
+            # Get endpoint info
+            endpoint_info = self.endpoints.get(endpoint_name)
+            if not endpoint_info:
+                raise ValueError(f"Invalid endpoint: {endpoint_name}")
+
+            # Resolve parameters
+            resolved_params = await self._resolve_parameters(step['parameters'], prior_results)
+            
             # Get formatted URL
             request_info = await self.get_formatted_url(
-                step['endpoint'],
+                endpoint_name,
                 endpoint_info,
                 resolved_params,
                 prior_results
             )
             
             if not request_info or 'url' not in request_info:
-                return None
+                raise ValueError("Failed to format URL")
 
             # Make request
-            try:
-                response = await deps.client.get(request_info['url'])
-                response.raise_for_status()
-                raw_data = response.json()
-            except Exception as e:
-                print(f"API request failed for step {step['id']}: {str(e)}")
-                return None
+            response = await deps.client.get(request_info['url'])
+            response.raise_for_status()
+            result = response.json()
+            
+            # Process data extraction if specified
+            if step.get('dataExtraction'):
+                result = await self._process_extraction(result, step['dataExtraction'])
+                
+            # Apply filtering if specified
+            if step.get('filtering') and step['filtering'].lower() != 'none':
+                result = await self._apply_filtering(result, step['filtering'])
+                
+            return result
+            
+        except Exception as e:
+            print(f"Endpoint execution error: {str(e)}")
+            return None
 
-            # Generate processing code
-            schema = self._analyze_response_schema(raw_data)
-            processing_code = await self.generate_processing_code(
-                step['endpoint'],
-                schema,
-                self.plan
+    async def _execute_custom_processing(
+        self,
+        step: Dict[str, Any],
+        prior_results: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
+        """Execute custom data processing step"""
+        try:
+            # Generate processing code based on step description and parameters
+            processing_code = await self._generate_processing_code(
+                step['description'],
+                step['parameters'],
+   
+             prior_results
             )
-
-            # Create temporary directory for code execution
+            
+            # Prepare data for processing
+            process_data = {
+                'prior_results': prior_results,
+                'parameters': step['parameters']
+            }
+            
+            # Execute processing
             with tempfile.TemporaryDirectory() as temp_dir:
-                # Write raw data to temp file
-                data_file_path = os.path.join(temp_dir, "data.json")
-                with open(data_file_path, "w", encoding="utf-8") as f:
-                    json.dump(raw_data, f)
-
-                # Set up execution environment with temp file loading
+                data_file = os.path.join(temp_dir, 'process_data.json')
+                with open(data_file, 'w') as f:
+                    json.dump(process_data, f)
+                    
                 execution_code = f"""
     import json
 
+    {processing_code}
+
     try:
-        {processing_code}
-        
-        # Load data from temp file
-        with open('{data_file_path}', 'r') as f:
+        with open('{data_file}', 'r') as f:
             data = json.load(f)
         
-        result = process_data(data)
+        result = process_data(data['prior_results'], data['parameters'])
         print(json.dumps(result))
     except Exception as e:
         print(json.dumps({{"error": str(e)}}))
     """
 
-                # Execute code using REPL
                 repl_result = await self.repl(code=execution_code)
                 
                 if repl_result.get('status') == 'error':
-                    raise RuntimeError(f"Code execution failed: {repl_result.get('error')}")
+                    raise RuntimeError(f"Processing failed: {repl_result.get('error')}")
                     
                 try:
                     output = repl_result.get('output')
                     if not output:
-                        raise ValueError("No output from code execution")
+                        raise ValueError("No output from processing")
                         
-                    processed_result = json.loads(output)
-                    if isinstance(processed_result, dict) and "error" in processed_result:
-                        raise RuntimeError(f"Processing error: {processed_result['error']}")
+                    result = json.loads(output)
+                    if isinstance(result, dict) and "error" in result:
+                        raise RuntimeError(f"Processing error: {result['error']}")
                         
-                    return processed_result
+                    return result
                     
                 except json.JSONDecodeError as e:
                     raise ValueError(f"Failed to parse processing result: {repl_result}")
-
+                    
         except Exception as e:
-            print(f"Error executing step {step['id']}: {str(e)}")
+            print(f"Custom processing error: {str(e)}")
             return None
 
+    async def _process_extraction(
+        self, 
+        data: Any, 
+        extraction_info: str
+    ) -> Any:
+        """Process data extraction based on extraction info"""
+        # Use LLM to generate extraction code
+        prompt = f"""Generate Python code to extract data according to this specification:
+        
+        Data structure:
+        {json.dumps(data)[:1000] if isinstance(data, (dict, list)) else str(data)[:1000]}
+        
+        Extraction needed:
+        {extraction_info}
+        
+        Return a Python function named extract_data that takes the data as input and returns the extracted result.
+        """
+        
+        try:
+            result = await asyncio.to_thread(
+                self.code_model.generate_content,
+                prompt,
+                generation_config=genai.GenerationConfig(
+                    response_mime_type='text/plain'
+                )
+            )
+            
+            extraction_code = result.text.strip().replace('```python', '').replace('```', '')
+            print(extraction_code)
+            # Execute extraction
+            with tempfile.TemporaryDirectory() as temp_dir:
+                data_file = os.path.join(temp_dir, 'data.json')
+                with open(data_file, 'w') as f:
+                    json.dump(data, f)
+                    
+                execution_code = f"""
+    import json
+
+    {extraction_code}
+
+    try:
+        with open('{data_file}', 'r') as f:
+            data = json.load(f)
+            
+        result = extract_data(data)
+        print(json.dumps(result))
+    except Exception as e:
+        print(json.dumps({{"error": str(e)}}))
+    """
+                print(execution_code)
+                repl_result = await self.repl(code=execution_code)
+                
+                if repl_result.get('status') == 'error':
+                    raise RuntimeError(f"Extraction failed: {repl_result.get('error')}")
+                    
+                try:
+                    output = repl_result.get('output')
+                    if not output:
+                        raise ValueError("No output from extraction")
+                        
+                    result = json.loads(output)
+                    if isinstance(result, dict) and "error" in result:
+                        raise RuntimeError(f"Extraction error: {result['error']}")
+                        
+                    return result
+                    
+                except json.JSONDecodeError:
+                    return data  # Return original data if extraction fails
+                    
+        except Exception as e:
+            print(f"Extraction error: {str(e)}")
+            return data
+            
+    async def _apply_filtering(
+        self, 
+        data: Any, 
+        filtering_info: str
+    ) -> Any:
+        """Apply filtering based on filtering info"""
+        if not filtering_info or filtering_info.lower() == 'none':
+            return data
+            
+        # Use LLM to generate filtering code
+        prompt = f"""Generate Python code to filter data according to this specification:
+        
+        Data structure:
+        {json.dumps(data)[:1000] if isinstance(data, (dict, list)) else str(data)[:1000]}
+        
+        Filtering needed:
+        {filtering_info}
+        
+        Return a Python function named filter_data that takes the data as input and returns the filtered result.
+        """
+        
+        try:
+            result = await asyncio.to_thread(
+                self.code_model.generate_content,
+                prompt,
+                generation_config=genai.GenerationConfig(
+                    response_mime_type='text/plain'
+                )
+            )
+            
+            filtering_code = result.text.strip().replace('```python', '').replace('```', '')
+            
+            # Execute filtering
+            with tempfile.TemporaryDirectory() as temp_dir:
+                data_file = os.path.join(temp_dir, 'data.json')
+                with open(data_file, 'w') as f:
+                    json.dump(data, f)
+                    
+                execution_code = f"""
+    import json
+
+    {filtering_code}
+
+    try:
+        with open('{data_file}', 'r') as f:
+            data = json.load(f)
+            
+        result = filter_data(data)
+        print(json.dumps(result))
+    except Exception as e:
+        print(json.dumps({{"error": str(e)}}))
+    """
+
+                repl_result = await self.repl(code=execution_code)
+                
+                if repl_result.get('status') == 'error':
+                    raise RuntimeError(f"Filtering failed: {repl_result.get('error')}")
+                    
+                try:
+                    output = repl_result.get('output')
+                    if not output:
+                        raise ValueError("No output from filtering")
+                        
+                    result = json.loads(output)
+                    if isinstance(result, dict) and "error" in result:
+                        raise RuntimeError(f"Filtering error: {result['error']}")
+                        
+                    return result
+                    
+                except json.JSONDecodeError:
+                    return data  # Return original data if filtering fails
+                    
+        except Exception as e:
+            print(f"Filtering error: {str(e)}")
+            return data
     async def get_formatted_url(
         self,
         endpoint_name: str,
@@ -633,11 +1071,12 @@ class MLBAgent:
         parameters: Dict[str, Any],
         prior_results: Dict[str, Any]
     ) -> Dict[str, Any]:
+        print(endpoint_info)
         """Get formatted URL and parameters directly from LLM"""
         prompt = f"""Given this MLB API endpoint and data, return the formatted URL and parameters.
 
         Endpoint: {endpoint_name}
-        Base URL: {endpoint_info['url']}
+        Base URL: {endpoint_info['endpoint']['url']}
         Paramteres: {parameters}
         Prior Results: {json.dumps(prior_results)}
 
@@ -757,7 +1196,7 @@ class MLBAgent:
         query: str, 
         intent: IntentAnalysis, 
         data: Dict[str, Any]
-    ) -> ResponseData:
+    ) -> Any:
         """Get structured response content"""
         try:
             result = await asyncio.to_thread(
@@ -812,7 +1251,7 @@ class MLBAgent:
         self,
         message: str,
         intent: Optional[IntentAnalysis] = None,
-        response_data: Optional[ResponseData] = None
+        response_data: Optional[Any] = None
     ) -> str:
         """Generate a friendly conversational response"""
         try:
@@ -843,7 +1282,7 @@ class MLBAgent:
     async def _generate_suggestions(
         self, 
         intent: IntentAnalysis, 
-        response: ResponseData
+        response: Any
     ) -> List[str]:
         """Generate contextual suggestions using LLM"""
         result = await asyncio.to_thread(
@@ -867,106 +1306,65 @@ class MLBAgent:
         )
         return json.loads(result.text)
 
-    async def _generate_actions(
-        self,
-        intent: IntentAnalysis,
-        response: ResponseData
-    ) -> List[Action]:
-        '''Generate available actions using LLM'''
-        result = await asyncio.to_thread(
-            self.model.generate_content,
-            f"""{self.action_prompt}
-            
-            Current intent:
-            {json.dumps(intent, indent=2)}
-            
-            Current response:
-            {json.dumps(response, indent=2)}""",
-            generation_config=genai.GenerationConfig(
-                response_mime_type="application/json",
-                response_schema={
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "type": {"type": "string"},
-                            "label": {"type": "string"},
-                            "data": {"type": "object"}
-                        },
-                        "required": ["type", "label", "data"]
-                    },
-                    "minItems": 1,
-                    "maxItems": 3
-                }
-            )
-        )
-        return json.loads(result.text)
-
-
     async def process_message(self, deps: MLBDeps, message: str) -> MLBResponse:
-        """Process message with improved error handling"""
-        try:
-            # 1. Get intent analysis
-            self.intent = await self.analyze_intent(message)
-            if not self.intent:
-                raise ValueError("Failed to analyze intent")
+            """Process message with improved intent handling"""
+            try:
+                # Get intent analysis
+                intent = await self.analyze_intent(message)
+                
+                # MLB-related query path
+                if intent["is_mlb_related"] and intent.get("requires_data", True):
+                    # Full MLB processing path
+                    plan = await self.create_data_plan(intent)
+                    self.state = plan
+                    data = await self.execute_plan(deps, plan)
+                    response_data = await self.format_response(message, intent, data)
+                    suggestions = await self._generate_suggestions(intent, response_data)
+                    conversation = await self.generate_conversation(message, intent, response_data)
+                    
+                    return {
+                        "message": response_data['summary'],
+                        "conversation": conversation,
+                        "data_type": intent['primary_intent'],
+                        "data": response_data['details'],
+                        "context": {"intent": intent},
+                        "suggestions": suggestions,
+                        "media": response_data.get('media'),
+                    }
+                
+                # Non-MLB or simple MLB conversation path
+                else:
+                    conversation = await self.generate_conversation(message, intent)
+                    
+                    # Generate contextual suggestions
+                    suggestions = []
+                    if intent.get("sentiment") == "negative":
+                        suggestions = [
+                            "Let me show you some exciting game highlights",
+                            "Would you like to see today's matchups?",
+                            "I can tell you about recent thrilling games"
+                        ]
+                    else:
+                        suggestions = [
+                            "Ask about today's games",
+                            "Look up your favorite team",
+                            "Check player stats"
+                        ]
+                    
+                    return {
+                        "message": intent.get("intent_description", "Let's talk baseball!"),
+                        "conversation": conversation,
+                        "data_type": "conversation",
+                        "data": {},
+                        "context": {"intent": intent},
+                        "suggestions": suggestions,
+                        "media": None,
+                        "actions": []
+                    }
 
-            # 2. Get retrieval plan
-            self.plan = await self.create_data_plan(self.intent)
-            if not self.plan:
-                raise ValueError("Failed to create data retrieval plan")
-
-            # 3. Execute plan
-            data = await self.execute_plan(deps, self.plan)
-
-            # 4. Generate response content
-            response_data = await self.format_response(message, self.intent, data)
-            
-            # 5. Generate suggestions and actions
-            suggestions = await self._generate_suggestions(self.intent, response_data)
-            actions = await self._generate_actions(self.intent, response_data)
-            
-            # 6. Generate conversation
-            conversation = await self.generate_conversation(
-                message, 
-                self.intent,
-                response_data
-            )
-
-            return {
-                "message": response_data['summary'],
-                "conversation": conversation,
-                "data_type": self.intent['primary_intent'],
-                "data": response_data['details'],
-                "context": {"intent": self.intent},
-                "suggestions": suggestions,
-                "media": response_data.get('media'),
-                "actions": actions
-            }
-
-        except Exception as e:
-            # Generate a friendly error response
-            error_conversation = await self.generate_conversation(
-                message,
-                {"primary_intent": "unknown", "entities": {}, "time_context": "current", "data_requirements": []},
-                {"summary": str(e), "details": {}}
-            )
-
-            return {
-                "message": f"I encountered an error but I'll try to help: {str(e)}",
-                "conversation": error_conversation,
-                "data_type": "error",
-                "data": {},
-                "context": {},
-                "suggestions": [
-                    "Try asking about a specific team",
-                    "Search for a player by name",
-                    "Ask about today's games"
-                ],
-                "media": None,
-                "actions": []
-            }
-
+            except Exception as e:
+                print(f"Error in process_message: {str(e)}")
+                return self._create_error_response(message, str(e))
     def _extract_and_filter(
         self,
         data: Any,
@@ -1007,8 +1405,162 @@ class MLBAgent:
                 
         return result
 
+    async def _generate_processing_code(
+        self,
+        description: str,
+        parameters: Dict[str, Any],
+        prior_results: Dict[str, Any]
+    ) -> str:
+        """Generate Python code for custom data processing steps"""
+        
+        # Create prompt for code generation
+        prompt = f"""Generate a Python function that processes MLB data according to this specification:
+        
+        Task Description: {description}
+        
+        Parameters: {json.dumps(parameters, indent=2)}
+        
+        Available Prior Results Keys: {list(prior_results.keys())}
+        
+        Requirements:
+        1. Function name must be 'process_data'
+        2. Takes two parameters: prior_results (dict) and parameters (dict)
+        3. Must handle missing or invalid data gracefully
+        4. Return processed data in JSON-serializable format
+        5. Include error handling and logging
+        
+        Example structure:
+        def process_data(prior_results: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any]:
+            try:
+                # Processing logic here
+                return processed_data
+            except Exception as e:
+                print(f"Processing error: {{str(e)}}")
+                return {{"error": str(e)}}
+        
+        Generate ONLY the Python function code, no explanations or markdown."""
+        
+        try:
+            # Get code from LLM
+            result = await asyncio.to_thread(
+                self.code_model.generate_content,
+                prompt,
+                generation_config=genai.GenerationConfig(
+                    response_mime_type='text/plain',
+                    temperature=0.2,  # Lower temperature for more focused code generation
+                    candidate_count=1
+                )
+            )
+            
+            # Clean up generated code
+            generated_code = result.text.strip()
+            generated_code = generated_code.replace('```python', '').replace('```', '')
+            
+            # Validate basic structure
+            if not generated_code.startswith('def process_data('):
+                # Fall back to default processing function if generation fails
+                return self._get_default_processing_code(description)
+                
+            # Add necessary imports
+            imports = """
+    import json
+    from typing import Dict, Any, List, Union
+    import statistics
+    from datetime import datetime
+    """
+            
+            return f"{imports}\n\n{generated_code}"
+            
+        except Exception as e:
+            print(f"Error generating processing code: {str(e)}")
+            return self._get_default_processing_code(description)
+            
+    def _get_default_processing_code(self, description: str) -> str:
+        """Get default processing code template"""
+        return """
+    import json
+    from typing import Dict, Any, List, Union
+
+    def process_data(prior_results: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any]:
+        try:
+            # Basic validation
+            if not prior_results or not parameters:
+                return {"error": "Missing required data"}
+                
+            processed_data = {}
+            
+            # Extract relevant data from prior results
+            for key, value in prior_results.items():
+                if isinstance(value, (dict, list)):
+                    processed_data[key] = value
+                    
+            # Apply any specified transformations
+            if parameters.get('transformations'):
+                for transform in parameters['transformations']:
+                    if transform == 'aggregate':
+                        processed_data = self._aggregate_data(processed_data)
+                    elif transform == 'sort':
+                        processed_data = self._sort_data(processed_data, parameters.get('sort_key'))
+                    elif transform == 'filter':
+                        processed_data = self._filter_data(processed_data, parameters.get('filter_condition'))
+                        
+            return processed_data
+            
+        except Exception as e:
+            print(f"Error in default processing: {str(e)}")
+            return {"error": str(e)}
+            
+    def _aggregate_data(data: Dict[str, Any]) -> Dict[str, Any]:
+        '''Basic data aggregation'''
+        aggregated = {}
+        for key, value in data.items():
+            if isinstance(value, list):
+                # Calculate basic statistics for numeric values
+                numeric_values = [v for v in value if isinstance(v, (int, float))]
+                if numeric_values:
+                    aggregated[f"{key}_stats"] = {
+                        "count": len(numeric_values),
+                        "sum": sum(numeric_values),
+                        "mean": statistics.mean(numeric_values),
+                        "median": statistics.median(numeric_values)
+                    }
+        return aggregated
+        
+    def _sort_data(data: Dict[str, Any], sort_key: str = None) -> Dict[str, Any]:
+        '''Basic data sorting'''
+        sorted_data = {}
+        for key, value in data.items():
+            if isinstance(value, list):
+                if sort_key and all(isinstance(item, dict) and sort_key in item for item in value):
+                    sorted_data[key] = sorted(value, key=lambda x: x[sort_key])
+                else:
+                    sorted_data[key] = sorted(value)
+            else:
+                sorted_data[key] = value
+        return sorted_data
+        
+    def _filter_data(data: Dict[str, Any], condition: str = None) -> Dict[str, Any]:
+        '''Basic data filtering'''
+        filtered_data = {}
+        for key, value in data.items():
+            if isinstance(value, list):
+                if condition and all(isinstance(item, dict) for item in value):
+                    filtered_data[key] = [
+                        item for item in value 
+                        if all(k in item for k in condition.split('=')[0].strip())
+                    ]
+                else:
+                    filtered_data[key] = value
+            else:
+                filtered_data[key] = value
+        return filtered_data
+    """
+
 # Create agent instance
 with open('src/core/constants/endpoints.json', 'r') as f:
     endpoints_json = f.read()
 
-mlb_agent = MLBAgent(api_key=settings.GEMINI_API_KEY, endpoints_json=endpoints_json)
+with open('src/core/constants/mlb_functions.json', 'r') as f:
+    functions_json = f.read()
+
+mlb_agent = MLBAgent(api_key=settings.GEMINI_API_KEY, endpoints_json=endpoints_json, functions_json=functions_json)

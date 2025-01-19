@@ -17,13 +17,7 @@ class ChatRequest(BaseModel):
 @router.post("/chat")
 async def chat(request: ChatRequest):
     """
-    Test endpoint for MLB chat agent.
-    
-    Sample request:
-    {
-        "message": "Tell me about the Yankees",
-        "context": {"favorite_team": "Yankees"}
-    }
+
     """
     async with httpx.AsyncClient() as client:
         deps = MLBDeps(client=client)
