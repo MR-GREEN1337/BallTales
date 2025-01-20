@@ -182,7 +182,7 @@ const OnboardingChat = () => {
     // Set thinking indicator after 3 seconds if no response
     thinkingTimeoutRef.current = setTimeout(() => {
       setShowThinking(true)
-    }, 3000)
+    }, 1500)
 
     try {
       const response = await axios.post<MLBResponse>(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat`, {

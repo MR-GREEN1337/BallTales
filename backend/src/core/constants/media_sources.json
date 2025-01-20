@@ -1,0 +1,39 @@
+{"sources": {
+    "team_logo": {
+        "url": "https://www.mlbstatic.com/team-logos/{teamId}.svg",
+        "description": "Get the official SVG logo for a specific MLB team. Returns a scalable vector graphic (SVG) image of the team's current official logo. The endpoint provides high-quality, resolution-independent team logos that can be resized without loss of quality.",
+        "required_params": [
+          "teamId"
+        ],
+        "optional_params": [],
+        "example_response": {
+          "type": "image/svg+xml",
+          "format": "SVG",
+          "typical_dimensions": "100x100 (scalable)",
+          "sample_usage": "Display(Image(url = f'https://www.mlbstatic.com/team-logos/{team_id}.svg', width=100, height=100))"
+        },
+        "notes": [
+          "The teamId must match the team's official MLB ID that can be obtained from the teams endpoint",
+          "SVG format allows for clean scaling to any size without quality loss",
+          "Can be used for both web display and print materials due to vector format",
+          "Current team logos only - does not include historical or alternate logos",
+          "Some visualization libraries may require additional configuration to display SVGs properly"
+        ],
+        "example_ids": {
+          "119": "Los Angeles Dodgers",
+          "147": "New York Yankees",
+          "121": "New York Mets",
+          "112": "Chicago Cubs",
+          "133": "Oakland Athletics"
+        }
+      },
+      "player_headshot": {
+        "url": "https://securea.mlb.com/mlb/images/players/head_shot/{playerId}.jpg",
+        "description": "Get the current official MLB.com headshot photo for a specific player. Returns a JPG image of the player's headshot. If no photo is available for the player, a default silhouette image is returned.",
+        "required_params": [
+          "playerId"
+        ],
+        "optional_params": [],
+        "notes": "The playerId must match the player's official MLB ID that can be obtained from the people endpoint. Images are typically 120x180 pixels in JPG format."
+      }
+}}

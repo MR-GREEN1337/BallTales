@@ -2,9 +2,11 @@ import asyncio
 from datetime import datetime
 import os
 import tempfile
+import traceback
 from typing import List, Optional, Dict, Any
 import json
 import google.generativeai as genai
+import pandas as pd
 from src.api.models import (
     Specificity,
     MLBResponse,
@@ -26,11 +28,18 @@ class MLBAgent:
     def __init__(self, api_key: str, endpoints_json: str, functions_json: str):
         genai.configure(api_key=api_key)
 
+        #Models
         self.model = genai.GenerativeModel("gemini-1.5-flash")
+        self.gemini_2_model = genai.GenerativeModel("gemini-2.0-flash-exp")
         self.model_8b = genai.GenerativeModel("gemini-1.5-flash-8b")
         self.code_model = genai.GenerativeModel("gemini-1.5-pro")
+
+        #Data
         self.endpoints = json.loads(endpoints_json)["endpoints"]
         self.functions = json.loads(functions_json)["functions"]
+        self.homeruns = pd.read_csv("src/core/constants/mlb_homeruns.csv")
+        self.media_source = json.loads(media_json)["sources"]
+
         self.intent = None
         self.plan = None
         self.repl = MLBPythonREPL(timeout=8)
@@ -144,7 +153,7 @@ KNOWN CONTEXT (Use these values directly - DO NOT create steps to fetch them):
 
 PLANNING EXAMPLES:
 
-1. Simple Logo Request:
+3. Simple Logo Request:
 Input: "Show me the Yankees logo"
 You should return:
 {{
@@ -173,7 +182,7 @@ You should return:
     ]
 }}
 
-2. Player Stats Request:
+4. Player Stats Request:
 Input: "How's Aaron Judge doing this season?"
 Intent: {{
     "type": "PLAYER_STATS",
@@ -208,13 +217,25 @@ Plan:
     ]
 }}
 
-Planning Rules:
-1. Input Resolution:
+PLANNING RULES:
+
+1. Highlight Request Handling:
+   • When intent type is HIGHLIGHT, prioritize video search
+   • Use highlight_search step type for video lookups
+   • Consider entity context (players, teams, dates) for search
+   • Include relevant metadata in extraction
+
+2. Data Source Selection:
+   • Prefer direct data source if available (highlight database)
+   • Fall back to API endpoints if needed
+   • Combine sources for mixed requests
+
+3. Input Resolution:
    • team_logo, team_stats need → teamId from lookup_team
    • player_stats, player_info need → personId from lookup_player
    • game endpoints need → gamePk from schedule
    
-2. Efficiency:
+4. Efficiency:
    • Use direct endpoint if all inputs available
    • Minimize steps - don't fetch unnecessary data
    • Batch related queries when possible
@@ -1448,7 +1469,7 @@ The plan must follow this exact schema:
             
             try:
                 model_response = await asyncio.to_thread(
-                    self.code_model.generate_content,
+                    self.gemini_2_model.generate_content,
                     prompt,
                     generation_config=genai.GenerationConfig(
                         response_mime_type="application/json"
@@ -1493,7 +1514,7 @@ The plan must follow this exact schema:
                 """
 
             result = await asyncio.to_thread(
-                self.model.generate_content,
+                self.code_model.generate_content,
                 f"""{self.conversation_prompt}
                 
                 User query: "{message}"
@@ -1539,23 +1560,30 @@ The plan must follow this exact schema:
         )
         return json.loads(result.text)
 
+
     async def process_message(self, deps: MLBDeps, message: str) -> MLBResponse:
-        """Process message with improved error handling and state utilization"""
+        """Enhanced message processing with media resolution"""
         try:
             # Get intent analysis
             self.intent = await self.analyze_intent(message)
 
             # MLB-related query path
-            if self.intent["is_mlb_related"] and self.intent["context"].get(
-                "requires_data", True
-            ):
+            if self.intent["is_mlb_related"] and self.intent["context"].get("requires_data", True):
                 try:
-                    # Full MLB processing path
+                    # Execute main data plan
                     plan = await self.create_data_plan(self.intent)
                     data = await self.execute_plan(deps, plan)
-                    #print("executed plan result is: ", data)
                     response_data = await self.format_response(message, data)
-                    #print("response data: ", response_data)
+                    
+                    # Add media resolution step
+                    media = await self._resolve_media(
+                        data,
+                        plan.get("steps", [])
+                    )
+                    
+                    if media:
+                        response_data["media"] = media
+
                     suggestions = await self._generate_suggestions(response_data)
                     conversation = await self.generate_conversation(
                         message, response_data
@@ -1570,55 +1598,16 @@ The plan must follow this exact schema:
                         "suggestions": suggestions,
                         "media": response_data.get("media"),
                     }
+                    
                 except Exception as execution_error:
                     print(f"Execution error: {str(execution_error)}")
-
-                    # Generate helpful response using the state we've collected
-                    error_message = "I encountered an issue while fetching that specific baseball data."
-                    helpful_context = ""
-
-                    # Generate baseball-appropriate suggestions based on intent
-                    fallback_suggestions = [
-                        "Try asking about today's games",
-                        "Look up a specific player's stats",
-                        "Check the current standings",
-                    ]
-
-                    if self.intent.get("entities", {}).get("players"):
-                        fallback_suggestions.append(f"Ask about a different player")
-                    if self.intent.get("entities", {}).get("teams"):
-                        fallback_suggestions.append(f"Check another team's information")
-
-                    return {
-                        "message": error_message,
-                        "conversation": f"I understand you're interested in baseball information{helpful_context}. "
-                        f"While I couldn't get that specific data, I'd be happy to help you with something else.",
-                        "data_type": "error",
-                        "data": {"error": str(execution_error)},
-                        "context": {"intent": self.intent},
-                        "suggestions": fallback_suggestions[:3],
-                        "media": None,
-                    }
-
-            # Non-MLB or simple MLB conversation path
+                    return self._create_error_response(message, str(execution_error))
+            
+            # Handle non-MLB queries as before...
             else:
                 conversation = await self.generate_conversation(message, self.intent)
-
-                # Generate contextual suggestions
-                suggestions = []
-                if self.intent.get("sentiment") == "negative":
-                    suggestions = [
-                        "Let me show you some exciting game highlights",
-                        "Would you like to see today's matchups?",
-                        "I can tell you about recent thrilling games",
-                    ]
-                else:
-                    suggestions = [
-                        "Ask about today's games",
-                        "Look up your favorite team",
-                        "Check player stats",
-                    ]
-
+                suggestions = self._get_default_suggestions()
+                
                 return {
                     "message": self.intent.get("intent_description", "Let's talk baseball!"),
                     "conversation": conversation,
@@ -1626,14 +1615,161 @@ The plan must follow this exact schema:
                     "data": {},
                     "context": {"intent": self.intent},
                     "suggestions": suggestions,
-                    "media": None,
-                    "actions": [],
+                    "media": None
                 }
 
         except Exception as e:
             print(f"Critical error in process_message: {str(e)}")
             return self._create_error_response(message, str(e))
 
+    async def _resolve_media(self, intent: Dict[str, Any], data: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Resolve what media to return based on context"""
+        try:
+            # Only pass titles for selection
+            homerun_titles = self.homeruns['title'].tolist()
+            
+            prompt = f"""Based on this MLB context, determine what media to return.
+
+            Intent: {json.dumps(intent, indent=2)}
+            Data: {json.dumps(data, indent=2)}
+            
+            Available Homerun Titles:
+            {json.dumps(homerun_titles, indent=2)}
+
+            Available other media sources:
+            {json.dumps(media_json, indent=2)}
+
+            Return JSON array of media to include:
+            [
+                {{
+                    "type": "image" | "video",
+                    "source": "headshot" | "logo" | "homerun",
+                    "params": {{
+                        // For headshots: "player_id"
+                        // For logos: "team_id" 
+                        // For homeruns: "title" - return the most relevant title from the list
+                    }}
+                }}
+            ]
+
+            Rules:
+            - Only return relevant media based on context
+            - For homeruns, pick the most relevant title matching the query/context
+            - Can return multiple items if appropriate"""
+
+            result = await asyncio.to_thread(
+                self.model.generate_content,
+                prompt,
+                generation_config=genai.GenerationConfig(
+                    temperature=0.1,
+                    response_mime_type="application/json"
+                ),
+            )
+
+            media_plan = json.loads(result.text)
+            media_results = []
+
+            for item in media_plan:
+                if item["source"] == "headshot":
+                    # Get description for player headshot
+                    headshot_prompt = f"""Describe this MLB player's headshot with baseball passion. Include:
+                    1. Their role and notable achievements
+                    2. Their playing style and impact
+                    3. Any iconic elements or memorable features
+
+                    Make it engaging and highlight their importance to the game.
+                    Return only the description, no explanations."""
+
+                    description = await asyncio.to_thread(
+                        self.model.generate_content,
+                        headshot_prompt,
+                        generation_config=genai.GenerationConfig(
+                            temperature=0.7,
+                            response_mime_type="text/plain"
+                        ),
+                    )
+
+                    media_results.append({
+                        "type": "image",
+                        "url": f"https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/{item['params']['player_id']}/headshot/67/current",
+                        "description": description.text
+                    })
+                    
+                elif item["source"] == "logo":
+                    # Get description for team logo
+                    logo_prompt = f"""Describe this MLB team's logo with baseball passion. Include:
+                    1. The team's history and legacy
+                    2. Notable championships and eras
+                    3. What the logo represents to fans
+                    4. The team's impact on baseball
+
+                    Make it engaging and capture the team's spirit.
+                    Return only the description, no explanations."""
+
+                    description = await asyncio.to_thread(
+                        self.model.generate_content,
+                        logo_prompt,
+                        generation_config=genai.GenerationConfig(
+                            temperature=0.7,
+                            response_mime_type="text/plain"
+                        ),
+                    )
+
+                    media_results.append({
+                        "type": "image", 
+                        "url": f"https://www.mlbstatic.com/team-logos/{item['params']['team_id']}.svg",
+                        "description": description.text
+                    })
+                    
+                elif item["source"] == "homerun":
+                    # Get video by exact title match
+                    video_data = self.homeruns[self.homeruns['title'] == item['params']['title']].iloc[0]
+                    
+                    # Get description for homerun highlight
+                    highlight_prompt = f"""Describe this MLB homerun highlight with baseball passion:
+
+                    Title: {video_data['title']}
+                    Stats:
+                    - Exit Velocity: {video_data['ExitVelocity']} mph
+                    - Launch Angle: {video_data['LaunchAngle']}°
+                    - Distance: {video_data['HitDistance']} ft
+
+                    Include:
+                    1. The impact and excitement of the moment
+                    2. The impressive stats and what they mean
+                    3. The significance for the player/team
+                    4. Any dramatic elements or context
+
+                    Make it thrilling and capture the moment's energy.
+                    Return only the description, no explanations."""
+
+                    description = await asyncio.to_thread(
+                        self.model.generate_content,
+                        highlight_prompt,
+                        generation_config=genai.GenerationConfig(
+                            temperature=0.7,
+                            response_mime_type="text/plain"
+                        ),
+                    )
+                    
+                    media_results.append({
+                        "type": "video",
+                        "url": video_data['video'],
+                        "title": video_data['title'],
+                        "description": description.text,
+                        "metadata": {
+                            "exit_velocity": float(video_data['ExitVelocity']),
+                            "launch_angle": float(video_data['LaunchAngle']),
+                            "distance": float(video_data['HitDistance'])
+                        }
+                    })
+
+            return media_results
+
+        except Exception as e:
+            print(f"Media resolution error: {str(e)}")
+            traceback.print_exc()
+            return []
     def _extract_and_filter(
         self, data: Any, path: Optional[str], filter_condition: Optional[str]
     ) -> Any:
@@ -1826,6 +1962,9 @@ with open("src/core/constants/endpoints.json", "r") as f:
 
 with open("src/core/constants/mlb_functions.json", "r") as f:
     functions_json = f.read()
+
+with open("src/core/constants/media_sources.json", "r") as f:
+    media_json = f.read()
 
 mlb_agent = MLBAgent(
     api_key=settings.GEMINI_API_KEY,
