@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.api.views.onboarding.router import router
+from src.api.router import router
 
 app = FastAPI()
 
@@ -15,6 +15,7 @@ app.add_middleware(
 
 app.include_router(router, prefix="/api/v1")
 
+
 @app.get("/")
 async def greet():
-    return {"heelo": "there"}
+    return {"hello": "there"}

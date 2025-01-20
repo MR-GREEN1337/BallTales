@@ -11,26 +11,24 @@ from datetime import datetime
 # Set up logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('mlb_docs_parser.log'),
-        logging.StreamHandler()
-    ]
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[logging.FileHandler("mlb_docs_parser.log"), logging.StreamHandler()],
 )
+
 
 class MLBDocsParser:
     def __init__(self, api_key: str):
         genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
-        
+        self.model = genai.GenerativeModel("gemini-1.5-flash")
+
     async def parse_function_doc(self, filepath: str) -> Optional[Dict[str, Any]]:
         """Parse a single function documentation file using Gemini."""
         try:
-            with open(filepath, 'r', encoding='utf-8') as f:
+            with open(filepath, "r", encoding="utf-8") as f:
                 content = f.read()
-            
+
             logging.info(f"Processing file: {filepath}")
-            
+
             # Split content into chunks if too large
             prompt = f"""
             Parse this MLB StatsAPI function documentation and return a structured JSON object.
@@ -69,11 +67,10 @@ class MLBDocsParser:
                 self.model.generate_content,
                 prompt,
                 generation_config=genai.GenerationConfig(
-                    temperature=0.1,
-                    response_mime_type="application/json"
-                )
+                    temperature=0.1, response_mime_type="application/json"
+                ),
             )
-            
+
             try:
                 parsed = json.loads(result.text)
                 logging.info(f"Successfully parsed {filepath}")
@@ -82,7 +79,7 @@ class MLBDocsParser:
                 logging.error(f"Invalid JSON from model for {filepath}: {str(e)}")
                 logging.error(f"Model output: {result.text}")
                 return None
-                
+
         except Exception as e:
             logging.error(f"Error processing {filepath}: {str(e)}", exc_info=True)
             return None
@@ -91,12 +88,12 @@ class MLBDocsParser:
         """Process all markdown files in the directory."""
         md_files = sorted(Path(docs_dir).glob("Function:-*.md"))
         total_files = len(list(md_files))
-        
+
         logging.info(f"Found {total_files} markdown files to process")
-        
+
         all_functions = []
         failed_files = []
-        
+
         for file_path in sorted(Path(docs_dir).glob("Function:-*.md")):
             try:
                 function_info = await self.parse_function_doc(str(file_path))
@@ -108,8 +105,10 @@ class MLBDocsParser:
                     logging.warning(f"✗ Failed to process {file_path.name}")
             except Exception as e:
                 failed_files.append(file_path.name)
-                logging.error(f"Error processing {file_path.name}: {str(e)}", exc_info=True)
-        
+                logging.error(
+                    f"Error processing {file_path.name}: {str(e)}", exc_info=True
+                )
+
         result = {
             "version": "1.0",
             "generated_at": datetime.now().isoformat(),
@@ -124,12 +123,13 @@ class MLBDocsParser:
                     "TeamID": "int",
                     "Date": "str (YYYY-MM-DD)",
                     "Season": "int",
-                    "LeagueID": "int"
+                    "LeagueID": "int",
                 }
-            }
+            },
         }
-        
+
         return result
+
 
 async def main():
     try:
@@ -138,32 +138,32 @@ async def main():
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             raise ValueError("Please set GEMINI_API_KEY environment variable")
-        
+
         # Initialize parser
         parser = MLBDocsParser(api_key)
-        
+
         # Path to your function docs
         docs_dir = "backend/src/core/constants/functions-wiki"
-        
+
         # Make sure directory exists
         if not os.path.exists(docs_dir):
             raise ValueError(f"Documentation directory not found: {docs_dir}")
-        
+
         # Process all documentation
         result = await parser.process_all_docs(docs_dir)
-        
+
         # Save output
         output_path = "backend/src/core/constants/mlb_functions.json"
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(result, f, indent=2)
-        
+
         print("\nProcessing Summary:")
         print(f"Total files found: {result['total_files_found']}")
         print(f"Successfully processed: {result['successfully_processed']}")
         print(f"Failed files: {len(result['failed_files'])}")
-        if result['failed_files']:
+        if result["failed_files"]:
             print("\nFailed files:")
-            for file in result['failed_files']:
+            for file in result["failed_files"]:
                 print(f"  - {file}")
         print(f"\nOutput saved to: {output_path}")
         print("Check mlb_docs_parser.log for detailed processing information")
@@ -171,6 +171,7 @@ async def main():
     except Exception as e:
         logging.error("Fatal error in main:", exc_info=True)
         raise
+
 
 if __name__ == "__main__":
     asyncio.run(main())
