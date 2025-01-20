@@ -3,8 +3,7 @@ import type { NextRequest } from 'next/server'
  
 // Configure which paths require authentication.
 const protectedPaths = [
-  '/dashboard',
-  '/onboarding'
+  '/chat',
 ]
 
 // Configure public paths that should bypass authentication

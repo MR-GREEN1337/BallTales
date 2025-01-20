@@ -101,7 +101,7 @@ const SignInPage = () => {
       }
 
       toast.success('Welcome back!')
-      router.push('/dashboard')
+      router.push('/chat')
     },
     onError: (error: Error) => {
       toast.error(error.message)

@@ -56,6 +56,12 @@ class Complexity(enum.Enum):
     MODERATE = "moderate"
     COMPLEX = "complex"
 
+class ComparisonType(enum.Enum):
+    NONE = "none"
+    PLAYER_VS_PLAYER = "player_vs_player"
+    TEAM_VS_TEAM = "team_vs_team"
+    HISTORICAL = "historical"
+
 class StatFocus(enum.Enum):
     NONE = "none"
     OFFENSIVE = "offensive"
@@ -85,6 +91,7 @@ class Entities(TypedDict):
 
 class Context(TypedDict):
     time_frame: Timeframe
+    comparison_type: ComparisonType
     stat_focus: StatFocus
     sentiment: Sentiment
     requires_data: bool
@@ -314,6 +321,7 @@ Focus on:
                 parsed_result["intent"]["complexity"] = Complexity(parsed_result["intent"]["complexity"])
                 
                 parsed_result["context"]["time_frame"] = Timeframe(parsed_result["context"]["time_frame"])
+                parsed_result["context"]["comparison_type"] = ComparisonType(parsed_result["context"]["comparison_type"])
                 parsed_result["context"]["stat_focus"] = StatFocus(parsed_result["context"]["stat_focus"])
                 parsed_result["context"]["sentiment"] = Sentiment(parsed_result["context"]["sentiment"])
 
@@ -343,6 +351,7 @@ Focus on:
                     },
                     "context": {
                         "time_frame": Timeframe.CURRENT,
+                        "comparison_type": ComparisonType.NONE,
                         "stat_focus": StatFocus.NONE,
                         "sentiment": Sentiment.NEUTRAL,
                         "requires_data": False,
@@ -1347,17 +1356,17 @@ Focus on:
         return json.loads(result.text)
 
     async def process_message(self, deps: MLBDeps, message: str) -> MLBResponse:
-        """Process message with Gemini-powered error handling"""
+        """Process message with improved error handling and state utilization"""
         try:
             # Get intent analysis
             intent = await self.analyze_intent(message)
             
             # MLB-related query path
-            if intent["is_mlb_related"] and intent.get("requires_data", True):
+            if intent["is_mlb_related"] and intent["context"].get("requires_data", True):
                 try:
                     # Full MLB processing path
                     plan = await self.create_data_plan(intent)
-                    self.state = plan
+                    #self.state = plan
                     data = await self.execute_plan(deps, plan)
                     response_data = await self.format_response(message, intent, data)
                     suggestions = await self._generate_suggestions(intent, response_data)
@@ -1375,59 +1384,71 @@ Focus on:
                 except Exception as execution_error:
                     print(f"Execution error: {str(execution_error)}")
                     
-                    # Use Gemini to analyze error and generate helpful response
-                    error_prompt = f"""You are an MLB query assistant handling an execution error.
-                    Generate a helpful, baseball-focused response explaining the issue and suggesting alternatives.
+                    # Generate helpful response using the state we've collected
+                    error_message = "I encountered an issue while fetching that specific baseball data."
+                    helpful_context = ""
+                    
+                    if self.state:
+                        try:
+                            # Extract useful information from state
+                            if isinstance(self.state, dict):
+                                steps_attempted = len(self.state.get("steps", []))
+                                targeted_data = next(
+                                    (step["description"] for step in self.state.get("steps", []) 
+                                    if isinstance(step, dict) and "description" in step),
+                                    None
+                                )
+                                
+                                if steps_attempted:
+                                    helpful_context = f" I was trying to {targeted_data.lower() if targeted_data else 'fetch the data'}"
+                                    helpful_context += f" and completed {steps_attempted} out of the planned steps."
+                            
+                            error_message += helpful_context
+                        except Exception as state_error:
+                            print(f"Error processing state for context: {str(state_error)}")
 
-                    User Query: {message}
-
-                    Intent Analysis:
-                    {json.dumps(intent, indent=2)}
-
-                    Execution State:
-                    {json.dumps(self.state, indent=2)}
-
-                    Error: {str(execution_error)}
-
-                    Return response as JSON with this structure:
-                    {{
-                        "message": "Technical summary of the issue",
-                        "conversation": "Natural, baseball-focused response explaining the issue and offering alternatives",
-                        "suggestions": ["3-5 relevant alternative queries based on the original intent and available state"]
-                    }}"""
-
-                    try:
-                        error_response = await asyncio.to_thread(
-                            self.model.generate_content,
-                            error_prompt,
-                            generation_config=genai.GenerationConfig(
-                                temperature=0.2,
-                                response_mime_type="application/json"
-                            )
-                        )
-                        
-                        parsed_error = json.loads(error_response.text)
-                        print(error_response)
-                        return {
-                            "message": parsed_error['message'],
-                            "conversation": parsed_error['conversation'],
-                            "data_type": "error",
-                            "data": {"error": str(execution_error), "state": self.state},
-                            "context": {"intent": intent},
-                            "suggestions": parsed_error['suggestions'],
-                            "media": None
-                        }
-                    except Exception as gemini_error:
-                        print(f"Failed to generate Gemini error response: {str(gemini_error)}")
-                        # Fall back to basic error response
-                        return self._create_error_response(message, str(execution_error))
+                    # Generate baseball-appropriate suggestions based on intent
+                    fallback_suggestions = [
+                        "Try asking about today's games",
+                        "Look up a specific player's stats",
+                        "Check the current standings"
+                    ]
+                    
+                    if intent.get("entities", {}).get("players"):
+                        fallback_suggestions.append(f"Ask about a different player")
+                    if intent.get("entities", {}).get("teams"):
+                        fallback_suggestions.append(f"Check another team's information")
+                    
+                    return {
+                        "message": error_message,
+                        "conversation": f"I understand you're interested in baseball information{helpful_context}. "
+                                    f"While I couldn't get that specific data, I'd be happy to help you with something else.",
+                        "data_type": "error",
+                        "data": {"error": str(execution_error), "state": self.state},
+                        "context": {"intent": intent},
+                        "suggestions": fallback_suggestions[:3],
+                        "media": None
+                    }
             
-            # Non-MLB or simple MLB conversation path  
+            # Non-MLB or simple MLB conversation path
             else:
                 conversation = await self.generate_conversation(message, intent)
-                suggestions = await self._generate_suggestions(intent, {})
-                print(conversation)
-                print(suggestions)
+                
+                # Generate contextual suggestions
+                suggestions = []
+                if intent.get("sentiment") == "negative":
+                    suggestions = [
+                        "Let me show you some exciting game highlights",
+                        "Would you like to see today's matchups?",
+                        "I can tell you about recent thrilling games"
+                    ]
+                else:
+                    suggestions = [
+                        "Ask about today's games",
+                        "Look up your favorite team",
+                        "Check player stats"
+                    ]
+                
                 return {
                     "message": intent.get("intent_description", "Let's talk baseball!"),
                     "conversation": conversation,
@@ -1442,7 +1463,6 @@ Focus on:
         except Exception as e:
             print(f"Critical error in process_message: {str(e)}")
             return self._create_error_response(message, str(e))
-
     def _extract_and_filter(
         self,
         data: Any,

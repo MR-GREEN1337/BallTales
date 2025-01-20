@@ -96,7 +96,7 @@ const SignUpPage = () => {
     },
     onSuccess: (user) => {
       toast.success('Account created successfully!')
-      router.push('/dashboard')
+      router.push('/chat')
     },
     onError: (error: Error) => {
       toast.error(error.message)
