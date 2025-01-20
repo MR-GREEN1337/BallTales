@@ -43,101 +43,63 @@ interface MLBResponse {
   }
 }
 
+const TypingText = ({ text }: { text: string }) => {
+  const [displayText, setDisplayText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const phrases = ["Thinking...", "Mulling it over...", "Processing..."];
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const currentPhrase = phrases[phraseIndex];
+      
+      if (!isDeleting) {
+        if (displayText !== currentPhrase) {
+          setDisplayText(currentPhrase.slice(0, displayText.length + 1));
+        } else {
+          setTimeout(() => setIsDeleting(true), 1000);
+        }
+      } else {
+        if (displayText === "") {
+          setIsDeleting(false);
+          setPhraseIndex((prev) => (prev + 1) % phrases.length);
+        } else {
+          setDisplayText(currentPhrase.slice(0, displayText.length - 1));
+        }
+      }
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [displayText, isDeleting, phraseIndex]);
+
+  return (
+    <motion.span
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="inline-block"
+    >
+      {displayText}
+      <motion.span
+        animate={{ opacity: [0, 1, 0] }}
+        transition={{ duration: 0.8, repeat: Infinity }}
+        className="ml-1"
+      >
+        |
+      </motion.span>
+    </motion.span>
+  );
+};
+
 const OnboardingChat = () => {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputText, setInputText] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const [showThinking, setShowThinking] = useState(false)
   const [preferences, setPreferences] = useState<any>({})
   const [hasInitialized, setHasInitialized] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    setIsLoaded(true)
-    setMessages([{
-      id: 'welcome-message',
-      content: "Hey there! I'm your baseball buddy, here to chat about the game we love! 💫⚾️ Tell me, what got you into baseball?",
-      sender: 'bot',
-      type: 'text'
-    }])
-  }, [])
-
-  const addMessage = (message: Message) => {
-    setMessages(prev => [...prev, message])
-  }
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
-
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages])
-
-  const handleSend = async () => {
-    if (!inputText.trim()) return
-
-    // Add user message
-    const userMessage = {
-      id: `user-${Date.now()}`,
-      content: inputText,
-      sender: 'user',
-      type: 'text' as const
-    }
-    addMessage(userMessage as any)
-    setInputText('')
-    setIsTyping(true)
-
-    try {
-      // Make API call to the MLB endpoint
-      const response = await axios.post<MLBResponse>(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/onboarding/chat`, {
-        message: inputText
-      })
-
-      // Add bot response
-      const botMessage: Message = {
-        id: `bot-${Date.now()}`,
-        content: response.data.conversation || response.data.message,
-        sender: 'bot',
-        type: 'text',
-        suggestions: response.data.suggestions,
-        media: response.data.media
-      }
-
-      setIsTyping(false)
-      addMessage(botMessage)
-
-      // Show suggestions if available
-      if (response.data.suggestions?.length) {
-        addMessage({
-          id: `suggestions-${Date.now()}`,
-          content: "You might also be interested in:",
-          sender: 'bot',
-          type: 'options',
-          options: response.data.suggestions
-        })
-      }
-
-      // Handle any errors in the response
-      if (response.data.data_type === 'error') {
-        toast.error(response.data.message)
-      }
-
-    } catch (error) {
-      console.error('Chat API error:', error)
-      setIsTyping(false)
-      
-      // Add error message
-      addMessage({
-        id: `error-${Date.now()}`,
-        content: "I'm having trouble connecting to the baseball data. Can you try asking that again?",
-        sender: 'bot',
-        type: 'text'
-      })
-      
-      toast.error('Failed to get response from MLB chat')
-    }
-  }
+  const thinkingTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
 
   const user = {
     name: "Jane Smith",
@@ -162,7 +124,6 @@ const OnboardingChat = () => {
     }
   }
 
-
   const handleSuggestionClick = (suggestion: string) => {
     setInputText(suggestion)
     handleSend()
@@ -173,13 +134,121 @@ const OnboardingChat = () => {
     // Add your logout logic here
   }
 
+  useEffect(() => {
+    setIsLoaded(true)
+    setMessages([{
+      id: 'welcome-message',
+      content: "Hey there! I'm your baseball buddy, here to chat about the game we love! 💫⚾️ Tell me, what got you into baseball?",
+      sender: 'bot',
+      type: 'text'
+    }])
+  }, [])
+
+  const addMessage = (message: Message) => {
+    setMessages(prev => [...prev, message])
+  }
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
+
+  // Clear thinking timeout when component unmounts
+  useEffect(() => {
+    return () => {
+      if (thinkingTimeoutRef.current) {
+        clearTimeout(thinkingTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  const handleSend = async () => {
+    if (!inputText.trim()) return
+
+    // Add user message
+    const userMessage = {
+      id: `user-${Date.now()}`,
+      content: inputText,
+      sender: 'user',
+      type: 'text' as const
+    }
+    addMessage(userMessage as any)
+    setInputText('')
+    setIsTyping(true)
+    
+    // Set thinking indicator after 3 seconds if no response
+    thinkingTimeoutRef.current = setTimeout(() => {
+      setShowThinking(true)
+    }, 3000)
+
+    try {
+      const response = await axios.post<MLBResponse>(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat`, {
+        message: inputText
+      })
+
+      // Clear thinking timeout and hide indicator
+      if (thinkingTimeoutRef.current) {
+        clearTimeout(thinkingTimeoutRef.current)
+      }
+      setShowThinking(false)
+
+      const botMessage: Message = {
+        id: `bot-${Date.now()}`,
+        content: response.data.conversation || response.data.message,
+        sender: 'bot',
+        type: 'text',
+        suggestions: response.data.suggestions,
+        media: response.data.media
+      }
+
+      setIsTyping(false)
+      addMessage(botMessage)
+
+      if (response.data.suggestions?.length) {
+        addMessage({
+          id: `suggestions-${Date.now()}`,
+          content: "You might also be interested in:",
+          sender: 'bot',
+          type: 'options',
+          options: response.data.suggestions
+        })
+      }
+
+      if (response.data.data_type === 'error') {
+        toast.error(response.data.message)
+      }
+
+    } catch (error) {
+      console.error('Chat API error:', error)
+      setIsTyping(false)
+      setShowThinking(false)
+      
+      if (thinkingTimeoutRef.current) {
+        clearTimeout(thinkingTimeoutRef.current)
+      }
+      
+      addMessage({
+        id: `error-${Date.now()}`,
+        content: "I'm having trouble connecting to the baseball data. Can you try asking that again?",
+        sender: 'bot',
+        type: 'text'
+      })
+      
+      toast.error('Failed to get response from MLB chat')
+    }
+  }
+
   return (
     <div 
-      className={`min-h-screen relative bg-cover bg-center transition-all duration-700 ease-in-out ${
-        isLoaded ? 'opacity-100' : 'opacity-0'
-      }`}
+      className="min-h-screen relative overflow-hidden"
       style={{
         backgroundImage: 'url(/chat.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
         backgroundColor: 'rgba(17, 24, 39, 0.85)',
         backgroundBlendMode: 'multiply'
       }}
@@ -191,11 +260,9 @@ const OnboardingChat = () => {
           onLogout={handleLogout}
         />
       </div>
-
       {/* Chat Container */}
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="space-y-8 pb-24">
-          {/* Welcome Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -232,20 +299,18 @@ const OnboardingChat = () => {
                         {message.content}
                       </div>
                       
-                      {/* Display Media if available */}
                       {message.media && (
                         <div className="mt-4">
                           {message.media.type === 'image' && (
                             <img 
                               src={message.media.url} 
                               alt={message.media.description}
-                              className="rounded-lg max-w-full h-auto"
+                              className="rounded-lg max-w-full h-auto transform-none"
                             />
                           )}
                         </div>
                       )}
                       
-                      {/* Display Options/Suggestions */}
                       {message.options && (
                         <div className="mt-4 flex flex-wrap gap-2">
                           {message.options.map((option) => (
@@ -265,7 +330,25 @@ const OnboardingChat = () => {
                 </motion.div>
               ))}
               
-              {isTyping && (
+              {/* Thinking indicator with animated text */}
+              {showThinking && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="flex items-start gap-3"
+                >
+                  <Bot className="w-8 h-8 text-blue-400 mt-1" />
+                  <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+                    <div className="text-white">
+                      <TypingText text="Thinking..." />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+              
+              {/* Typing indicator */}
+              {isTyping && !showThinking && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -286,7 +369,7 @@ const OnboardingChat = () => {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Fixed Input at Bottom */}
+        {/* Input */}
         <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-gray-900 to-transparent p-4">
           <div className="max-w-4xl mx-auto flex gap-2">
             <Input
@@ -297,7 +380,7 @@ const OnboardingChat = () => {
               className="bg-white/5 border-white/20 text-white placeholder:text-gray-400 backdrop-blur-sm"
             />
             <Button
-              onClick={() => handleSend()}
+              onClick={handleSend}
               className="bg-blue-600 hover:bg-blue-700 text-white px-6"
             >
               <Send className="w-5 h-5" />

@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.router import router
 
-app = FastAPI()
+app = FastAPI(description="BallTales Backend")
 
 app.add_middleware(
     CORSMiddleware,
