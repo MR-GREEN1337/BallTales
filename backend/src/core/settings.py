@@ -8,7 +8,6 @@ class Settings(BaseSettings):
 
     GEMINI_API_KEY: str
     DATABASE_URL: str
-    GROQ_API_KEY: str
 
 
 settings = Settings()

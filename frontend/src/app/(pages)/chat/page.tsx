@@ -98,7 +98,6 @@ const OnboardingChat = () => {
   const [showThinking, setShowThinking] = useState(false)
   const [userData, setUserData] = useState<any>(null)
   const router = useRouter()
-  const [isLoading, setIsLoading] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const thinkingTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
   const [clearingMessages, setClearingMessages] = useState(false);
@@ -121,8 +120,6 @@ const OnboardingChat = () => {
         console.error('Error fetching user data:', error)
         toast.error('Failed to load user profile')
         router.push('/sign-in')
-      } finally {
-        setIsLoading(false)
       }
     }
 
@@ -170,13 +167,6 @@ const OnboardingChat = () => {
     }
   }, [])
 
-  if (isLoading) {
-    return (
-      <div className='flex h-screen w-full items-center justify-center'>
-        <Loader2Icon size={30} className='animlate-spin stroke-primary' />
-      </div>
-    )
-  }
   const handleSend = async () => {
     if (!inputText.trim()) return
 
@@ -194,10 +184,10 @@ const OnboardingChat = () => {
     // Set thinking indicator after 3 seconds if no response
     thinkingTimeoutRef.current = setTimeout(() => {
       setShowThinking(true)
-    }, 1500)
+    }, 2000)
 
     try {
-      const response = await axios.post<MLBResponse>(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat`, {
+      const response = await axios.post<MLBResponse>(`${process.env.NEXT_PUBLIC_API_URL}/chat`, {
         message: inputText
       })
       console.log("hhi", response.data)

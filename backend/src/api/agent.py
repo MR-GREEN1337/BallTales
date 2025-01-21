@@ -1,13 +1,19 @@
 import asyncio
+import base64
 from datetime import datetime
+import difflib
 import os
 import tempfile
 import traceback
 from typing import List, Optional, Dict, Any
 import json
+import aiohttp
 import google.generativeai as genai
 import pandas as pd
 from src.api.models import (
+    MediaType,
+    SearchIdentifiers,
+    SearchParameters,
     Specificity,
     MLBResponse,
     MLBDeps,
@@ -25,16 +31,18 @@ from src.core.settings import settings
 
 
 class MLBAgent:
-    def __init__(self, api_key: str, endpoints_json: str, functions_json: str):
+    def __init__(
+        self, api_key: str, endpoints_json: str, functions_json: str, media_json: str
+    ):
         genai.configure(api_key=api_key)
 
-        #Models
+        # Models
         self.model = genai.GenerativeModel("gemini-1.5-flash")
         self.gemini_2_model = genai.GenerativeModel("gemini-2.0-flash-exp")
         self.model_8b = genai.GenerativeModel("gemini-1.5-flash-8b")
         self.code_model = genai.GenerativeModel("gemini-1.5-pro")
 
-        #Data
+        # Data
         self.endpoints = json.loads(endpoints_json)["endpoints"]
         self.functions = json.loads(functions_json)["functions"]
         self.homeruns = pd.read_csv("src/core/constants/mlb_homeruns.csv")
@@ -45,7 +53,7 @@ class MLBAgent:
         self.repl = MLBPythonREPL(timeout=8)
 
         self._setup_prompts()
-        #print(self.endpoints)
+        # print(self.endpoints)
 
     def _setup_prompts(self):
         """Set up all prompts used by the agent"""
@@ -132,15 +140,14 @@ Season Progress:
 - Data needed: Season schedule, current date
 
     Query to analyze: """
+#Available Endpoints:
+#{json.dumps(self.endpoints, indent=2)}
 
         self.plan_prompt = f"""Create a detailed MLB data retrieval plan optimizing for accuracy and efficiency.
 
-Choose from the given functions/endpoints
+Choose from the given functions
 Available Functions:
 {json.dumps(self.functions, indent=2)}
-
-Available Endpoints:
-{json.dumps(self.endpoints, indent=2)}
 
 Current Intent Analysis:
 {json.dumps(self.intent, indent=2)}
@@ -218,6 +225,7 @@ Plan:
 }}
 
 PLANNING RULES:
+GENERALLY OPT FOR MORE THAN ONE STEP
 
 1. Highlight Request Handling:
    • When intent type is HIGHLIGHT, prioritize video search
@@ -433,19 +441,20 @@ The plan must follow this exact schema:
 
     async def create_data_plan(self, intent: IntentAnalysis) -> DataRetrievalPlan:
         """Generate structured data retrieval plan with improved schema validation"""
+        #TODO: Fix endpoint data handling, for now we'll use functions only
         try:
             # Compile available resources
             available_endpoints = list(self.endpoints.keys())
             available_functions = [f["name"] for f in self.functions]
 
             # Define valid types and methods statically
-            valid_types = {"endpoint": True, "function": True}
+            valid_types = {"function": True} #, "endpoint": True}
 
-            valid_methods = {method: True for method in available_endpoints}
+            valid_methods = {} #{method: True for method in available_endpoints}
             valid_methods.update({method: True for method in available_functions})
 
             plan_types = {
-                "endpoint": True,
+                #"endpoint": True,
                 "function": True,
             }
 
@@ -577,11 +586,6 @@ The plan must follow this exact schema:
                 },
                 "required": ["plan_type", "steps", "fallback", "dependencies"],
             }
-
-            # Define available methods statically to avoid list concatenation
-            valid_methods = {method: True for method in available_endpoints}
-            valid_methods.update({method: True for method in available_functions})
-
             # Generate plan using LLM
             result = await asyncio.to_thread(
                 self.model.generate_content,
@@ -772,9 +776,7 @@ The plan must follow this exact schema:
                 raise ValueError(f"Invalid function: {function_name}")
 
             # Prepare function parameters
-            resolved_params = await self._resolve_parameters(
-                step, prior_results
-            )
+            resolved_params = await self._resolve_parameters(step, prior_results)
 
             # Generate function execution code
             execution_code = f"""
@@ -834,11 +836,11 @@ The plan must follow this exact schema:
         """Execute MLB API endpoint"""
         try:
             # Get endpoint from parameters
-            endpoint_name = step["parameters"].get("value") 
+            endpoint_name = step["parameters"].get("value")
             if not endpoint_name:
                 raise ValueError("No endpoint specified")
 
-            # Get endpoint info
+            """# Get endpoint info
             endpoint_info = self.endpoints.get(endpoint_name)
             if not endpoint_info:
                 raise ValueError(f"Invalid endpoint: {endpoint_name}")
@@ -855,19 +857,20 @@ The plan must follow this exact schema:
 
             if not request_info or "url" not in request_info:
                 raise ValueError("Failed to format URL")
-
+            """
             # Make request
-            response = await deps.client.get(request_info["url"])
+            print(endpoint_name)
+            response = await deps.client.get(endpoint_name)  # request_info["url"]
             response.raise_for_status()
             result = response.json()
 
             # Process data extraction if specified
-            if step.get("dataExtraction"):
-                result = await self._process_extraction(result, step["dataExtraction"])
+            if step.get("extract"):
+                result = await self._process_extraction(result, step["extract"])
 
-            # Apply filtering if specified
+            """# Apply filtering if specified
             if step.get("filtering") and step["filtering"].lower() != "none":
-                result = await self._apply_filtering(result, step["filtering"])
+                result = await self._apply_filtering(result, step["filtering"])"""
 
             return result
 
@@ -938,7 +941,7 @@ The plan must follow this exact schema:
                 {json.dumps(result, indent=2)}
 
                 Requirements:
-                - Extract fields specified in: {json.dumps(step.get('extract', {}), indent=2)}
+                - Extract fields specified in: {json.dumps(step.get("extract", {}), indent=2)}
                 - Handle missing or null values gracefully
                 - Return only the requested fields
                 - Maintain original data types (numbers, strings, etc.)
@@ -952,24 +955,25 @@ The plan must follow this exact schema:
                                 prompt,
                                 generation_config=genai.GenerationConfig(
                                     temperature=0.1,  # Low temperature for precise extraction
-                                    response_mime_type="application/json"
+                                    response_mime_type="application/json",
                                 ),
                             )
-                            
+
                             # Parse and validate LLM response
                             extracted_data = json.loads(extraction_result.text)
-                            
+
                             # Apply any specified filters
                             if step.get("extract", {}).get("filter"):
                                 extracted_data = await self._apply_filtering(
-                                    extracted_data, 
-                                    step["extract"]["filter"]
+                                    extracted_data, step["extract"]["filter"]
                                 )
-                            
+
                             return extracted_data
 
                         except Exception as llm_error:
-                            print(f"LLM extraction failed: {str(llm_error)}, falling back to standard processing")
+                            print(
+                                f"LLM extraction failed: {str(llm_error)}, falling back to standard processing"
+                            )
                             # Fall back to standard processing on LLM failure
 
                     # For larger results or LLM failure, use standard processing
@@ -1055,26 +1059,24 @@ The plan must follow this exact schema:
                 extraction_code = (
                     result.text.strip().replace("```python", "").replace("```", "")
                 )
-
                 with tempfile.TemporaryDirectory() as temp_dir:
                     data_file = os.path.join(temp_dir, "data.json")
                     with open(data_file, "w") as f:
                         json.dump(data, f)
 
                     execution_code = f"""
-    import json
+                {extraction_code}
 
-    {extraction_code}
-
-    try:
-        with open('{data_file}', 'r') as f:
-            data = json.load(f)
-        
-        result = extract_data(data)
-        print(json.dumps(result))
-    except Exception as e:
-        print(json.dumps({{"error": str(e)}}))
-    """
+                try:
+                    with open('{data_file}', 'r') as f:
+                        data = json.load(f)
+                    
+                    result = extract_data(data)
+                    print(json.dumps(result))
+                except Exception as e:
+                    print(json.dumps({{"error": str(e)}}))
+                    """
+                    print("extraction code: ", execution_code)
                     repl_result = await self.repl(code=execution_code)
 
                     if repl_result.get("status") == "error":
@@ -1104,7 +1106,7 @@ The plan must follow this exact schema:
         self,
         data: Any,
         filtering_info: str,
-        size_threshold: int = 10000,  # Default threshold in characters
+        size_threshold: int = 100_000,  # Default threshold in characters
     ) -> Any:
         """Apply filtering based on filtering info and data size"""
         if not filtering_info or filtering_info.lower() == "none":
@@ -1288,15 +1290,16 @@ The plan must follow this exact schema:
 
         # Prepare the code to execute
         execution_code = f"""
-    import json
-    {processing_code}
+import json
 
-    # Input data
-    data = {json.dumps(data)}
+{processing_code}
 
-    # Execute processing function
-    result = process_data(data)
-    print(json.dumps(result))
+# Input data
+data = {json.dumps(data)}
+
+# Execute processing function
+result = process_data(data)
+print(json.dumps(result))
     """
         print("hihoo", execution_code)
 
@@ -1311,24 +1314,21 @@ The plan must follow this exact schema:
             return data  # Return original data if processing fails
 
     async def _resolve_parameters(
-        self, 
-        step: Dict[str, Any], 
-        prior_results: Dict[str, Any]
+        self, step: Dict[str, Any], prior_results: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Resolve API parameters using Gemini for intelligent parameter formatting"""
         try:
             # Get function/endpoint info
             step_type = step.get("type")
             step_name = step.get("name")
-            
+
             if step_type == "function":
                 function_info = next(
-                    (f for f in self.functions if f["name"] == step_name), 
-                    None
+                    (f for f in self.functions if f["name"] == step_name), None
                 )
                 if not function_info:
                     raise ValueError(f"Invalid function: {step_name}")
-                
+
                 prompt = f"""Format MLB Stats API function parameters.
 
     Function Info:
@@ -1388,7 +1388,9 @@ The plan must follow this exact schema:
                 prompt,
                 generation_config=genai.GenerationConfig(
                     temperature=0.1,  # Low temperature for precise formatting
-                    response_mime_type="text/plain" if step_type == "function" else "application/json"
+                    response_mime_type="text/plain"
+                    if step_type == "function"
+                    else "application/json",
                 ),
             )
 
@@ -1403,7 +1405,9 @@ The plan must follow this exact schema:
                 except json.JSONDecodeError:
                     print(f"Failed to parse endpoint parameters: {result.text}")
                     # Fall back to basic parameter resolution
-                    return self._basic_parameter_resolution(step["parameters"], prior_results)
+                    return self._basic_parameter_resolution(
+                        step["parameters"], prior_results
+                    )
 
         except Exception as e:
             print(f"Parameter resolution error: {str(e)}")
@@ -1411,9 +1415,7 @@ The plan must follow this exact schema:
             return self._basic_parameter_resolution(step["parameters"], prior_results)
 
     def _basic_parameter_resolution(
-        self,
-        parameters: Dict[str, Any],
-        prior_results: Dict[str, Any]
+        self, parameters: Dict[str, Any], prior_results: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Basic parameter resolution as fallback"""
         resolved = {}
@@ -1439,25 +1441,15 @@ The plan must follow this exact schema:
             default_response = {
                 "summary": "Here's what I found about the baseball stats.",
                 "details": data,
-                "media": None
+                "media": None,
             }
-            
-            # Convert Enum values to strings
-            sanitized_intent = {
-                'context': {k: str(v.value) if hasattr(v, 'value') else v 
-                        for k, v in self.intent['context'].items()},
-                'intent': {k: str(v.value) if hasattr(v, 'value') else v 
-                        for k, v in self.intent['intent'].items()},
-                'entities': self.intent['entities']
-            }
-                
             # Create prompt only after preparing defaults
             prompt = f"""Create a natural, informative response from this MLB data.
                 
             Query: {query}
             
             Intent:
-            {json.dumps(sanitized_intent)}
+            {json.dumps(self.intent)}
             
             Data:
             {json.dumps(data)}
@@ -1466,7 +1458,7 @@ The plan must follow this exact schema:
             - summary: A brief overview (1-2 sentences)
             - details: The complete data and analysis
             - media: Optional media content (if applicable)"""
-            
+
             try:
                 model_response = await asyncio.to_thread(
                     self.gemini_2_model.generate_content,
@@ -1475,75 +1467,70 @@ The plan must follow this exact schema:
                         response_mime_type="application/json"
                     ),
                 )
-                
-                if not model_response or not hasattr(model_response, 'text'):
+
+                if not model_response or not hasattr(model_response, "text"):
                     return default_response
-                    
+
                 return json.loads(model_response.text)
-                
+
             except Exception as e:
                 print(f"Model generation error: {str(e)}")
                 return default_response
-                    
+
         except Exception as e:
             print(f"Error in format_response: {str(e)}")
             return {
                 "summary": "Here's the baseball data I found.",
                 "details": data,
-                "media": None
+                "media": None,
             }
+
     async def generate_conversation(
-            self,
-            message: str,
-            response_data: Optional[Any] = None,
-        ) -> str:
-            """Generate a friendly conversational response"""
-            try:
-                # First sanitize the response_data if it contains any Enum values
-                def sanitize_enum_values(obj):
-                    if isinstance(obj, dict):
-                        return {k: sanitize_enum_values(v) for k, v in obj.items()}
-                    elif isinstance(obj, list):
-                        return [sanitize_enum_values(item) for item in obj]
-                    elif hasattr(obj, 'value'):  # Check if it's an Enum
-                        return str(obj.value)
-                    return obj
+        self,
+        message: str,
+        response_data: Optional[Any] = None,
+    ) -> str:
+        """Generate a friendly conversational response"""
+        try:
+            # First sanitize the response_data if it contains any Enum values
+            def sanitize_enum_values(obj):
+                if isinstance(obj, dict):
+                    return {k: sanitize_enum_values(v) for k, v in obj.items()}
+                elif isinstance(obj, list):
+                    return [sanitize_enum_values(item) for item in obj]
+                elif hasattr(obj, "value"):  # Check if it's an Enum
+                    return str(obj.value)
+                return obj
 
-                # Sanitize both intent and response data
-                if self.intent:
-                    sanitized_intent = sanitize_enum_values(self.intent)
-                else:
-                    sanitized_intent = {}
+            if response_data:
+                sanitized_response = sanitize_enum_values(response_data)
+            else:
+                sanitized_response = {}
 
-                if response_data:
-                    sanitized_response = sanitize_enum_values(response_data)
-                else:
-                    sanitized_response = {}
-
-                context = ""
-                if sanitized_intent and sanitized_response:
-                    context = f"""
-                    Intent: {json.dumps(sanitized_intent)}
+            context = ""
+            if self.intent and sanitized_response:
+                context = f"""
+                    Intent: {json.dumps(self.intent)}
                     Data response: {json.dumps(sanitized_response, indent=2)}
                     """
 
-                result = await asyncio.to_thread(
-                    self.code_model.generate_content,
-                    f"""{self.conversation_prompt}
+            result = await asyncio.to_thread(
+                self.gemini_2_model.generate_content,
+                f"""{self.conversation_prompt}
                     
                     User query: "{message}"
                     {context}
                     
                     Generate a friendly response:""",
-                    generation_config=genai.GenerationConfig(
-                        response_mime_type="text/plain"
-                    ),
-                )
-                return result.text.strip()
-            except Exception as e:
-                print(f"Error generating conversation: {str(e)}")
-                traceback.print_exc()
-                return "I'd be happy to talk baseball with you! What would you like to know about the game?"
+                generation_config=genai.GenerationConfig(
+                    response_mime_type="text/plain"
+                ),
+            )
+            return result.text.strip()
+        except Exception as e:
+            print(f"Error generating conversation: {str(e)}")
+            traceback.print_exc()
+            return "I'd be happy to talk baseball with you! What would you like to know about the game?"
 
     def _get_default_suggestions(self) -> List[str]:
         """Get default suggestions when no context-specific ones are available"""
@@ -1552,25 +1539,17 @@ The plan must follow this exact schema:
             "Who are the top players this season?",
             "Show me the latest standings",
             "What are some exciting home runs?",
-            "Tell me about your favorite baseball moment"
+            "Tell me about your favorite baseball moment",
         ]
-    async def _generate_suggestions(
-        self, response: Any
-    ) -> List[str]:
+
+    async def _generate_suggestions(self, response: Any) -> List[str]:
         """Generate contextual suggestions using LLM"""
-        sanitized_intent = {
-            'context': {k: str(v.value) if hasattr(v, 'value') else v 
-                    for k, v in self.intent['context'].items()},
-            'intent': {k: str(v.value) if hasattr(v, 'value') else v 
-                    for k, v in self.intent['intent'].items()},
-            'entities': self.intent['entities']
-        }
         result = await asyncio.to_thread(
             self.model.generate_content,
             f"""{self.suggestion_prompt}
             
             Current intent:
-            {json.dumps(sanitized_intent)}
+            {json.dumps(self.intent)}
             
             Current response:
             {json.dumps(response, indent=2)}""",
@@ -1584,7 +1563,6 @@ The plan must follow this exact schema:
         )
         return json.loads(result.text)
 
-
     async def process_message(self, deps: MLBDeps, message: str) -> MLBResponse:
         """Enhanced message processing with media resolution"""
         try:
@@ -1592,19 +1570,18 @@ The plan must follow this exact schema:
             self.intent = await self.analyze_intent(message)
 
             # MLB-related query path
-            if self.intent["is_mlb_related"] and self.intent["context"].get("requires_data", True):
+            if self.intent["is_mlb_related"] and self.intent["context"].get(
+                "requires_data", True
+            ):
                 try:
                     # Execute main data plan
                     plan = await self.create_data_plan(self.intent)
                     data = await self.execute_plan(deps, plan)
                     response_data = await self.format_response(message, data)
-                    
+
                     # Add media resolution step
-                    media = await self._resolve_media(
-                        data,
-                        plan.get("steps", [])
-                    )
-                    
+                    media = await self._resolve_media(deps, data, plan.get("steps", []))
+
                     if media:
                         response_data["media"] = media
 
@@ -1622,178 +1599,249 @@ The plan must follow this exact schema:
                         "suggestions": suggestions,
                         "media": response_data.get("media"),
                     }
-                    
+
                 except Exception as execution_error:
                     print(f"Execution error: {str(execution_error)}")
                     return self._create_error_response(message, str(execution_error))
-            
+
             # Handle non-MLB queries as before...
             else:
                 conversation = await self.generate_conversation(message, self.intent)
                 suggestions = self._get_default_suggestions()
-                
+
                 return {
-                    "message": self.intent.get("intent_description", "Let's talk baseball!"),
+                    "message": self.intent.get(
+                        "intent_description", "Let's talk baseball!"
+                    ),
                     "conversation": conversation,
                     "data_type": "conversation",
                     "data": {},
                     "context": {"intent": self.intent},
                     "suggestions": suggestions,
-                    "media": None
+                    "media": None,
                 }
 
         except Exception as e:
             print(f"Critical error in process_message: {str(e)}")
             return self._create_error_response(message, str(e))
 
-    async def _resolve_media(self, intent: Dict[str, Any], data: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Resolve what media to return based on context"""
+    async def _get_search_parameters(
+        self, intent: Dict[str, Any], data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Get ready-to-use media URLs and relevant homerun keywords"""
         try:
-            # Only pass titles for selection
-            homerun_titles = self.homeruns['title'].tolist()
-            
-            prompt = f"""Based on this MLB context, determine what media to return.
+            # Get a small sample of homerun data for context
+            sample_homerun = self.homeruns.head(15).to_dict()
 
-            Intent: {json.dumps(intent, indent=2)}
-            Data: {json.dumps(data, indent=2)}
-            
-            Available Homerun Titles:
-            {json.dumps(homerun_titles, indent=2)}
+            # Create the prompt for comprehensive media resolution
+            media_prompt = """Based on this MLB context, generate a complete media plan with ready-to-use URLs and relevant homerun search terms.
 
-            Available other media sources:
-            {json.dumps(media_json, indent=2)}
+            Intent: {intent}
+            Data: {data}
+            Sample Homerun Data: {homerun_sample}
+            Available Media Sources: {media_sources}
 
-            Return JSON array of media to include:
-            [
-                {{
-                    "type": "image" | "video",
-                    "source": "headshot" | "logo" | "homerun",
-                    "params": {{
-                        // For headshots: "player_id"
-                        // For logos: "team_id" 
-                        // For homeruns: "title" - return the most relevant title from the list
-                    }}
-                }}
-            ]
+            Return a JSON object with:
+            1. direct_media: Array of ready-to-use media items with:
+            - type: "image" or "video"
+            - url: Complete URL (use templates below)
+            - description: Natural description
+            - metadata: Additional info (esp. for homeruns)
 
-            Rules:
-            - Only return relevant media based on context
-            - For homeruns, pick the most relevant title matching the query/context
-            - Can return multiple items if appropriate"""
+            2. homerun_search: Array of relevant search terms
+            for finding matching homerun clips
 
+            URL Templates:
+            - Player headshots: https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/[player_id]/headshot/67/current
+            - Team logos: https://www.mlbstatic.com/team-logos/[team_id].svg
+
+            Focus on:
+            - Generate complete, ready-to-use URLs
+            - Include relevant player/team IDs
+            - Provide natural descriptions
+            - Select most relevant homerun search terms
+            - Limit to 3-5 most relevant media items"""
+
+            # Format prompt with actual data
+            formatted_prompt = media_prompt.format(
+                intent=json.dumps(intent, indent=2),
+                data=json.dumps(data, indent=2),
+                homerun_sample=json.dumps(sample_homerun, indent=2),
+                media_sources=json.dumps(self.media_source, indent=2),
+            )
+
+            # Get media plan from LLM
             result = await asyncio.to_thread(
                 self.model.generate_content,
-                prompt,
+                formatted_prompt,
                 generation_config=genai.GenerationConfig(
                     temperature=0.1,
-                    response_mime_type="application/json"
+                    response_mime_type="application/json",
+                    response_schema={
+                        "type": "object",
+                        "properties": {
+                            "direct_media": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "type": {
+                                            "type": "string",
+                                            "enum": ["image", "video"],
+                                        },
+                                        "url": {"type": "string"},
+                                        "description": {"type": "string"},
+                                        "metadata": {
+                                            "type": "object",
+                                            "properties": {
+                                                "exit_velocity": {"type": "number"},
+                                                "launch_angle": {"type": "number"},
+                                                "distance": {"type": "number"},
+                                                "player_id": {"type": "string"},
+                                                "team_id": {"type": "string"},
+                                                "game_date": {"type": "string"},
+                                                "venue": {"type": "string"},
+                                            },
+                                        },
+                                    },
+                                    "required": ["type", "url", "description"],
+                                },
+                            },
+                            "homerun_search": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                            },
+                        },
+                        "required": ["direct_media", "homerun_search"],
+                    },
                 ),
             )
 
             media_plan = json.loads(result.text)
-            media_results = []
-
-            for item in media_plan:
-                if item["source"] == "headshot":
-                    # Get description for player headshot
-                    headshot_prompt = f"""Describe this MLB player's headshot with baseball passion. Include:
-                    1. Their role and notable achievements
-                    2. Their playing style and impact
-                    3. Any iconic elements or memorable features
-
-                    Make it engaging and highlight their importance to the game.
-                    Return only the description, no explanations."""
-
-                    description = await asyncio.to_thread(
-                        self.model.generate_content,
-                        headshot_prompt,
-                        generation_config=genai.GenerationConfig(
-                            temperature=0.7,
-                            response_mime_type="text/plain"
-                        ),
+            print(media_plan)
+            # Process homerun matches if search terms provided
+            if media_plan["homerun_search"]:
+                homerun_matches = []
+                for title in self.homeruns["title"]:
+                    score = max(
+                        difflib.SequenceMatcher(
+                            None, str(title).lower(), keyword.lower()
+                        ).ratio()
+                        for keyword in media_plan["homerun_search"]
                     )
+                    if score > 0.6:  # Threshold for good matches
+                        video_data = self.homeruns[
+                            self.homeruns["title"] == title
+                        ].iloc[0]
+                        homerun_matches.append(
+                            {
+                                "type": "video",
+                                "url": video_data["video"],
+                                "title": video_data["title"],
+                                "description": f"Incredible home run with {video_data['ExitVelocity']} mph exit velocity, {video_data['LaunchAngle']}° launch angle, traveling {video_data['HitDistance']} feet!",
+                                "metadata": {
+                                    "exit_velocity": float(video_data["ExitVelocity"]),
+                                    "launch_angle": float(video_data["LaunchAngle"]),
+                                    "distance": float(video_data["HitDistance"]),
+                                },
+                            }
+                        )
 
-                    media_results.append({
-                        "type": "image",
-                        "url": f"https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/{item['params']['player_id']}/headshot/67/current",
-                        "description": description.text
-                    })
+                # Sort by exit velocity and take top matches
+                homerun_matches.sort(
+                    key=lambda x: x["metadata"]["exit_velocity"], reverse=True
+                )
+                media_plan["direct_media"].extend(
+                    homerun_matches
+                )  # Add top 2 matches
+
+            return media_plan
+
+        except Exception as e:
+            print(f"Error in media resolution: {str(e)}")
+            return {"direct_media": [], "homerun_search": []}
+
+    async def _resolve_media(self, deps: MLBDeps, data: Dict[str, Any], steps: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Resolve media using optimized search and image analysis"""
+        try:
+            # Get ready-to-use media items and homerun search terms
+            media_plan = await self._get_search_parameters(self.intent, data)
+            print("meedia", media_plan)
+            # Analyze and enhance media items with descriptions
+            enhanced_media = []
+            for media_item in media_plan.get("direct_media", []):
+                try:
+                    if media_item["type"] == "image":
+                        # Upload image to Gemini for analysis
+                        image_data = await deps.client.get(media_item["url"])
+                        if image_data:
+                            # Create prompt for image analysis
+                            prompt = f"""Analyze this baseball image and provide:
+                            1. Detailed visual description
+                            2. Key elements and subjects
+                            3. Baseball-specific context
+                            4. Historical or statistical significance if apparent
+                            
+                            This image is supposed to be {media_item["description"]}
+                            Return a natural, engaging description that captures the image's essence.
+                            Return a concise description
+                            """
+                            
+                            image_type="svg" if "team" in media_item["description"].lower() else "jpeg"
+                            # Generate image description using Gemini
+                            result = await asyncio.to_thread(
+                                self.gemini_2_model.generate_content,
+                                [
+                                    prompt,
+                                    {'data': base64.b64encode(image_data.content).decode('utf-8'), 'mime_type': f'image/{image_type}'}
+                                ],
+                                generation_config=genai.GenerationConfig(
+                                    temperature=0.7,
+                                )
+                            )
+                            #print("response media:", result)
+                            # Add enhanced description to media item
+                            media_item["description"] = result.text.strip()
+                            
+                    enhanced_media.append(media_item)
                     
-                elif item["source"] == "logo":
-                    # Get description for team logo
-                    logo_prompt = f"""Describe this MLB team's logo with baseball passion. Include:
-                    1. The team's history and legacy
-                    2. Notable championships and eras
-                    3. What the logo represents to fans
-                    4. The team's impact on baseball
-
-                    Make it engaging and capture the team's spirit.
-                    Return only the description, no explanations."""
-
-                    description = await asyncio.to_thread(
-                        self.model.generate_content,
-                        logo_prompt,
-                        generation_config=genai.GenerationConfig(
-                            temperature=0.7,
-                            response_mime_type="text/plain"
-                        ),
-                    )
-
-                    media_results.append({
-                        "type": "image", 
-                        "url": f"https://www.mlbstatic.com/team-logos/{item['params']['team_id']}.svg",
-                        "description": description.text
-                    })
+                except Exception as media_error:
+                    print(f"Error processing media item: {str(media_error)}")
+                    # Still include item even if enhancement fails
+                    enhanced_media.append(media_item)
                     
-                elif item["source"] == "homerun":
-                    # Get video by exact title match
-                    video_data = self.homeruns[self.homeruns['title'] == item['params']['title']].iloc[0]
-                    
-                    # Get description for homerun highlight
-                    highlight_prompt = f"""Describe this MLB homerun highlight with baseball passion:
-
-                    Title: {video_data['title']}
-                    Stats:
-                    - Exit Velocity: {video_data['ExitVelocity']} mph
-                    - Launch Angle: {video_data['LaunchAngle']}°
-                    - Distance: {video_data['HitDistance']} ft
-
-                    Include:
-                    1. The impact and excitement of the moment
-                    2. The impressive stats and what they mean
-                    3. The significance for the player/team
-                    4. Any dramatic elements or context
-
-                    Make it thrilling and capture the moment's energy.
-                    Return only the description, no explanations."""
-
-                    description = await asyncio.to_thread(
-                        self.model.generate_content,
-                        highlight_prompt,
-                        generation_config=genai.GenerationConfig(
-                            temperature=0.7,
-                            response_mime_type="text/plain"
-                        ),
-                    )
-                    
-                    media_results.append({
-                        "type": "video",
-                        "url": video_data['video'],
-                        "title": video_data['title'],
-                        "description": description.text,
-                        "metadata": {
-                            "exit_velocity": float(video_data['ExitVelocity']),
-                            "launch_angle": float(video_data['LaunchAngle']),
-                            "distance": float(video_data['HitDistance'])
-                        }
-                    })
-
-            return media_results
+            return enhanced_media
 
         except Exception as e:
             print(f"Media resolution error: {str(e)}")
             traceback.print_exc()
             return []
+
+    async def _enhance_media_metadata(self, media_item: Dict[str, Any]) -> Dict[str, Any]:
+        """Enhance media metadata with additional context"""
+        try:
+            if media_item["type"] == "image":
+                # Generate contextual metadata for images
+                if "player_id" in media_item.get("metadata", {}):
+                    media_item["metadata"]["player_context"] = await self._generate_player_description(
+                        media_item["metadata"]["player_id"]
+                    )
+                elif "team_id" in media_item.get("metadata", {}):
+                    media_item["metadata"]["team_context"] = await self._generate_team_description(
+                        media_item["metadata"]["team_id"]
+                    )
+                
+            elif media_item["type"] == "video" and "homerun_data" in media_item.get("metadata", {}):
+                # Add enhanced homerun context
+                media_item["metadata"]["game_context"] = await self._generate_highlight_description(
+                    media_item["metadata"]["homerun_data"]
+                )
+                
+            return media_item
+            
+        except Exception as e:
+            print(f"Error enhancing media metadata: {str(e)}")
+            return media_item
     def _extract_and_filter(
         self, data: Any, path: Optional[str], filter_condition: Optional[str]
     ) -> Any:
@@ -1994,4 +2042,5 @@ mlb_agent = MLBAgent(
     api_key=settings.GEMINI_API_KEY,
     endpoints_json=endpoints_json,
     functions_json=functions_json,
+    media_json=media_json,
 )

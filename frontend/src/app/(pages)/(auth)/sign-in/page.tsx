@@ -322,40 +322,6 @@ const SignInPage = () => {
             </Button>
           </motion.form>
 
-          {/* OAuth Options */}
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/20"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-transparent text-gray-300">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-6 space-y-3">
-              <Button 
-                variant="outline" 
-                className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20"
-                onClick={() => router.push('/api/auth/google')}
-              >
-                <Chrome className="w-5 h-5 mr-2" />
-                Sign in with Google
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20"
-                onClick={() => router.push('/api/auth/github')}
-              >
-                <Github className="w-5 h-5 mr-2" />
-                Sign in with GitHub
-              </Button>
-            </div>
-          </div>
-
           {/* Sign Up Link */}
           <p className="mt-6 text-center text-gray-300">
             Don't have an account?{' '}

@@ -2,7 +2,7 @@ from httpx import AsyncClient
 import typing_extensions as typing
 import enum
 from dataclasses import dataclass
-from typing import TypedDict, List, Optional, Dict, Any, Literal
+from typing import NotRequired, TypedDict, List, Optional, Dict, Any, Literal
 
 
 @dataclass
@@ -22,7 +22,7 @@ class MLBResponse(TypedDict):
     media: Optional[Dict[str, Any]]
 
 
-class IntentType(enum.Enum):
+class IntentType(str, enum.Enum):
     TEAM_INFO = "team_info"
     PLAYER_INFO = "player_info"
     GAME_INFO = "game_info"
@@ -33,14 +33,14 @@ class IntentType(enum.Enum):
     CONVERSATION = "conversation"
 
 
-class Specificity(enum.Enum):
+class Specificity(str, enum.Enum):
     GENERAL = "general"
     SPECIFIC = "specific"
     COMPARATIVE = "comparative"
     ANALYTICAL = "analytical"
 
 
-class Timeframe(enum.Enum):
+class Timeframe(str, enum.Enum):
     HISTORICAL = "historical"
     CURRENT = "current"
     UPCOMING = "upcoming"
@@ -48,27 +48,27 @@ class Timeframe(enum.Enum):
     CAREER = "career"
 
 
-class Complexity(enum.Enum):
+class Complexity(str, enum.Enum):
     SIMPLE = "simple"
     MODERATE = "moderate"
     COMPLEX = "complex"
 
 
-class ComparisonType(enum.Enum):
+class ComparisonType(str, enum.Enum):
     NONE = "none"
     PLAYER_VS_PLAYER = "player_vs_player"
     TEAM_VS_TEAM = "team_vs_team"
     HISTORICAL = "historical"
 
 
-class StatFocus(enum.Enum):
+class StatFocus(str, enum.Enum):
     NONE = "none"
     OFFENSIVE = "offensive"
     DEFENSIVE = "defensive"
     BOTH = "both"
 
 
-class Sentiment(enum.Enum):
+class Sentiment(str, enum.Enum):
     NEUTRAL = "neutral"
     POSITIVE = "positive"
     NEGATIVE = "negative"
@@ -110,12 +110,12 @@ class IntentAnalysis(TypedDict):
 
 
 # Data Plan Enums
-class PlanType(enum.Enum):
+class PlanType(str, enum.Enum):
     ENDPOINT = "endpoint"
     FUNCTION = "function"
 
 
-class StepType(enum.Enum):
+class StepType(str, enum.Enum):
     ENDPOINT = "endpoint"
     FUNCTION = "function"
 
@@ -154,3 +154,32 @@ class DataRetrievalPlan(typing.TypedDict):
     plan_type: PlanType
     steps: list[PlanStep]
     fallback: FallbackPlan
+
+
+class MediaType(str, enum.Enum):
+    IMAGE = "image"
+    VIDEO = "video"
+
+
+class MediaParams(TypedDict):
+    param1: str  # Defining specific param structure
+    search_query: NotRequired[str]
+    date_range: NotRequired[str]
+
+
+class MediaEndpoint(TypedDict):
+    type: MediaType
+    endpoint: str
+    params: MediaParams
+
+
+class SearchIdentifiers(TypedDict):
+    ids: List[str]
+    names: List[str]
+
+
+class SearchParameters(TypedDict):
+    homerun_keywords: List[str]
+    player_search: SearchIdentifiers
+    team_search: SearchIdentifiers
+    media_endpoints: List[MediaEndpoint]
