@@ -50,6 +50,7 @@
     "embla-carousel-react": "^8.5.2",
     "framer-motion": "^11.18.0",
     "input-otp": "^1.4.2",
+    "js-cookie": "^3.0.5",
     "js-cookies": "^1.0.4",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.471.1",
@@ -71,6 +72,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@types/bcryptjs": "^2.4.6",
+    "@types/js-cookie": "^3.0.6",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/lodash": "^4.17.14",
     "@types/node": "^20",

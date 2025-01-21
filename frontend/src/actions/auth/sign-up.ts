@@ -3,7 +3,6 @@
 import prisma from '@/lib/prisma'
 import { hash } from 'bcryptjs'
 import { sign } from 'jsonwebtoken'
-import { cookies } from 'next/headers'
 
 const SALT_ROUNDS = 12
 
@@ -71,7 +70,7 @@ export async function signUp({ email, password, name, language }: SignUpInput) {
     })
 
     // Create auth token
-    const authToken = sign(
+    const token = sign(
       {
         id: user.id,
         email: user.email,
@@ -81,16 +80,9 @@ export async function signUp({ email, password, name, language }: SignUpInput) {
       { expiresIn: '7d' }
     )
 
-    // Set auth cookie
-    const cookieStore = await cookies()
-    cookieStore.set('auth-token', authToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-    })
-
+    // Return token and user data
     return {
+      token,
       user: {
         id: user.id,
         email: user.email,

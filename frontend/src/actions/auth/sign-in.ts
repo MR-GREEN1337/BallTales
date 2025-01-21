@@ -3,7 +3,6 @@
 import prisma from '@/lib/prisma'
 import { compare } from 'bcryptjs'
 import { sign } from 'jsonwebtoken'
-import { cookies } from 'next/headers'
 
 interface SignInInput {
   email: string
@@ -37,6 +36,7 @@ export async function signIn({ email, password }: SignInInput) {
         error: 'Invalid credentials',
       }
     }
+
     // Create session token
     const token: string = sign(
       {
@@ -47,17 +47,10 @@ export async function signIn({ email, password }: SignInInput) {
       process.env.JWT_SECRET || 'fallback-secret',
       { expiresIn: '7d' }
     )
-    // Set cookie
-    const cookieStore = await cookies()
-    cookieStore.set('auth-token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-    })
 
-    // Return user data (excluding password)
+    // Return token and user data
     return {
+      token, // Send token back to client
       user: {
         id: user.id,
         email: user.email,

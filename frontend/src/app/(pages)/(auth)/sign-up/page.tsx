@@ -12,6 +12,7 @@ import { signUp } from '@/actions/auth/sign-up'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import Cookies from "js-cookie"
 
 interface SignUpFormData {
   email: string
@@ -91,7 +92,20 @@ const SignUpPage = () => {
       if (result.error) {
         throw new Error(result.error)
       }
-      
+      if (result.token) {
+        // Set the cookie on the client side
+        Cookies.set('auth-token', result.token, {
+          expires: 7, // 7 days
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/'
+        })
+        
+        // Add a small delay before redirecting to ensure cookie is set
+        setTimeout(() => {
+          router.push('/chat')
+        }, 100)
+      }
       return result.user
     },
     onSuccess: (user) => {

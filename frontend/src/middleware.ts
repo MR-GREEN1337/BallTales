@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
- 
-// Configure which paths require authentication.
+import { verify } from 'jsonwebtoken'
+
+// Configure which paths require authentication
 const protectedPaths = [
   '/chat',
 ]
@@ -10,17 +11,16 @@ const protectedPaths = [
 const publicPaths = [
   '/sign-up',
   '/sign-in',
-  '/forgot-password',
   '/'
 ]
- 
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-  const token = request.cookies.get('token')?.value
+  const token = request.cookies.get('auth-token')?.value
 
   // If user is authenticated and tries to access sign-in, redirect to dashboard
   if (pathname === '/sign-in' && token) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+    return NextResponse.redirect(new URL('/chat', request.url))
   }
   
   // Check if the path is public
@@ -43,18 +43,13 @@ export function middleware(request: NextRequest) {
   }
   
   try {
-    // Here you would typically verify the token
-    // This is a placeholder for token verification logic
-    // You could add JWT verification or other token validation here
-    if (!isValidToken(token)) {
-      throw new Error('Invalid token')
-    }
-
+    // Verify the JWT token
+    verify(token, process.env.JWT_SECRET || 'fallback-secret')
     return NextResponse.next()
   } catch (error) {
     // If token is invalid, clear it and redirect to login
     const response = NextResponse.redirect(new URL('/sign-in', request.url))
-    response.cookies.delete('token')
+    response.cookies.delete('auth-token')  // Use auth-token instead of token
     return response
   }
 }
@@ -71,12 +66,4 @@ export const config = {
      */
     '/((?!_next/static|_next/image|favicon.ico|public/).*)',
   ],
-}
-
-// Placeholder function for token validation
-// Replace this with your actual token validation logic
-function isValidToken(token: string): boolean {
-  // Add your token verification logic here
-  // For example, verify JWT signature, check expiration, etc.
-  return token.length > 0
 }

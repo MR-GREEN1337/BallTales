@@ -25,11 +25,12 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
-} from "@/components/ui/alert"
+} from "@/components/ui/alert";
+import Cookies from 'js-cookie';
 
 interface SignInFormData {
-  email: string
-  password: string
+  email: string;
+  password: string;
   rememberMe: boolean
 }
 
@@ -89,8 +90,19 @@ const SignInPage = () => {
       if (result.error) {
         throw new Error(result.error)
       }
+
+      if (result.token) {
+        // Set the cookie on the client side
+        Cookies.set('auth-token', result.token, {
+          expires: 7, // 7 days
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/'
+        }
+      )
+    }
       
-      return result.user
+    router.push('/chat')
     },
     onSuccess: (user) => {
       // Handle "Remember me"

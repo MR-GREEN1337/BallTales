@@ -1493,43 +1493,67 @@ The plan must follow this exact schema:
                 "media": None
             }
     async def generate_conversation(
-        self,
-        message: str,
-        response_data: Optional[Any] = None,
-    ) -> str:
-        """Generate a friendly conversational response"""
-        try:
-            sanitized_intent = {
-            'context': {k: str(v.value) if hasattr(v, 'value') else v 
-                    for k, v in self.intent['context'].items()},
-            'intent': {k: str(v.value) if hasattr(v, 'value') else v 
-                    for k, v in self.intent['intent'].items()},
-            'entities': self.intent['entities']
-        }
-            context = ""
-            if self.intent and response_data:
-                context = f"""
-                Intent: {json.dumps(sanitized_intent)}
-                Data response: {json.dumps(response_data, indent=2)}
-                """
+            self,
+            message: str,
+            response_data: Optional[Any] = None,
+        ) -> str:
+            """Generate a friendly conversational response"""
+            try:
+                # First sanitize the response_data if it contains any Enum values
+                def sanitize_enum_values(obj):
+                    if isinstance(obj, dict):
+                        return {k: sanitize_enum_values(v) for k, v in obj.items()}
+                    elif isinstance(obj, list):
+                        return [sanitize_enum_values(item) for item in obj]
+                    elif hasattr(obj, 'value'):  # Check if it's an Enum
+                        return str(obj.value)
+                    return obj
 
-            result = await asyncio.to_thread(
-                self.code_model.generate_content,
-                f"""{self.conversation_prompt}
-                
-                User query: "{message}"
-                {context}
-                
-                Generate a friendly response:""",
-                generation_config=genai.GenerationConfig(
-                    response_mime_type="text/plain"
-                ),
-            )
-            return result.text.strip()
-        except Exception as e:
-            print(f"Error generating conversation: {str(e)}")
-            return "I'd be happy to talk baseball with you! What would you like to know about the game?"
+                # Sanitize both intent and response data
+                if self.intent:
+                    sanitized_intent = sanitize_enum_values(self.intent)
+                else:
+                    sanitized_intent = {}
 
+                if response_data:
+                    sanitized_response = sanitize_enum_values(response_data)
+                else:
+                    sanitized_response = {}
+
+                context = ""
+                if sanitized_intent and sanitized_response:
+                    context = f"""
+                    Intent: {json.dumps(sanitized_intent)}
+                    Data response: {json.dumps(sanitized_response, indent=2)}
+                    """
+
+                result = await asyncio.to_thread(
+                    self.code_model.generate_content,
+                    f"""{self.conversation_prompt}
+                    
+                    User query: "{message}"
+                    {context}
+                    
+                    Generate a friendly response:""",
+                    generation_config=genai.GenerationConfig(
+                        response_mime_type="text/plain"
+                    ),
+                )
+                return result.text.strip()
+            except Exception as e:
+                print(f"Error generating conversation: {str(e)}")
+                traceback.print_exc()
+                return "I'd be happy to talk baseball with you! What would you like to know about the game?"
+
+    def _get_default_suggestions(self) -> List[str]:
+        """Get default suggestions when no context-specific ones are available"""
+        return [
+            "Tell me about today's games",
+            "Who are the top players this season?",
+            "Show me the latest standings",
+            "What are some exciting home runs?",
+            "Tell me about your favorite baseball moment"
+        ]
     async def _generate_suggestions(
         self, response: Any
     ) -> List[str]:

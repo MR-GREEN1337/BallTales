@@ -87,3 +87,8 @@ body {
     --chart-5: 284 85% 60%;     /* Brighter Purple */
   }
 }
+
+.shadow-glow {
+  filter: blur(0.5px);
+  will-change: transform;
+}

@@ -2,12 +2,18 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { UserCircle2, Bot, Send, ChevronRight, Save } from 'lucide-react'
+import { UserCircle2, Bot, Send, ChevronRight, Save, Loader2Icon } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { toast } from 'sonner'
 import axios from 'axios'
 import MLBProfile from './_components/MLBProfile'
+import MLBMedia from './_components/MLBMedia'
+import { getUserProfile } from '@/actions/user/get-user'
+import Cookies from "js-cookie"
+import { redirect, useRouter } from 'next/navigation'
+import { ClearButton, MessageDust } from './_components/ResetButton'
+
 
 interface Message {
   id: string
@@ -20,12 +26,7 @@ interface Message {
     items: { id: string; name: string; image?: string }[]
   }
   suggestions?: string[]
-  media?: {
-    type: string
-    url: string
-    thumbnail: string
-    description: string
-  }
+  media?: any
 }
 
 interface MLBResponse {
@@ -48,11 +49,11 @@ const TypingText = ({ text }: { text: string }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const phrases = ["Thinking...", "Mulling it over...", "Processing..."];
   const [phraseIndex, setPhraseIndex] = useState(0);
-  
+
   useEffect(() => {
     const interval = setInterval(() => {
       const currentPhrase = phrases[phraseIndex];
-      
+
       if (!isDeleting) {
         if (displayText !== currentPhrase) {
           setDisplayText(currentPhrase.slice(0, displayText.length + 1));
@@ -95,34 +96,38 @@ const OnboardingChat = () => {
   const [inputText, setInputText] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [showThinking, setShowThinking] = useState(false)
-  const [preferences, setPreferences] = useState<any>({})
-  const [hasInitialized, setHasInitialized] = useState(false)
-  const [isLoaded, setIsLoaded] = useState(false)
+  const [userData, setUserData] = useState<any>(null)
+  const router = useRouter()
+  const [isLoading, setIsLoading] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const thinkingTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
+  const [clearingMessages, setClearingMessages] = useState(false);
+  const [messagesToClear, setMessagesToClear] = useState<Message[]>([]);
 
-  const user = {
-    name: "Jane Smith",
-    email: "jane@mlb.fan",
-    avatar: "/user.png" // Using placeholder for demo
-  }
-
-  // Example preferences collected during chat
-  const user_preferences = {
-    favoriteTeam: "New York Yankees",
-    favoritePlayer: "Aaron Judge",
-    favoriteHomeRun: "Judge's 62nd HR of 2022 Season",
-    stats: {
-      messagesExchanged: 145,
-      queriesAnswered: 72,
-      daysActive: 30
-    },
-    preferences: {
-      language: "English",
-      statsPreference: "Advanced",
-      notificationPreference: "Game Time Only"
+  useEffect(() => {
+    const authToken = Cookies.get('auth-token')
+    //alert(authToken)
+    if (!authToken) {
+      router.push('/sign-in')
+      return
     }
-  }
+
+    const fetchUserData = async () => {
+      try {
+        const data = await getUserProfile(authToken)
+        setUserData(data)
+        //alert(JSON.stringify(data, null, 2))
+      } catch (error) {
+        console.error('Error fetching user data:', error)
+        toast.error('Failed to load user profile')
+        router.push('/sign-in')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchUserData()
+  }, [])
 
   const handleSuggestionClick = (suggestion: string) => {
     setInputText(suggestion)
@@ -130,12 +135,12 @@ const OnboardingChat = () => {
   }
 
   const handleLogout = () => {
-    toast.success("Successfully logged out")
-    // Add your logout logic here
+    Cookies.remove('auth-token')
+    router.push('/sign-in')
+    toast.success('Successfully logged out')
   }
 
   useEffect(() => {
-    setIsLoaded(true)
     setMessages([{
       id: 'welcome-message',
       content: "Hey there! I'm your baseball buddy, here to chat about the game we love! 💫⚾️ Tell me, what got you into baseball?",
@@ -165,6 +170,13 @@ const OnboardingChat = () => {
     }
   }, [])
 
+  if (isLoading) {
+    return (
+      <div className='flex h-screen w-full items-center justify-center'>
+        <Loader2Icon size={30} className='animlate-spin stroke-primary' />
+      </div>
+    )
+  }
   const handleSend = async () => {
     if (!inputText.trim()) return
 
@@ -178,7 +190,7 @@ const OnboardingChat = () => {
     addMessage(userMessage as any)
     setInputText('')
     setIsTyping(true)
-    
+
     // Set thinking indicator after 3 seconds if no response
     thinkingTimeoutRef.current = setTimeout(() => {
       setShowThinking(true)
@@ -188,6 +200,7 @@ const OnboardingChat = () => {
       const response = await axios.post<MLBResponse>(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat`, {
         message: inputText
       })
+      console.log("hhi", response.data)
 
       // Clear thinking timeout and hide indicator
       if (thinkingTimeoutRef.current) {
@@ -203,6 +216,7 @@ const OnboardingChat = () => {
         suggestions: response.data.suggestions,
         media: response.data.media
       }
+      console.log(response.data.media)
 
       setIsTyping(false)
       addMessage(botMessage)
@@ -225,24 +239,48 @@ const OnboardingChat = () => {
       console.error('Chat API error:', error)
       setIsTyping(false)
       setShowThinking(false)
-      
+
       if (thinkingTimeoutRef.current) {
         clearTimeout(thinkingTimeoutRef.current)
       }
-      
+
       addMessage({
         id: `error-${Date.now()}`,
         content: "I'm having trouble connecting to the baseball data. Can you try asking that again?",
         sender: 'bot',
         type: 'text'
       })
-      
+
       toast.error('Failed to get response from MLB chat')
     }
   }
 
+  if (!userData?.user) {
+    return null
+  }
+
+  const handleReset = () => {
+    setClearingMessages(true);
+    // Store current messages except welcome message
+    setMessagesToClear(messages.filter(m => m.id !== 'welcome-message'));
+    // Reset to only welcome message
+    setMessages([{
+      id: 'welcome-message',
+      content: "Hey there! I'm your baseball buddy, here to chat about the game we love! 💫⚾️ Tell me, what got you into baseball?",
+      sender: 'bot',
+      type: 'text'
+    }]);
+
+    // Clean up after animation
+    setTimeout(() => {
+      setClearingMessages(false);
+      setMessagesToClear([]);
+    }, 1000);
+  };
+
+
   return (
-    <div 
+    <div
       className="min-h-screen relative overflow-hidden"
       style={{
         backgroundImage: 'url(/chat.jpg)',
@@ -253,10 +291,11 @@ const OnboardingChat = () => {
         backgroundBlendMode: 'multiply'
       }}
     >
-      <div className="fixed top-4 right-4 z-50">
-        <MLBProfile 
-          user={user}
-          preferences={user_preferences}
+      <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+        <ClearButton onClear={handleReset} disabled={messages.length === 1}/>
+        <MLBProfile
+          user={userData.user}
+          preferences={userData.preferences}
           onLogout={handleLogout}
         />
       </div>
@@ -276,9 +315,25 @@ const OnboardingChat = () => {
           {/* Messages */}
           <div className="space-y-6">
             <AnimatePresence>
+              {clearingMessages && (
+                <div className="fixed inset-0 pointer-events-none">
+                  {messagesToClear.map((message) => (
+                    <MessageDust
+                      key={`dust-${message.id}`}
+                      message={message}
+                      onComplete={() => {
+                        setMessagesToClear(prev =>
+                          prev.filter(m => m.id !== message.id)
+                        );
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
               {messages.map((message) => (
                 <motion.div
                   key={message.id}
+                  id={`message-${message.id}`}  // Add this line
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
@@ -289,28 +344,19 @@ const OnboardingChat = () => {
                     ) : (
                       <UserCircle2 className="w-8 h-8 text-gray-400 mt-1" />
                     )}
-                    
-                    <div className={`rounded-2xl p-4 backdrop-blur-sm ${
-                      message.sender === 'user' 
-                        ? 'bg-blue-600/90 text-white'
-                        : 'bg-white/10 text-white'
-                    }`}>
+
+                    <div className={`rounded-2xl p-4 backdrop-blur-sm ${message.sender === 'user'
+                      ? 'bg-blue-600/90 text-white'
+                      : 'bg-white/10 text-white'
+                      }`}>
                       <div className="prose prose-invert">
                         {message.content}
                       </div>
-                      
+
                       {message.media && (
-                        <div className="mt-4">
-                          {message.media.type === 'image' && (
-                            <img 
-                              src={message.media.url} 
-                              alt={message.media.description}
-                              className="rounded-lg max-w-full h-auto transform-none"
-                            />
-                          )}
-                        </div>
+                        <MLBMedia media={message.media} />
                       )}
-                      
+
                       {message.options && (
                         <div className="mt-4 flex flex-wrap gap-2">
                           {message.options.map((option) => (
@@ -329,7 +375,7 @@ const OnboardingChat = () => {
                   </div>
                 </motion.div>
               ))}
-              
+
               {/* Thinking indicator with animated text */}
               {showThinking && (
                 <motion.div
@@ -346,7 +392,7 @@ const OnboardingChat = () => {
                   </div>
                 </motion.div>
               )}
-              
+
               {/* Typing indicator */}
               {isTyping && !showThinking && (
                 <motion.div

@@ -8,37 +8,37 @@ datasource db {
 }
 
 model User {
-  id          String          @id @default(cuid())
-  email       String          @unique
-  password    String
-  name        String?
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  preferences UserPreferences?
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String?
+  avatar        String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  preferences   UserPreferences?
+  baseballStats BaseballStats?
 }
 
 model UserPreferences {
-  id            String    @id @default(cuid())
-  userId        String    @unique
-  user          User      @relation(fields: [userId], references: [id])
-  language      String    @default("en")
-  theme         String    @default("system")
-  notifications Boolean   @default(true)
+  id                     String  @id @default(cuid())
+  userId                 String  @unique
+  user                   User    @relation(fields: [userId], references: [id])
+  language               String  @default("en")
+  theme                  String  @default("system")
+  notifications          Boolean @default(true)
+  favoriteTeam          String?
+  favoritePlayer        String?
+  favoriteHomeRun       String?
+  statsPreference       String  @default("Basic")
+  notificationPreference String  @default("Game Time Only")
 }
 
-model Homerun {
-  id           Int      @id @default(autoincrement())
-  season       Int
-  title        String
-  exitVelocity Float?
-  launchAngle  Float?
-  hitDistance  Float?
-  video        String?
-  playerId     String
-  playerName   String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  @@index([playerId])
-  @@index([season])
+model BaseballStats {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id])
+  messagesExchanged Int      @default(0)
+  queriesAnswered   Int      @default(0)
+  daysActive        Int      @default(0)
+  lastActive        DateTime @default(now())
 }

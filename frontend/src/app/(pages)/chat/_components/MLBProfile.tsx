@@ -28,19 +28,13 @@ interface MLBProfileProps {
   onLogout: () => void
 }
 
-const AvatarComponent = ({ src, fallback }: { src?: string; fallback: string }) => (
+const AvatarComponent = () => (
   <div className="relative inline-block">
-    {src ? (
       <img 
-        src={src} 
+        src={"/user.png"} 
         alt="Profile" 
         className="w-full h-full object-cover rounded-full"
       />
-    ) : (
-      <div className="w-full h-full flex items-center justify-center bg-blue-600 text-white rounded-full">
-        {fallback}
-      </div>
-    )}
   </div>
 )
 
@@ -52,10 +46,7 @@ const MLBProfile = ({ user, preferences, onLogout }: MLBProfileProps) => {
       <DropdownMenuTrigger asChild>
         <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-200">
           <div className="h-8 w-8">
-            <AvatarComponent
-              src={user.avatar}
-              fallback={user.name.substring(0, 2).toUpperCase()}
-            />
+            <AvatarComponent />
           </div>
           <span className="text-white font-medium hidden md:inline">{user.name}</span>
           <ChevronDown className="w-4 h-4 text-gray-300" />
@@ -67,10 +58,7 @@ const MLBProfile = ({ user, preferences, onLogout }: MLBProfileProps) => {
         <div className="p-4">
           <div className="flex items-start gap-3">
             <div className="h-16 w-16">
-              <AvatarComponent
-                src={user.avatar}
-                fallback={user.name.substring(0, 2).toUpperCase()}
-              />
+              <AvatarComponent />
             </div>
             <div>
               <h3 className="text-lg font-semibold">{user.name}</h3>
