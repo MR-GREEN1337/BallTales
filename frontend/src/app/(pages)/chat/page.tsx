@@ -13,6 +13,7 @@ import { getUserProfile } from '@/actions/user/get-user'
 import Cookies from "js-cookie"
 import { redirect, useRouter } from 'next/navigation'
 import { ClearButton, MessageDust } from './_components/ResetButton'
+import { languageContent, typingPhrases } from '@/lib/constants'
 
 
 interface Message {
@@ -46,10 +47,35 @@ interface MLBResponse {
   chart: any
 }
 
-const TypingText = ({ text }: { text: string }) => {
+interface ChatRequestData {
+  message: string;
+  history: {
+    id: string;
+    content: string;
+    sender: 'bot' | 'user';
+    type: 'text' | 'options' | 'selection';
+    options?: string[];
+    suggestions?: string[];
+    media?: any;
+    chart?: any;
+  }[];
+  user_data: {
+    id: string;
+    name: string;
+    email: string;
+    language: string;
+    preferences: {
+      favorite_teams: string[];
+      favorite_players: string[];
+      interests: string[];
+    }
+  }
+}
+
+const TypingText = ({ text, language }: { text: string, language: string }) => {
   const [displayText, setDisplayText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
-  const phrases = ["Thinking...", "Mulling it over...", "Processing..."];
+  const phrases = typingPhrases[language as keyof typeof typingPhrases] || typingPhrases.en;
   const [phraseIndex, setPhraseIndex] = useState(0);
 
   useEffect(() => {
@@ -95,6 +121,7 @@ const TypingText = ({ text }: { text: string }) => {
 
 const OnboardingChat = () => {
   const [messages, setMessages] = useState<Message[]>([])
+  const [userLanguage, setUserLanguage] = useState('en');
   const [inputText, setInputText] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [showThinking, setShowThinking] = useState(false)
@@ -140,13 +167,23 @@ const OnboardingChat = () => {
   }
 
   useEffect(() => {
+    // Get user language from userData when it's available
+    if (userData?.preferences?.preferences?.language) {
+      const lang = userData.preferences.preferences.language.toLowerCase();
+      // Map 'sp' to 'es' for Spanish
+      const mappedLang = lang === 'sp' ? 'es' : lang;
+      setUserLanguage(mappedLang);
+    }
+
+    // Set initial message based on language
     setMessages([{
       id: 'welcome-message',
-      content: "Hey there! I'm your baseball buddy, here to chat about the game we love! 💫⚾️ Tell me, what got you into baseball?",
+      content: languageContent[userLanguage as keyof typeof languageContent]?.welcomeMessage || languageContent.en.welcomeMessage,
       sender: 'bot',
-      type: 'text'
-    }])
-  }, [])
+      type: 'text',
+      chart: undefined
+    }]);
+  }, [userData]);
 
   const addMessage = (message: Message) => {
     setMessages(prev => [...prev, message])
@@ -169,15 +206,31 @@ const OnboardingChat = () => {
     }
   }, [])
 
+  interface MessageHistory {
+    content: string
+    sender: 'bot' | 'user'
+    timestamp?: number
+  }
+
+  interface UserPreferences {
+    favorite_teams?: string[]
+    favorite_players?: string[]
+    interests?: string[]
+  }
+
+  // Update the handleSend function in your OnboardingChat component
   const handleSend = async () => {
     if (!inputText.trim()) return
 
+    const timestamp = Date.now()
+
     // Add user message
     const userMessage = {
-      id: `user-${Date.now()}`,
+      id: `user-${timestamp}`,
       content: inputText,
-      sender: 'user',
-      type: 'text' as const
+      sender: 'user' as const,
+      type: 'text' as const,
+      timestamp
     }
     addMessage(userMessage as any)
     setInputText('')
@@ -189,11 +242,34 @@ const OnboardingChat = () => {
     }, 2000)
 
     try {
-      const response = await axios.post<MLBResponse>(`${process.env.NEXT_PUBLIC_API_URL}/chat`, {
-        message: inputText
-      })
-      console.log("hhi", response.data)
-
+      // Convert messages to the format expected by the backend
+      const messageHistory = messages.map(msg => ({
+        content: msg.content,
+        sender: msg.sender,
+        type: msg.type || 'text',
+        suggestions: msg.suggestions || undefined,
+      }))
+      console.log("userData", userData)
+      // Prepare user data
+      const userDataForRequest = {
+        id: userData.user.id,
+        name: userData.user.name,
+        email: userData.user.email,
+        language: userData.preferences.preferences.language,
+        preferences: {
+          favorite_teams: userData.preferences?.favorite_teams || [],
+          favorite_players: userData.preferences?.favorite_players || [],
+          interests: userData.preferences?.interests || []
+        }
+      }
+      const backData = {
+        message: inputText,
+        history: messageHistory,
+        user_data: userDataForRequest
+      }
+      console.log("Back Data", backData)
+      const response = await axios.post<MLBResponse>(`${process.env.NEXT_PUBLIC_API_URL}/chat`, backData as ChatRequestData)
+      console.log(response)
       // Clear thinking timeout and hide indicator
       if (thinkingTimeoutRef.current) {
         clearTimeout(thinkingTimeoutRef.current)
@@ -209,7 +285,6 @@ const OnboardingChat = () => {
         media: response.data.media,
         chart: response.data.chart
       }
-      //console.log(response.data.media)
 
       setIsTyping(false)
       addMessage(botMessage)
@@ -220,7 +295,8 @@ const OnboardingChat = () => {
           content: "You might also be interested in:",
           sender: 'bot',
           type: 'options',
-          options: response.data.suggestions
+          options: response.data.suggestions,
+          chart: undefined
         })
       }
 
@@ -230,22 +306,28 @@ const OnboardingChat = () => {
 
     } catch (error) {
       console.error('Chat API error:', error)
-      setIsTyping(false)
-      setShowThinking(false)
-
-      if (thinkingTimeoutRef.current) {
-        clearTimeout(thinkingTimeoutRef.current)
-      }
-
-      addMessage({
-        id: `error-${Date.now()}`,
-        content: "I'm having trouble connecting to the baseball data. Can you try asking that again?",
-        sender: 'bot',
-        type: 'text'
-      })
-
-      toast.error('Failed to get response from MLB chat')
+      handleChatError()
     }
+  }
+
+  // Separate error handling function for cleaner code
+  const handleChatError = () => {
+    setIsTyping(false)
+    setShowThinking(false)
+
+    if (thinkingTimeoutRef.current) {
+      clearTimeout(thinkingTimeoutRef.current)
+    }
+
+    addMessage({
+      id: `error-${Date.now()}`,
+      content: "I'm having trouble connecting to the baseball data. Can you try asking that again?",
+      sender: 'bot',
+      type: 'text',
+      chart: undefined
+    })
+
+    toast.error('Failed to get response from MLB chat')
   }
 
   if (!userData?.user) {
@@ -259,9 +341,10 @@ const OnboardingChat = () => {
     // Reset to only welcome message
     setMessages([{
       id: 'welcome-message',
-      content: "Hey there! I'm your baseball buddy, here to chat about the game we love! 💫⚾️ Tell me, what got you into baseball?",
+      content: languageContent[userLanguage as keyof typeof languageContent]?.welcomeMessage || languageContent.en.welcomeMessage,
       sender: 'bot',
-      type: 'text'
+      type: 'text',
+      chart: undefined
     }]);
 
     // Clean up after animation
@@ -285,7 +368,7 @@ const OnboardingChat = () => {
       }}
     >
       <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
-        <ClearButton onClear={handleReset} disabled={messages.length === 1}/>
+        <ClearButton onClear={handleReset} disabled={messages.length === 1} />
         <MLBProfile
           user={userData.user}
           preferences={userData.preferences}
@@ -301,8 +384,12 @@ const OnboardingChat = () => {
             transition={{ delay: 0.5 }}
             className="text-center"
           >
-            <h1 className="text-4xl font-bold text-white mb-2">Welcome to BallTales</h1>
-            <p className="text-gray-300">Let's chat about baseball and get to know your interests</p>
+            <h1 className="text-4xl font-bold text-white mb-2">
+              {languageContent[userLanguage as keyof typeof languageContent]?.pageTitle || languageContent.en.pageTitle}
+            </h1>
+            <p className="text-gray-300">
+              {languageContent[userLanguage as keyof typeof languageContent]?.pageSubtitle || languageContent.en.pageSubtitle}
+            </p>
           </motion.div>
 
           {/* Messages */}
@@ -380,7 +467,7 @@ const OnboardingChat = () => {
                   <Bot className="w-8 h-8 text-blue-400 mt-1" />
                   <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
                     <div className="text-white">
-                      <TypingText text="Thinking..." />
+                      <TypingText text="Thinking..." language={userLanguage} />
                     </div>
                   </div>
                 </motion.div>
@@ -415,7 +502,7 @@ const OnboardingChat = () => {
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Type anything about baseball..."
+              placeholder={languageContent[userLanguage as keyof typeof languageContent]?.inputPlaceholder || languageContent.en.inputPlaceholder}
               className="bg-white/5 border-white/20 text-white placeholder:text-gray-400 backdrop-blur-sm"
             />
             <Button

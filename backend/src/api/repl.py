@@ -4,12 +4,8 @@ import subprocess
 import json
 from typing import TypedDict, Dict, List, Optional
 
+from src.api.models import REPLResult
 
-class REPLResult(TypedDict):
-    status: str
-    logs: List[str]
-    error: Optional[str]
-    output: Optional[str]
 
 
 class MLBPythonREPL:

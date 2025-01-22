@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, Grid2X2, Play } from 'lucide-react';
+import { ChevronDown, ChevronUp, Grid2X2, Play, Search } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -14,13 +14,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import MLBStatistics from './MLBStatistics';
 
-// TypeScript interfaces
+// TypeScript interfaces remain the same
 interface MediaMetadata {
   exit_velocity?: number;
   launch_angle?: number;
   distance?: number;
+  year?: number;
 }
 
 interface MediaItem {
@@ -33,7 +35,7 @@ interface MediaItem {
 
 interface MLBMediaProps {
   media: MediaItem | MediaItem[];
-  chart: any
+  chart: any;
 }
 
 interface MediaStatsProps {
@@ -42,6 +44,7 @@ interface MediaStatsProps {
 
 const VIDEO_GALLERY_THRESHOLD = 3;
 
+// MediaStats component remains the same
 const MediaStats: React.FC<MediaStatsProps> = ({ metadata }) => (
   <div className="flex flex-wrap gap-2">
     {metadata.exit_velocity && (
@@ -68,17 +71,18 @@ const MediaStats: React.FC<MediaStatsProps> = ({ metadata }) => (
         </div>
       </div>
     )}
+    {metadata.year && (
+      <div className="bg-blue-500/20 rounded-lg px-3 py-2">
+        <div className="text-xs text-gray-300">Season</div>
+        <div className="font-semibold text-white">
+          {metadata.year}
+        </div>
+      </div>
+    )}
   </div>
 );
 
-interface MediaItem {
-  type: 'image' | 'video';
-  url: string;
-  description?: string;
-  title?: string;
-  metadata?: MediaMetadata;
-}
-
+// VideoPlayer component remains the same
 const VideoPlayer: React.FC<{ video: MediaItem }> = ({ video }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -158,6 +162,7 @@ const VideoPlayer: React.FC<{ video: MediaItem }> = ({ video }) => {
   );
 };
 
+// SingleVideo component remains the same
 const SingleVideo: React.FC<{ video: MediaItem }> = ({ video }) => (
   <div className="border border-white/10 hover:border-white/20 transition-colors rounded-lg overflow-hidden">
     <div className="p-4 space-y-4">
@@ -170,7 +175,15 @@ const SingleVideo: React.FC<{ video: MediaItem }> = ({ video }) => (
   </div>
 );
 
+// Updated VideoGrid component with search functionality
 const VideoGrid: React.FC<{ videos: MediaItem[] }> = ({ videos }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Filter videos based on search query
+  const filteredVideos = videos.filter(video => 
+    video.title?.toLowerCase().includes(searchQuery.toLowerCase()) || !searchQuery
+  );
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -183,8 +196,26 @@ const VideoGrid: React.FC<{ videos: MediaItem[] }> = ({ videos }) => {
         <DialogHeader>
           <DialogTitle>Home Run Gallery</DialogTitle>
         </DialogHeader>
+        
+        {/* Search Bar */}
+        <div className="px-4 pt-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Search home runs..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 bg-black/20 border-white/10 focus:border-blue-500/50 transition-colors"
+            />
+          </div>
+          <div className="mt-2 text-sm text-gray-400">
+            Showing {filteredVideos.length} of {videos.length} videos
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-          {videos.map((video, index) => (
+          {filteredVideos.map((video, index) => (
             <Card 
               key={index} 
               className="overflow-hidden bg-black/50 hover:bg-black/60 transition-colors border-white/10 hover:border-white/20"
@@ -210,6 +241,7 @@ const VideoGrid: React.FC<{ videos: MediaItem[] }> = ({ videos }) => {
   );
 };
 
+// MLBMedia component remains largely the same
 const MLBMedia: React.FC<MLBMediaProps> = ({ media, chart }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   if (!media) return null;
@@ -300,15 +332,11 @@ const MLBMedia: React.FC<MLBMediaProps> = ({ media, chart }) => {
               ))}
             </div>
           )}
-                {/* Add statistics section */}
-      {chart && chart.requires_chart && (
-        <>
-        {/*<pre>{JSON.stringify(chart, null, 2)}</pre>*/}
-        <div className="mt-8">
-          <MLBStatistics chart={chart} />
-        </div>
-        </>
-      )}
+          {chart && chart.requires_chart && (
+            <div className="mt-8">
+              <MLBStatistics chart={chart} />
+            </div>
+          )}
         </div>
       )}
     </div>

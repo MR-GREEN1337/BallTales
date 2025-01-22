@@ -1,624 +1,44 @@
 {
   "endpoints": {
-    "attendance": {
-      "url": "https://statsapi.mlb.com/api/v1/attendance",
-      "description": "Get attendance information",
-      "required_params": [
-        "teamId",
-        "sportId",
-        "season",
-        "fields"
-      ]
-    },
     "sports_players": {
       "url": "https://statsapi.mlb.com/api/v1/sports/{sportId}/players",
-      "description": "Get a list of all players for a specific sport and season. Returns detailed player information including IDs, names, birth details, and handedness.",
-      "required_params": [
-        "sportId",
-        "season"
+      "description": "Get a list of all players for a specific sport and season. Returns detailed player information including IDs, names, birth details, and handedness. This endpoint supports fields parameter to limit response data.",
+      "required_params": ["sportId", "season"],
+      "optional_params": ["gameType", "fields"],
+      "rate_limit": "25 requests per second",
+      "case_sensitive": true,
+      "example_calls": [
+        {
+          "description": "Get MLB players for 2024 season with specific fields",
+          "url": "https://statsapi.mlb.com/api/v1/sports/1/players?season=2024&fields=people,id,fullName",
+          "notes": "sportId=1 represents MLB"
+        }
       ],
-      "optional_params": [
-        "gameType",
-        "fields"
-      ],
-      "example_response": {
-        "people": [
-          {
-            "id": 671096,
-            "fullName": "Andrew Abbott",
-            "birthDate": "1999-06-01",
-            "birthCity": "Lynchburg",
-            "birthStateProvince": "VA",
-            "batSide": "Left",
-            "pitchHand": "Left"
-          }
-        ]
+      "response_schema": {
+        "people": [{
+          "id": "Integer - Unique identifier for the player",
+          "fullName": "String - Player's full name",
+          "birthDate": "String - YYYY-MM-DD format",
+          "birthCity": "String",
+          "birthStateProvince": "String",
+          "batSide": "String - Left/Right",
+          "pitchHand": "String - Left/Right"
+        }]
       },
-      "notes": "sportId=1 represents MLB. Response includes a 'people' array with detailed player information. Can be used to search through all players in a given season."
-    },
-    "schedule_postseason_tuneIn": {
-      "url": "https://statsapi.mlb.com/api/v1/schedule/postseason/tuneIn",
-      "description": "Get postseason tune-in information. Note: This endpoint appears to return no data.",
-      "required_params": [],
-      "optional_params": [
-        "teamId",
-        "sportId",
-        "season",
-        "hydrate",
-        "fields"
-      ]
-    },
-    "sports": {
-      "url": "https://statsapi.mlb.com/api/v1/sports",
-      "description": "Get sports information",
-      "required_params": [],
-      "optional_params": [
-        "sportId",
-        "fields"
-      ]
-    },
-    "standings": {
-      "url": "https://statsapi.mlb.com/api/v1/standings",
-      "description": "Get standings information",
-      "required_params": [
-        "leagueId"
-      ],
-      "optional_params": [
-        "season",
-        "standingsTypes",
-        "date",
-        "hydrate",
-        "fields"
-      ]
-    },
-    "teams": {
-      "url": "https://statsapi.mlb.com/api/v1/teams",
-      "description": "Get teams information",
-      "required_params": [],
-      "optional_params": [
-        "season",
-        "activeStatus",
-        "leagueIds",
-        "sportId",
-        "sportIds",
-        "gameType",
-        "hydrate",
-        "fields"
-      ]
-    },
-    "teams_affiliates": {
-      "url": "https://statsapi.mlb.com/api/v1/teams/affiliates",
-      "description": "Get team affiliates",
-      "required_params": [
-        "teamIds"
-      ],
-      "optional_params": [
-        "sportId",
-        "season",
-        "hydrate",
-        "fields"
-      ]
-    },
-    "team": {
-      "url": "https://statsapi.mlb.com/api/v1/teams/{teamId}",
-      "description": "Get specific team information",
-      "required_params": [
-        "teamId"
-      ],
-      "optional_params": [
-        "season",
-        "sportId",
-        "hydrate",
-        "fields"
-      ]
-    },
-    "team_alumni": {
-      "url": "https://statsapi.mlb.com/api/v1/teams/{teamId}/alumni",
-      "description": "Get team alumni information",
-      "required_params": [
-        "teamId",
-        "season",
-        "group"
-      ],
-      "optional_params": [
-        "hydrate",
-        "fields"
-      ]
-    },
-    "team_coaches": {
-      "url": "https://statsapi.mlb.com/api/v1/teams/{teamId}/coaches",
-      "description": "Get team coaches information",
-      "required_params": [
-        "teamId"
-      ],
-      "optional_params": [
-        "season",
-        "date",
-        "fields"
-      ]
-    },
-    "team_roster": {
-      "url": "https://statsapi.mlb.com/api/v1/teams/{teamId}/roster",
-      "description": "Get team roster",
-      "required_params": [
-        "teamId"
-      ],
-      "optional_params": [
-        "rosterType",
-        "season",
-        "date",
-        "hydrate",
-        "fields"
-      ]
-    },
-    "transactions": {
-      "url": "https://statsapi.mlb.com/api/v1/transactions",
-      "description": "Get transaction information",
-      "required_params": [
-        "teamId",
-        "playerId",
-        "date",
-        "startDate + endDate"
-      ],
-      "optional_params": [
-        "sportId",
-        "teamId",
-        "playerId",
-        "date",
-        "startData",
-        "endDate",
-        "fields"
-      ]
-    },
-    "venue": {
-      "url": "https://statsapi.mlb.com/api/v1/venues",
-      "description": "Get venue information",
-      "required_params": [
-        "venueIds"
-      ],
-      "optional_params": [
-        "season",
-        "hydrate",
-        "fields"
-      ]
-    },
-    "meta": {
-      "url": "https://statsapi.mlb.com/api/v1/{type}",
-      "description": "Get reference data for use in other API calls",
-      "required_params": [
-        "type"
-      ],
-      "available_types": [
-        "awards",
-        "baseballStats",
-        "eventTypes",
-        "gameStatus",
-        "gameTypes",
-        "hitTrajectories",
-        "jobTypes",
-        "languages",
-        "leagueLeaderTypes",
-        "logicalEvents",
-        "metrics",
-        "pitchCodes",
-        "pitchTypes",
-        "platforms",
-        "positions",
-        "reviewReasons",
-        "rosterTypes",
-        "scheduleEventTypes",
-        "situationCodes",
-        "sky",
-        "standingsTypes",
-        "statGroups",
-        "statTypes",
-        "windDirection"
-      ]
-    },
-    "awards": {
-      "url": "https://statsapi.mlb.com/api/v1/awards{awardId}{recipients}",
-      "description": "Get information about MLB awards. Call with no parameters to return a list of awardIds.",
-      "required_params": [],
-      "optional_params": [
-        "awardId",
-        "recipients",
-        "sportId",
-        "leagueId",
-        "season",
-        "hydrate",
-        "fields"
-      ]
-    },
-    "conferences": {
-      "url": "https://statsapi.mlb.com/api/v1/conferences",
-      "description": "Get conference information",
-      "required_params": [],
-      "optional_params": [
-        "conferenceId",
-        "season",
-        "fields"
-      ]
-    },
-    "divisions": {
-      "url": "https://statsapi.mlb.com/api/v1/divisions",
-      "description": "Get division information. Call with no parameters to return a list of divisions.",
-      "required_params": [],
-      "optional_params": [
-        "divisionId",
-        "leagueId",
-        "sportId",
-        "season"
-      ]
-    },
-    "draft": {
-      "url": "https://statsapi.mlb.com/api/v1/draft{prospects}{year}{latest}",
-      "description": "Get draft information. Year defaults to current year if omitted. Prospects and Latest cannot be used together.",
-      "required_params": [],
-      "optional_params": [
-        "prospects",
-        "year",
-        "latest",
-        "limit",
-        "fields",
-        "round",
-        "name",
-        "school",
-        "state",
-        "country",
-        "position",
-        "teamId",
-        "playerId",
-        "bisPlayerId"
-      ]
-    },
-    "game": {
-      "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/feed/live",
-      "description": "Get live game feed",
-      "required_params": [
-        "gamePk"
-      ],
-      "optional_params": [
-        "timecode",
-        "hydrate",
-        "fields"
-      ]
-    },
-    "game_diff": {
-      "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/feed/live/diffPatch",
-      "description": "Get game feed differences between timestamps",
-      "required_params": [
-        "gamePk",
-        "startTimecode",
-        "endTimecode"
-      ]
-    },
-    "game_timestamps": {
-      "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/feed/live/timestamps",
-      "description": "Get game feed timestamps",
-      "required_params": [
-        "gamePk"
-      ]
-    },
-    "game_changes": {
-      "url": "https://statsapi.mlb.com/api/v1/game/changes",
-      "description": "Get game changes since timestamp",
-      "required_params": [
-        "updatedSince"
-      ],
-      "optional_params": [
-        "sportId",
-        "gameType",
-        "season",
-        "fields"
-      ]
-    },
-    "game_contextMetrics": {
-      "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/contextMetrics",
-      "description": "Get game context metrics",
-      "required_params": [
-        "gamePk"
-      ],
-      "optional_params": [
-        "timecode",
-        "fields"
-      ]
-    },
-    "game_winProbability": {
-      "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/winProbability",
-      "description": "Get win probability. For current probability only, use game_contextMetrics instead.",
-      "required_params": [
-        "gamePk"
-      ],
-      "optional_params": [
-        "timecode",
-        "fields"
-      ]
-    },
-    "game_boxscore": {
-      "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/boxscore",
-      "description": "Get game boxscore",
-      "required_params": [
-        "gamePk"
-      ],
-      "optional_params": [
-        "timecode",
-        "fields"
-      ]
-    },
-    "game_content": {
-      "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/content",
-      "description": "Get game content",
-      "required_params": [
-        "gamePk"
-      ],
-      "optional_params": [
-        "highlightLimit"
-      ]
-    },
-    "game_color": {
-      "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/feed/color",
-      "description": "Get game color feed",
-      "required_params": [
-        "gamePk"
-      ],
-      "optional_params": [
-        "timecode",
-        "fields"
-      ]
-    },
-    "game_color_diff": {
-      "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/feed/color/diffPatch",
-      "description": "Get game color feed differences",
-      "required_params": [
-        "gamePk",
-        "startTimecode",
-        "endTimecode"
-      ]
-    },
-    "game_color_timestamps": {
-      "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/feed/color/timestamps",
-      "description": "Get game color feed timestamps",
-      "required_params": [
-        "gamePk"
-      ]
-    },
-    "game_linescore": {
-      "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/linescore",
-      "description": "Get game linescore",
-      "required_params": [
-        "gamePk"
-      ],
-      "optional_params": [
-        "timecode",
-        "fields"
-      ]
-    },
-    "game_playByPlay": {
-      "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/playByPlay",
-      "description": "Get game play-by-play",
-      "required_params": [
-        "gamePk"
-      ],
-      "optional_params": [
-        "timecode",
-        "fields"
-      ]
-    },
-    "gamePace": {
-      "url": "https://statsapi.mlb.com/api/v1/gamePace",
-      "description": "Get game pace statistics",
-      "required_params": [
-        "season"
-      ],
-      "optional_params": [
-        "teamIds",
-        "leagueIds",
-        "leagueListId",
-        "sportId",
-        "gameType",
-        "startDate",
-        "endDate",
-        "venueIds",
-        "orgType",
-        "includeChildren",
-        "fields"
-      ]
-    },
-    "highLow": {
-      "url": "https://statsapi.mlb.com/api/v1/highLow/{orgType}",
-      "description": "Get high/low statistics. Valid orgType values: player, team, division, league, sport, types",
-      "required_params": [
-        "orgType",
-        "sortStat",
-        "season"
-      ],
-      "optional_params": [
-        "statGroup",
-        "gameType",
-        "teamId",
-        "leagueId",
-        "sportIds",
-        "limit",
-        "fields"
-      ]
-    },
-    "homeRunDerby": {
-      "url": "https://statsapi.mlb.com/api/v1/homeRunDerby/{gamePk}{bracket}{pool}",
-      "description": "Get Home Run Derby information",
-      "required_params": [
-        "gamePk"
-      ],
-      "optional_params": [
-        "bracket",
-        "pool",
-        "fields"
-      ]
-    },
-    "league": {
-      "url": "https://statsapi.mlb.com/api/v1/league",
-      "description": "Get league information",
-      "required_params": [
-        "sportId",
-        "leagueIds"
-      ],
-      "optional_params": [
-        "seasons",
-        "fields"
-      ]
-    },
-    "league_allStarBallot": {
-      "url": "https://statsapi.mlb.com/api/v1/league/{leagueId}/allStarBallot",
-      "description": "Get All-Star ballot information",
-      "required_params": [
-        "leagueId",
-        "season"
-      ],
-      "optional_params": [
-        "fields"
-      ]
-    },
-    "league_allStarWriteIns": {
-      "url": "https://statsapi.mlb.com/api/v1/league/{leagueId}/allStarWriteIns",
-      "description": "Get All-Star write-in ballot information",
-      "required_params": [
-        "leagueId",
-        "season"
-      ],
-      "optional_params": [
-        "fields"
-      ]
-    },
-    "league_allStarFinalVote": {
-      "url": "https://statsapi.mlb.com/api/v1/league/{leagueId}/allStarFinalVote",
-      "description": "Get All-Star final vote information",
-      "required_params": [
-        "leagueId",
-        "season"
-      ],
-      "optional_params": [
-        "fields"
-      ]
-    },
-    "people": {
-      "url": "https://statsapi.mlb.com/api/v1/people",
-      "description": "Get information about multiple people",
-      "required_params": [
-        "personIds"
-      ],
-      "optional_params": [
-        "hydrate",
-        "fields"
-      ]
-    },
-    "people_changes": {
-      "url": "https://statsapi.mlb.com/api/v1/people/changes",
-      "description": "Get changes to people information",
-      "required_params": [],
-      "optional_params": [
-        "updatedSince",
-        "fields"
-      ]
-    },
-    "people_freeAgents": {
-      "url": "https://statsapi.mlb.com/api/v1/people/freeAgents",
-      "description": "Get free agent information",
-      "required_params": [
-        "leagueId"
-      ],
-      "optional_params": [
-        "order",
-        "hydrate",
-        "fields"
-      ]
-    },
-    "person": {
-      "url": "https://statsapi.mlb.com/api/v1/people/{personId}",
-      "description": "Get information about a specific person",
-      "required_params": [
-        "personId"
-      ],
-      "optional_params": [
-        "hydrate",
-        "fields"
-      ]
-    },
-    "person_stats": {
-      "url": "https://statsapi.mlb.com/api/v1/people/{personId}/stats/game/{gamePk}",
-      "description": "Get person's game stats. Use 'current' for gamePk to get current game stats.",
-      "required_params": [
-        "personId",
-        "gamePk"
-      ],
-      "optional_params": [
-        "fields"
-      ]
-    },
-    "jobs": {
-      "url": "https://statsapi.mlb.com/api/v1/jobs",
-      "description": "Get jobs information",
-      "required_params": [
-        "jobType"
-      ],
-      "optional_params": [
-        "sportId",
-        "date",
-        "fields"
-      ]
-    },
-    "jobs_umpires": {
-      "url": "https://statsapi.mlb.com/api/v1/jobs/umpires",
-      "description": "Get umpire information",
-      "required_params": [],
-      "optional_params": [
-        "sportId",
-        "date",
-        "fields"
-      ]
-    },
-    "jobs_umpire_games": {
-      "url": "https://statsapi.mlb.com/api/v1/jobs/umpires/games/{umpireId}",
-      "description": "Get umpire's games",
-      "required_params": [
-        "umpireId",
-        "season"
-      ],
-      "optional_params": [
-        "fields"
-      ]
-    },
-    "jobs_datacasters": {
-      "url": "https://statsapi.mlb.com/api/v1/jobs/datacasters",
-      "description": "Get datacaster information",
-      "required_params": [],
-      "optional_params": [
-        "sportId",
-        "date",
-        "fields"
-      ]
-    },
-    "jobs_officialScorers": {
-      "url": "https://statsapi.mlb.com/api/v1/jobs/officialScorers",
-      "description": "Get official scorer information",
-      "required_params": [],
-      "optional_params": [
-        "timecode",
-        "fields"
-      ]
+      "pagination": {
+        "supported": false
+      }
     },
     "schedule": {
       "url": "https://statsapi.mlb.com/api/v1/schedule",
-      "description": "Get schedule information",
-      "required_params": [
-        "sportId",
-        "gamePk",
-        "gamePks"
-      ],
+      "description": "Get schedule information with extensive filtering options. Supports detailed game data through hydration parameters.",
+      "required_params": ["sportId", "gamePk", "gamePks"],
       "optional_params": [
         "scheduleType",
         "eventTypes",
         "hydrate",
         "teamId",
-        "leagueId",
+        "leagueId", 
         "venueIds",
         "gameTypes",
         "date",
@@ -627,91 +47,88 @@
         "season",
         "opponentId",
         "fields"
-      ]
-    },
-    "schedule_tied": {
-      "url": "https://statsapi.mlb.com/api/v1/schedule/games/tied",
-      "description": "Get tied games information",
-      "required_params": [
-        "season"
       ],
-      "optional_params": [
-        "gameTypes",
-        "hydrate",
-        "fields"
+      "rate_limit": "25 requests per second",
+      "case_sensitive": true,
+      "pagination": {
+        "supported": true,
+        "params": {
+          "limit": "Number of records to return",
+          "offset": "Starting point for records (i+1)"
+        }
+      },
+      "example_calls": [
+        {
+          "description": "Get MLB schedule for a specific date range",
+          "url": "https://statsapi.mlb.com/api/v1/schedule?sportId=1&startDate=2024-04-01&endDate=2024-04-07&fields=dates,games,teams,venue"
+        }
       ]
     },
-    "schedule_postseason": {
-      "url": "https://statsapi.mlb.com/api/v1/schedule/postseason",
-      "description": "Get postseason schedule information",
-      "required_params": [],
+    "game": {
+      "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/feed/live",
+      "description": "Get detailed live game feed including play-by-play data, player stats, and game state information. Supports timecode parameter for historical snapshots.",
+      "required_params": ["gamePk"],
+      "optional_params": ["timecode", "hydrate", "fields"],
+      "rate_limit": "25 requests per second",
+      "case_sensitive": true,
+      "example_calls": [
+        {
+          "description": "Get live game feed at specific moment",
+          "url": "https://statsapi.mlb.com/api/v1/game/531060/feed/live?timecode=20240401_182458",
+          "notes": "Timecode format: YYYYMMDD_HHMMSS"
+        }
+      ]
+    },
+    "team_stats": {
+      "url": "https://statsapi.mlb.com/api/v1/teams/{teamId}/stats",
+      "description": "Get comprehensive team statistics with support for various stat types, groups, and situational splits. Allows filtering by season and game type.",
+      "required_params": ["teamId"],
       "optional_params": [
-        "gameTypes",
-        "seriesNumber",
-        "teamId",
-        "sportId",
         "season",
-        "hydrate",
+        "statGroup",
+        "gameType",
+        "stats",
+        "sportIds",
+        "sitCodes",
         "fields"
-      ]
-    },
-    "schedule_postseason_series": {
-      "url": "https://statsapi.mlb.com/api/v1/schedule/postseason/series",
-      "description": "Get postseason series information",
-      "required_params": [],
-      "optional_params": [
-        "gameTypes",
-        "seriesNumber",
-        "teamId",
-        "sportId",
-        "season",
-        "fields"
-      ]
-    },
-    "seasons": {
-      "url": "https://statsapi.mlb.com/api/v1/seasons{/all}",
-      "description": "Get seasons information. Include /all in path to query all seasons. Pass parameter all=True to include /all in path. The divisionId and leagueId parameters are supported when 'all' is used.",
-      "required_params": [
-        "sportId"
       ],
-      "optional_params": [
-        "all",
-        "season",
-        "sportId",
-        "divisionId",
-        "leagueId",
-        "fields"
+      "notes": "Use meta('statGroups') for valid group values, meta('statTypes') for valid stats values, and meta('situationCodes') for valid sitCodes. Use sitCodes with stats=statSplits.",
+      "rate_limit": "25 requests per second",
+      "case_sensitive": true,
+      "example_calls": [
+        {
+          "description": "Get team batting stats for specific situations",
+          "url": "https://statsapi.mlb.com/api/v1/teams/147/stats?stats=statSplits&statGroup=hitting&sitCodes=risp,men_on&season=2024",
+          "notes": "Team 147 represents the New York Yankees"
+        }
       ]
     },
-    "season": {
-      "url": "https://statsapi.mlb.com/api/v1/seasons/{seasonId}",
-      "description": "Get specific season information",
-      "required_params": [
-        "seasonId",
-        "sportId"
-      ],
-      "optional_params": [
-        "seasonId",
-        "sportId",
-        "fields"
+    "people": {
+      "url": "https://statsapi.mlb.com/api/v1/people",
+      "description": "Get detailed information about multiple players. Supports hydration for additional related data and fields parameter for response filtering.",
+      "required_params": ["personIds"],
+      "optional_params": ["hydrate", "fields"],
+      "rate_limit": "25 requests per second",
+      "case_sensitive": true,
+      "example_calls": [
+        {
+          "description": "Get specific information for multiple players",
+          "url": "https://statsapi.mlb.com/api/v1/people?personIds=671096,660271&fields=people,id,fullName,primaryPosition",
+          "notes": "Comma-separated list of player IDs"
+        }
       ]
     },
     "stats": {
       "url": "https://statsapi.mlb.com/api/v1/stats",
-      "description": "Get statistics. If no limit specified, response limited to 50 records.",
-      "required_params": [
-        "stats",
-        "group"
-      ],
+      "description": "Get detailed statistics with extensive filtering and grouping options. Results limited to 50 records by default if no limit specified.",
+      "required_params": ["stats", "group"],
       "optional_params": [
-        "stats",
         "playerPool",
         "position",
         "teamId",
         "leagueId",
         "limit",
         "offset",
-        "group",
         "gameType",
         "season",
         "sportIds",
@@ -723,132 +140,1014 @@
         "metrics",
         "startDate",
         "endDate"
+      ],
+      "rate_limit": "25 requests per second",
+      "case_sensitive": true,
+      "pagination": {
+        "supported": true,
+        "default_limit": 50,
+        "params": {
+          "limit": "Number of records to return",
+          "offset": "Starting point for records (i+1)"
+        }
+      },
+      "example_calls": [
+        {
+          "description": "Get batting stats for specific team",
+          "url": "https://statsapi.mlb.com/api/v1/stats?stats=season&group=hitting&teamId=147&season=2024&fields=stats,splits,stat",
+          "notes": "Group parameter supports: hitting, pitching, fielding, running, game, team"
+        }
       ]
-    },
-    "stats_leaders": {
-      "url": "https://statsapi.mlb.com/api/v1/stats/leaders",
-      "description": "Get statistical leaders. For all-time leaders without season parameter, include statType=statsSingleSeason.",
-      "required_params": [
-        "leaderCategories"
-      ],
-      "optional_params": [
-        "leaderCategories",
-        "playerPool",
-        "leaderGameTypes",
-        "statGroup",
-        "season",
-        "leagueId",
-        "sportId",
-        "hydrate",
-        "limit",
-        "fields",
-        "statType"
-      ]
-    },
-    "stats_streaks": {
-      "url": "https://statsapi.mlb.com/api/v1/stats/streaks",
-      "description": "Get streaks information",
-      "required_params": [
-        "streakType",
-        "streakSpan",
-        "season",
-        "sportId",
-        "limit"
-      ],
-      "optional_params": [
-        "streakType",
-        "streakSpan",
-        "gameType",
-        "season",
-        "sportId",
-        "limit",
-        "hydrate",
-        "fields"
-      ],
-      "notes": "Valid streakType values: 'hittingStreakOverall', 'hittingStreakHome', 'hittingStreakAway', 'onBaseOverall', 'onBaseHome', 'onBaseAway'. Valid streakSpan values: 'career', 'season', 'currentStreak', 'currentStreakInSeason', 'notable', 'notableInSeason'."
-    },
-    "teams_history": {
-      "url": "https://statsapi.mlb.com/api/v1/teams/history",
-      "description": "Get team history",
-      "required_params": [
-        "teamIds"
-      ],
-      "optional_params": [
-        "teamIds",
-        "startSeason",
-        "endSeason",
-        "fields"
-      ]
-    },
-    "teams_stats": {
-      "url": "https://statsapi.mlb.com/api/v1/teams/stats",
-      "description": "Get team statistics",
-      "required_params": [
-        "season",
-        "group",
-        "stats"
-      ],
-      "optional_params": [
-        "season",
-        "sportIds",
-        "group",
-        "gameType",
-        "stats",
-        "order",
-        "sortStat",
-        "fields",
-        "startDate",
-        "endDate"
-      ],
-      "notes": "Use meta('statGroups') to look up valid values for group, and meta('statTypes') for valid values for stats. Use force=True for startDate/endDate until v0.1.8."
-    },
-    "team_personnel": {
-      "url": "https://statsapi.mlb.com/api/v1/teams/{teamId}/personnel",
-      "description": "Get team personnel information",
-      "required_params": [
-        "teamId"
-      ],
-      "optional_params": [
-        "teamId",
-        "date",
-        "fields"
-      ]
-    },
-    "team_leaders": {
-      "url": "https://statsapi.mlb.com/api/v1/teams/{teamId}/leaders",
-      "description": "Get team statistical leaders",
-      "required_params": [
-        "teamId",
-        "leaderCategories",
-        "season"
-      ],
-      "optional_params": [
-        "teamId",
-        "leaderCategories",
-        "season",
-        "leaderGameTypes",
-        "hydrate",
-        "limit",
-        "fields"
-      ]
-    },
-    "team_stats": {
-      "url": "https://statsapi.mlb.com/api/v1/teams/{teamId}/stats",
-      "description": "Get specific team statistics",
-      "required_params": [
-        "teamId"
-      ],
-      "optional_params": [
-        "teamId",
-        "season",
-        "statGroup",
-        "gameType",
-        "stats",
-        "sportIds",
-        "sitCodes",
-        "fields"
-      ],
-      "notes": "Use meta('statGroups') for valid values for group, meta('statTypes') for valid values for stats, and meta('situationCodes') for valid values for sitCodes. Use sitCodes with stats=statSplits. Endpoint supported as of version 1.2."
     }
+  },
+  "api_metadata": {
+    "base_url": "https://statsapi.mlb.com/api/v1/",
+    "version": "1.0",
+    "formats": ["JSON"],
+    "authentication": {
+      "type": "OAuth2",
+      "token_cache_duration": "60 minutes",
+      "refresh_token_expiry": "14 days of non-use"
+    },
+    "best_practices": {
+      "pagination": {
+        "description": "When retrieving large datasets, use limit and offset parameters together for proper pagination",
+        "example": "?limit=100&offset=0 for first page, then offset=100 for second page, etc."
+      },
+      "fields_usage": {
+        "description": "Use fields parameter to reduce payload size and improve performance",
+        "format": "parent.child.grandchild notation for nested fields",
+        "example": "fields=people,id,fullName,stats"
+      },
+      "error_handling": {
+        "429": "Rate limit exceeded - wait before retrying",
+        "default_responses": "Invalid parameters may return default data instead of error",
+        "case_sensitivity": "Parameter names must use exact case as specified"
+      }
+    }
+  },
+  "meta": {
+    "url": "https://statsapi.mlb.com/api/v1/{type}",
+    "description": "Get reference data and metadata for various aspects of the API. This endpoint serves as a central source for looking up valid values, codes, and configurations used throughout other endpoints.",
+    "required_params": ["type"],
+    "available_types": [
+      {
+        "name": "awards",
+        "description": "Award types and categories"
+      },
+      {
+        "name": "baseballStats",
+        "description": "Available baseball statistics and metrics"
+      },
+      {
+        "name": "eventTypes",
+        "description": "Game and play event types"
+      },
+      {
+        "name": "gameStatus",
+        "description": "Possible game status codes and descriptions"
+      },
+      {
+        "name": "gameTypes",
+        "description": "Different types of games (regular season, playoffs, etc.)"
+      },
+      {
+        "name": "hitTrajectories",
+        "description": "Types of hit trajectories and classifications"
+      },
+      {
+        "name": "jobTypes",
+        "description": "Baseball-related job classifications"
+      },
+      {
+        "name": "languages",
+        "description": "Supported languages for API responses"
+      },
+      {
+        "name": "leagueLeaderTypes",
+        "description": "Categories for league leader statistics"
+      },
+      {
+        "name": "metrics",
+        "description": "Available statistical metrics"
+      },
+      {
+        "name": "pitchTypes",
+        "description": "Types of pitches and their classifications"
+      },
+      {
+        "name": "positions",
+        "description": "Player positions and roles"
+      },
+      {
+        "name": "reviewReasons",
+        "description": "Reasons for play reviews and challenges"
+      },
+      {
+        "name": "rosterTypes",
+        "description": "Different types of team rosters"
+      },
+      {
+        "name": "scheduleEventTypes",
+        "description": "Types of scheduled events"
+      },
+      {
+        "name": "situationCodes",
+        "description": "Game situation classifications"
+      },
+      {
+        "name": "sky",
+        "description": "Weather/sky condition classifications"
+      },
+      {
+        "name": "standingsTypes",
+        "description": "Different types of standings calculations"
+      },
+      {
+        "name": "statGroups",
+        "description": "Groupings of statistics"
+      },
+      {
+        "name": "statTypes",
+        "description": "Types of statistics available"
+      },
+      {
+        "name": "windDirection",
+        "description": "Wind direction classifications"
+      }
+    ],
+    "example_calls": [
+      {
+        "description": "Get valid pitch types",
+        "url": "https://statsapi.mlb.com/api/v1/pitchTypes"
+      },
+      {
+        "description": "Get game status codes",
+        "url": "https://statsapi.mlb.com/api/v1/gameStatus"
+      }
+    ],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true
+  },
+  "game_timestamps": {
+    "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/feed/live/timestamps",
+    "description": "Get a list of available timecodes for a game's live feed. These timestamps can be used with other game endpoints to retrieve historical snapshots.",
+    "required_params": ["gamePk"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true,
+    "example_calls": [
+      {
+        "description": "Get available timestamps for a game",
+        "url": "https://statsapi.mlb.com/api/v1/game/531060/feed/live/timestamps",
+        "notes": "Returns array of timestamps in YYYYMMDD_HHMMSS format"
+      }
+    ]
+  },
+  "game_changes": {
+    "url": "https://statsapi.mlb.com/api/v1/game/changes",
+    "description": "Get changes to game data since a specified timestamp. Useful for tracking updates and modifications to game information.",
+    "required_params": ["updatedSince"],
+    "optional_params": ["sportId", "gameType", "season", "fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true,
+    "example_calls": [
+      {
+        "description": "Get game changes since timestamp",
+        "url": "https://statsapi.mlb.com/api/v1/game/changes?updatedSince=2024-01-22T12:00:00Z"
+      }
+    ]
+  },
+  "game_content": {
+    "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/content",
+    "description": "Get additional content related to a specific game, including highlights and other media.",
+    "required_params": ["gamePk"],
+    "optional_params": ["highlightLimit"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true,
+    "example_calls": [
+      {
+        "description": "Get game content with limited highlights",
+        "url": "https://statsapi.mlb.com/api/v1/game/531060/content?highlightLimit=5"
+      }
+    ]
+  },
+  "game_winProbability": {
+    "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/winProbability",
+    "description": "Get win probability data for a game. For current probability only, use game_contextMetrics instead.",
+    "required_params": ["gamePk"],
+    "optional_params": ["timecode", "fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true,
+    "example_calls": [
+      {
+        "description": "Get win probability for specific game moment",
+        "url": "https://statsapi.mlb.com/api/v1/game/531060/winProbability?timecode=20240401_182458"
+      }
+    ]
+  },
+  "awards": {
+    "url": "https://statsapi.mlb.com/api/v1/awards{awardId}{recipients}",
+    "description": "Get information about MLB awards and their recipients. Call with no parameters to return a list of available awardIds.",
+    "required_params": [],
+    "optional_params": [
+      "awardId",
+      "recipients",
+      "sportId",
+      "leagueId",
+      "season",
+      "hydrate",
+      "fields"
+    ],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true,
+    "example_calls": [
+      {
+        "description": "Get all awards",
+        "url": "https://statsapi.mlb.com/api/v1/awards"
+      },
+      {
+        "description": "Get specific award recipients",
+        "url": "https://statsapi.mlb.com/api/v1/awards/MVP/recipients?season=2023"
+      }
+    ]
+  },
+  "conferences": {
+    "url": "https://statsapi.mlb.com/api/v1/conferences",
+    "description": "Get information about baseball conferences and their configurations.",
+    "required_params": [],
+    "optional_params": ["conferenceId", "season", "fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true,
+    "example_calls": [
+      {
+        "description": "Get all conferences",
+        "url": "https://statsapi.mlb.com/api/v1/conferences"
+      }
+    ]
+  },
+  "jobs_umpire_games": {
+    "url": "https://statsapi.mlb.com/api/v1/jobs/umpires/games/{umpireId}",
+    "description": "Get list of games for a specific umpire.",
+    "required_params": ["umpireId", "season"],
+    "optional_params": ["fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true,
+    "example_calls": [
+      {
+        "description": "Get umpire's games for season",
+        "url": "https://statsapi.mlb.com/api/v1/jobs/umpires/games/123456?season=2024"
+      }
+    ]
+  },
+  "jobs_datacasters": {
+    "url": "https://statsapi.mlb.com/api/v1/jobs/datacasters",
+    "description": "Get information about game datacasters and their assignments.",
+    "required_params": [],
+    "optional_params": ["sportId", "date", "fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true
+  },
+  "jobs_officialScorers": {
+    "url": "https://statsapi.mlb.com/api/v1/jobs/officialScorers",
+    "description": "Get information about official scorers and their assignments.",
+    "required_params": [],
+    "optional_params": ["timecode", "fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true
+  },
+  "season": {
+    "url": "https://statsapi.mlb.com/api/v1/seasons/{seasonId}",
+    "description": "Get detailed information about a specific season.",
+    "required_params": ["seasonId", "sportId"],
+    "optional_params": ["fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true,
+    "example_calls": [
+      {
+        "description": "Get specific MLB season details",
+        "url": "https://statsapi.mlb.com/api/v1/seasons/2024?sportId=1"
+      }
+    ]
+  },
+  "person": {
+    "url": "https://statsapi.mlb.com/api/v1/people/{personId}",
+    "description": "Get detailed information about a specific person including biographical data, current status, and primary position.",
+    "required_params": ["personId"],
+    "optional_params": ["hydrate", "fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true,
+    "example_calls": [
+      {
+        "description": "Get basic player information",
+        "url": "https://statsapi.mlb.com/api/v1/people/671096"
+      },
+      {
+        "description": "Get player with hydrated stats",
+        "url": "https://statsapi.mlb.com/api/v1/people/671096?hydrate=stats(type=season)"
+      }
+    ]
+  },
+  "person_stats": {
+    "url": "https://statsapi.mlb.com/api/v1/people/{personId}/stats/game/{gamePk}",
+    "description": "Get a person's statistics for a specific game. Use 'current' for gamePk to get current game stats.",
+    "required_params": ["personId", "gamePk"],
+    "optional_params": ["fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true,
+    "example_calls": [
+      {
+        "description": "Get player's current game stats",
+        "url": "https://statsapi.mlb.com/api/v1/people/671096/stats/game/current"
+      }
+    ]
+  },
+  "game_diff": {
+    "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/feed/live/diffPatch",
+    "description": "Get differences in game feed data between two timestamps. Useful for tracking specific changes in game state.",
+    "required_params": ["gamePk", "startTimecode", "endTimecode"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true,
+    "example_calls": [
+      {
+        "description": "Get game feed changes between timestamps",
+        "url": "https://statsapi.mlb.com/api/v1/game/531060/feed/live/diffPatch?startTimecode=20240401_182458&endTimecode=20240401_182558"
+      }
+    ]
+  },
+  "league_allStarWriteIns": {
+    "url": "https://statsapi.mlb.com/api/v1/league/{leagueId}/allStarWriteIns",
+    "description": "Get All-Star write-in ballot information for a specific league.",
+    "required_params": ["leagueId", "season"],
+    "optional_params": ["fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true,
+    "example_calls": [
+      {
+        "description": "Get AL All-Star write-in candidates",
+        "url": "https://statsapi.mlb.com/api/v1/league/103/allStarWriteIns?season=2024"
+      }
+    ]
+  },
+  "league_allStarFinalVote": {
+    "url": "https://statsapi.mlb.com/api/v1/league/{leagueId}/allStarFinalVote",
+    "description": "Get All-Star final vote information and results for a specific league.",
+    "required_params": ["leagueId", "season"],
+    "optional_params": ["fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true,
+    "example_calls": [
+      {
+        "description": "Get AL All-Star final vote results",
+        "url": "https://statsapi.mlb.com/api/v1/league/103/allStarFinalVote?season=2024"
+      }
+    ]
+  },
+  "game_color_timestamps": {
+    "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/feed/color/timestamps",
+    "description": "Get available timestamps for the game color feed data.",
+    "required_params": ["gamePk"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true,
+    "example_calls": [
+      {
+        "description": "Get color feed timestamps",
+        "url": "https://statsapi.mlb.com/api/v1/game/531060/feed/color/timestamps"
+      }
+    ]
+  },
+  "transactions": {
+    "url": "https://statsapi.mlb.com/api/v1/transactions",
+    "description": "Get transaction information including trades, signings, and roster moves.",
+    "required_params": ["teamId", "playerId", "date", "startDate + endDate"],
+    "optional_params": [
+      "sportId",
+      "teamId",
+      "playerId",
+      "date",
+      "startDate",
+      "endDate",
+      "fields"
+    ],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true,
+    "example_calls": [
+      {
+        "description": "Get team transactions for date range",
+        "url": "https://statsapi.mlb.com/api/v1/transactions?teamId=147&startDate=2024-01-01&endDate=2024-01-31"
+      }
+    ],
+    "response_schema": {
+      "transactions": [{
+        "id": "String",
+        "effectiveDate": "String - YYYY-MM-DD",
+        "type": {
+          "code": "String",
+          "description": "String"
+        },
+        "player": {
+          "id": "Integer",
+          "fullName": "String"
+        },
+        "team": {
+          "id": "Integer",
+          "name": "String"
+        }
+      }]
+    },
+    "valid_transaction_types": {
+      "SC": "Status Change",
+      "ASG": "Assigned",
+      "DES": "Designated for Assignment",
+      "OPT": "Optioned",
+      "OUT": "Outrighted",
+      "TR": "Trade",
+      "DFA": "Declared Free Agency",
+      "REL": "Released",
+      "SGN": "Signed",
+      "SFA": "Signed as Free Agent",
+      "DR": "Drafted"
+    }
+  },
+  "global_notes": {
+    "rate_limiting": "All endpoints are limited to 25 requests per second. Exceeding this limit will result in a 429 response.",
+    "case_sensitivity": "All endpoints use Lower Camel Case naming convention. First letter of string is lowercase, following words have capitalized first letter.",
+    "authentication": "OAuth2 tokens are cached for 60 minutes. Refresh tokens expire after 14 days of non-use.",
+    "fields_parameter": "All endpoints support the fields parameter to reduce payload size. Use parent.child notation for nested fields.",
+    "error_handling": "Invalid parameters may result in default responses rather than errors. Verify returned data matches expected results."
+  },
+  "teams": {
+    "url": "https://statsapi.mlb.com/api/v1/teams",
+    "description": "Get comprehensive team information including basic details, venue, league affiliations, and current season status. Can be filtered by season, league, sport, and game type.",
+    "required_params": [],
+    "optional_params": [
+      "season",
+      "activeStatus",
+      "leagueIds",
+      "sportId",
+      "sportIds",
+      "gameType",
+      "hydrate",
+      "fields"
+    ],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true,
+    "example_calls": [
+      {
+        "description": "Get all active MLB teams for current season",
+        "url": "https://statsapi.mlb.com/api/v1/teams?sportId=1&season=2024&activeStatus=true",
+        "notes": "Returns all active MLB teams with their basic information"
+      }
+    ],
+    "response_schema": {
+      "teams": [{
+        "id": "Integer",
+        "name": "String - Full team name",
+        "link": "String - API link to team details",
+        "season": "Integer",
+        "venue": {
+          "id": "Integer",
+          "name": "String",
+          "link": "String"
+        },
+        "springLeague": {
+          "id": "Integer",
+          "name": "String",
+          "link": "String",
+          "abbreviation": "String"
+        }
+      }]
+    }
+  },
+  "game_boxscore": {
+    "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/boxscore",
+    "description": "Get detailed game boxscore including player statistics, batting orders, pitching matchups, and game info. Supports historical snapshots through timecode parameter.",
+    "required_params": ["gamePk"],
+    "optional_params": ["timecode", "fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true,
+    "example_calls": [
+      {
+        "description": "Get live game boxscore",
+        "url": "https://statsapi.mlb.com/api/v1/game/531060/boxscore"
+      },
+      {
+        "description": "Get historical boxscore snapshot",
+        "url": "https://statsapi.mlb.com/api/v1/game/531060/boxscore?timecode=20240401_182458"
+      }
+    ],
+    "response_schema": {
+      "teams": {
+        "away": {
+          "team": {"id": "Integer", "name": "String"},
+          "batters": ["Integer[] - Player IDs"],
+          "pitchers": ["Integer[] - Player IDs"],
+          "bench": ["Integer[] - Player IDs"],
+          "bullpen": ["Integer[] - Player IDs"],
+          "battingOrder": ["Integer[] - Player IDs in batting order"]
+        },
+        "home": {
+          "team": {"id": "Integer", "name": "String"},
+          "batters": ["Integer[] - Player IDs"],
+          "pitchers": ["Integer[] - Player IDs"],
+          "bench": ["Integer[] - Player IDs"],
+          "bullpen": ["Integer[] - Player IDs"],
+          "battingOrder": ["Integer[] - Player IDs in batting order"]
+        }
+      }
+    }
+  },
+  "standings": {
+    "url": "https://statsapi.mlb.com/api/v1/standings",
+    "description": "Get comprehensive standings information with support for various standing types including regular season, wild card, division leaders, and split season standings.",
+    "required_params": ["leagueId"],
+    "optional_params": [
+      "season",
+      "standingsTypes",
+      "date",
+      "hydrate",
+      "fields"
+    ],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true,
+    "example_calls": [
+      {
+        "description": "Get current MLB standings by division",
+        "url": "https://statsapi.mlb.com/api/v1/standings?leagueId=103,104&standingsTypes=regularSeason&season=2024",
+        "notes": "LeagueId 103=American League, 104=National League"
+      }
+    ],
+    "valid_standings_types": [
+      "regularSeason",
+      "wildCard",
+      "divisionLeaders",
+      "wildCardWithLeaders",
+      "firstHalf",
+      "secondHalf",
+      "springTraining",
+      "postseason",
+      "byDivision",
+      "byLeague",
+      "byConference"
+    ]
+  },
+  "game_playByPlay": {
+    "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/playByPlay",
+    "description": "Get detailed play-by-play data including every pitch, at-bat result, and game event. Supports historical snapshots through timecode parameter.",
+    "required_params": ["gamePk"],
+    "optional_params": ["timecode", "fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true,
+    "example_calls": [
+      {
+        "description": "Get complete play-by-play for a game",
+        "url": "https://statsapi.mlb.com/api/v1/game/531060/playByPlay",
+        "notes": "Returns all plays in chronological order"
+      }
+    ],
+    "response_schema": {
+      "allPlays": [{
+        "result": {
+          "type": "String - Play type",
+          "event": "String - Play description",
+          "eventType": "String - Standardized event type",
+          "description": "String - Detailed play description"
+        },
+        "about": {
+          "atBatIndex": "Integer",
+          "inning": "Integer",
+          "isTopInning": "Boolean",
+          "hasOut": "Boolean",
+          "captivatingIndex": "Integer"
+        },
+        "count": {
+          "balls": "Integer",
+          "strikes": "Integer",
+          "outs": "Integer"
+        }
+      }]
+    }
+  },
+  "team_roster": {
+    "url": "https://statsapi.mlb.com/api/v1/teams/{teamId}/roster",
+    "description": "Get detailed team roster information with various roster types including active roster, 40-man roster, and non-roster invitees. Supports specific dates and seasons.",
+    "required_params": ["teamId"],
+    "optional_params": [
+      "rosterType",
+      "season",
+      "date",
+      "hydrate",
+      "fields"
+    ],
+    "valid_roster_types": [
+      "40Man",
+      "fullSeason",
+      "fullRoster",
+      "nonRosterInvitees",
+      "active",
+      "allTime",
+      "depthChart",
+      "gameday",
+      "coach"
+    ],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true,
+    "example_calls": [
+      {
+        "description": "Get active roster for specific team",
+        "url": "https://statsapi.mlb.com/api/v1/teams/147/roster?rosterType=active",
+        "notes": "Returns current active roster if no date specified"
+      }
+    ]
+  },
+  "attendance": {
+    "url": "https://statsapi.mlb.com/api/v1/attendance",
+    "description": "Get attendance information for games and venues.",
+    "required_params": ["teamId", "sportId", "season", "fields"],
+    "optional_params": [],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true,
+    "example_calls": [
+      {
+        "description": "Get team attendance for season",
+        "url": "https://statsapi.mlb.com/api/v1/attendance?teamId=147&sportId=1&season=2024"
+      }
+    ]
+  },
+  "schedule_postseason_tuneIn": {
+    "url": "https://statsapi.mlb.com/api/v1/schedule/postseason/tuneIn",
+    "description": "Get postseason tune-in information.",
+    "required_params": [],
+    "optional_params": ["teamId", "sportId", "season", "hydrate", "fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true,
+    "notes": "This endpoint appears to return no data currently"
+  },
+  "sports": {
+    "url": "https://statsapi.mlb.com/api/v1/sports",
+    "description": "Get information about different sports and their configurations.",
+    "required_params": [],
+    "optional_params": ["sportId", "fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true,
+    "example_calls": [
+      {
+        "description": "Get all sports information",
+        "url": "https://statsapi.mlb.com/api/v1/sports"
+      }
+    ]
+  },
+  "divisions": {
+    "url": "https://statsapi.mlb.com/api/v1/divisions",
+    "description": "Get division information and configurations. Returns list of divisions when called without parameters.",
+    "required_params": [],
+    "optional_params": ["divisionId", "leagueId", "sportId", "season"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true,
+    "example_calls": [
+      {
+        "description": "Get specific division details",
+        "url": "https://statsapi.mlb.com/api/v1/divisions?divisionId=200&sportId=1",
+        "notes": "Division 200 represents AL West"
+      }
+    ]
+  },
+  "draft": {
+    "url": "https://statsapi.mlb.com/api/v1/draft{prospects}{year}{latest}",
+    "description": "Get draft information including prospects and results. Year defaults to current year if omitted.",
+    "required_params": [],
+    "optional_params": [
+      "prospects",
+      "year",
+      "latest",
+      "limit",
+      "fields",
+      "round",
+      "name",
+      "school",
+      "state",
+      "country",
+      "position",
+      "teamId",
+      "playerId",
+      "bisPlayerId"
+    ],
+    "notes": "Prospects and Latest parameters cannot be used together",
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true,
+    "example_calls": [
+      {
+        "description": "Get draft prospects for current year",
+        "url": "https://statsapi.mlb.com/api/v1/draft/prospects"
+      }
+    ]
+  },
+  "game_contextMetrics": {
+    "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/contextMetrics",
+    "description": "Get detailed game context metrics and statistics.",
+    "required_params": ["gamePk"],
+    "optional_params": ["timecode", "fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true
+  },
+  "game_color": {
+    "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/feed/color",
+    "description": "Get game color commentary feed with additional details.",
+    "required_params": ["gamePk"],
+    "optional_params": ["timecode", "fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true
+  },
+  "game_color_diff": {
+    "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/feed/color/diffPatch",
+    "description": "Get differences in game color feed between timestamps.",
+    "required_params": ["gamePk", "startTimecode", "endTimecode"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true
+  },
+  "game_linescore": {
+    "url": "https://statsapi.mlb.com/api/v1/game/{gamePk}/linescore",
+    "description": "Get detailed game linescore information.",
+    "required_params": ["gamePk"],
+    "optional_params": ["timecode", "fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true
+  },
+  "gamePace": {
+    "url": "https://statsapi.mlb.com/api/v1/gamePace",
+    "description": "Get game pace statistics and metrics.",
+    "required_params": ["season"],
+    "optional_params": [
+      "teamIds",
+      "leagueIds",
+      "leagueListId",
+      "sportId",
+      "gameType",
+      "startDate",
+      "endDate",
+      "venueIds",
+      "orgType",
+      "includeChildren",
+      "fields"
+    ],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true
+  },
+  "highLow": {
+    "url": "https://statsapi.mlb.com/api/v1/highLow/{orgType}",
+    "description": "Get high/low statistics for various organization types.",
+    "required_params": ["orgType", "sortStat", "season"],
+    "optional_params": [
+      "statGroup",
+      "gameType",
+      "teamId",
+      "leagueId",
+      "sportIds",
+      "limit",
+      "fields"
+    ],
+    "valid_org_types": ["player", "team", "division", "league", "sport", "types"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true
+  },
+  "homeRunDerby": {
+    "url": "https://statsapi.mlb.com/api/v1/homeRunDerby/{gamePk}{bracket}{pool}",
+    "description": "Get Home Run Derby information including brackets and pools.",
+    "required_params": ["gamePk"],
+    "optional_params": ["bracket", "pool", "fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true
+  },
+  "league": {
+    "url": "https://statsapi.mlb.com/api/v1/league",
+    "description": "Get detailed league information and configurations.",
+    "required_params": ["sportId", "leagueIds"],
+    "optional_params": ["seasons", "fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true
+  },
+  "league_allStarBallot": {
+    "url": "https://statsapi.mlb.com/api/v1/league/{leagueId}/allStarBallot",
+    "description": "Get All-Star ballot information for specific league.",
+    "required_params": ["leagueId", "season"],
+    "optional_params": ["fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true
+  },
+  "jobs": {
+    "url": "https://statsapi.mlb.com/api/v1/jobs",
+    "description": "Get information about various baseball jobs and positions.",
+    "required_params": ["jobType"],
+    "optional_params": ["sportId", "date", "fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true
+  },
+  "jobs_umpires": {
+    "url": "https://statsapi.mlb.com/api/v1/jobs/umpires",
+    "description": "Get umpire information and assignments.",
+    "required_params": [],
+    "optional_params": ["sportId", "date", "fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true
+  },
+  "venue": {
+    "url": "https://statsapi.mlb.com/api/v1/venues",
+    "description": "Get detailed venue information and configurations.",
+    "required_params": ["venueIds"],
+    "optional_params": ["season", "hydrate", "fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true
+  },
+  "stats_streaks": {
+    "url": "https://statsapi.mlb.com/api/v1/stats/streaks",
+    "description": "Get information about various player and team streaks.",
+    "required_params": ["streakType", "streakSpan", "season", "sportId", "limit"],
+    "optional_params": ["gameType", "hydrate", "fields"],
+    "valid_streak_types": [
+      "hittingStreakOverall",
+      "hittingStreakHome",
+      "hittingStreakAway",
+      "onBaseOverall",
+      "onBaseHome",
+      "onBaseAway"
+    ],
+    "valid_streak_spans": [
+      "career",
+      "season",
+      "currentStreak",
+      "currentStreakInSeason",
+      "notable",
+      "notableInSeason"
+    ],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true
+  },
+  "stats_leaders": {
+    "url": "https://statsapi.mlb.com/api/v1/stats/leaders",
+    "description": "Get statistical leaders for various categories with extensive filtering options. For all-time leaders without season parameter, include statType=statsSingleSeason.",
+    "required_params": ["leaderCategories"],
+    "optional_params": [
+      "leaderGameTypes",
+      "statGroup",
+      "season",
+      "leagueId",
+      "sportId",
+      "hydrate",
+      "limit",
+      "fields",
+      "statType"
+    ],
+    "valid_stat_groups": {
+      "hitting": ["avg", "hr", "rbi", "runs", "sb", "ops"],
+      "pitching": ["era", "w", "sv", "so", "whip"],
+      "fielding": ["fpct", "e", "dp"]
+    },
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true,
+    "example_calls": [
+      {
+        "description": "Get current season batting leaders",
+        "url": "https://statsapi.mlb.com/api/v1/stats/leaders?leaderCategories=homeRuns,battingAverage&season=2024&sportId=1",
+        "notes": "Returns top 10 leaders by default"
+      }
+    ]
+  },
+  "schedule_tied": {
+    "url": "https://statsapi.mlb.com/api/v1/schedule/games/tied",
+    "description": "Get information about tied games in a season.",
+    "required_params": ["season"],
+    "optional_params": ["gameTypes", "hydrate", "fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true
+  },
+  "schedule_postseason": {
+    "url": "https://statsapi.mlb.com/api/v1/schedule/postseason",
+    "description": "Get postseason schedule and results information.",
+    "required_params": [],
+    "optional_params": [
+      "gameTypes",
+      "seriesNumber",
+      "teamId",
+      "sportId",
+      "season",
+      "hydrate",
+      "fields"
+    ],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true
+  },
+  "schedule_postseason_series": {
+    "url": "https://statsapi.mlb.com/api/v1/schedule/postseason/series",
+    "description": "Get detailed postseason series information.",
+    "required_params": [],
+    "optional_params": [
+      "gameTypes",
+      "seriesNumber",
+      "teamId",
+      "sportId",
+      "season",
+      "fields"
+    ],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true
+  },
+  "teams_history": {
+    "url": "https://statsapi.mlb.com/api/v1/teams/history",
+    "description": "Get historical team information and records.",
+    "required_params": ["teamIds"],
+    "optional_params": ["startSeason", "endSeason", "fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true
+  },
+  "team_personnel": {
+    "url": "https://statsapi.mlb.com/api/v1/teams/{teamId}/personnel",
+    "description": "Get team personnel information including staff and management.",
+    "required_params": ["teamId"],
+    "optional_params": ["date", "fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true
+  },
+  "team_leaders": {
+    "url": "https://statsapi.mlb.com/api/v1/teams/{teamId}/leaders",
+    "description": "Get statistical leaders for a specific team.",
+    "required_params": ["teamId", "leaderCategories", "season"],
+    "optional_params": ["leaderGameTypes", "hydrate", "limit", "fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true
+  },
+  "teams_affiliates": {
+    "url": "https://statsapi.mlb.com/api/v1/teams/affiliates",
+    "description": "Get information about team affiliates and minor league teams.",
+    "required_params": ["teamIds"],
+    "optional_params": ["sportId", "season", "hydrate", "fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true
+  },
+  "team": {
+    "url": "https://statsapi.mlb.com/api/v1/teams/{teamId}",
+    "description": "Get detailed information about a specific team.",
+    "required_params": ["teamId"],
+    "optional_params": ["season", "sportId", "hydrate", "fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true
+  },
+  "team_coaches": {
+    "url": "https://statsapi.mlb.com/api/v1/teams/{teamId}/coaches",
+    "description": "Get coaching staff information for a team.",
+    "required_params": ["teamId"],
+    "optional_params": ["season", "date", "fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true
+  },
+  "team_alumni": {
+    "url": "https://statsapi.mlb.com/api/v1/teams/{teamId}/alumni",
+    "description": "Get information about team alumni and former players.",
+    "required_params": ["teamId", "season", "group"],
+    "optional_params": ["hydrate", "fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true
+  },
+  "people_changes": {
+    "url": "https://statsapi.mlb.com/api/v1/people/changes",
+    "description": "Get changes to people information in the database.",
+    "required_params": [],
+    "optional_params": ["updatedSince", "fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true
+  },
+  "people_freeAgents": {
+    "url": "https://statsapi.mlb.com/api/v1/people/freeAgents",
+    "description": "Get information about current free agents.",
+    "required_params": ["leagueId"],
+    "optional_params": ["order", "hydrate", "fields"],
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true
+  },
+  "seasons": {
+    "url": "https://statsapi.mlb.com/api/v1/seasons{/all}",
+    "description": "Get comprehensive season information including dates, preseason, regular season, postseason, and other important season milestones.",
+    "required_params": ["sportId"],
+    "optional_params": [
+      "all",
+      "season",
+      "sportId",
+      "divisionId",
+      "leagueId",
+      "fields"
+    ],
+    "notes": "Include /all in path to query all seasons. Pass parameter all=True to include /all in path. The divisionId and leagueId parameters are supported when 'all' is used.",
+    "rate_limit": "25 requests per second",
+    "case_sensitive": true,
+    "example_calls": [
+      {
+        "description": "Get information for specific MLB season",
+        "url": "https://statsapi.mlb.com/api/v1/seasons?sportId=1&season=2024",
+        "notes": "Returns regular season, preseason and postseason dates"
+      },
+      {
+        "description": "Get all MLB seasons",
+        "url": "https://statsapi.mlb.com/api/v1/seasons/all?sportId=1",
+        "notes": "Returns information for all MLB seasons in history"
+      }
+    ]
   }
 }

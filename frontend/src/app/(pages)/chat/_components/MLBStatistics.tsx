@@ -121,6 +121,31 @@ const MLBStatistics: React.FC<MLBStatisticsProps> = ({ chart }) => {
     );
   };
 
+  const formatMLBTooltip = (value: any, name: string, props: any) => {
+    // Check if we're dealing with MLB team data
+    const payload = props.payload;
+    if (payload && payload[0] && payload[0].payload.category) {
+      const teamName = payload[0].payload.category;
+      return [`${value}`, teamName];
+    }
+    return [value, name];
+  };
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div className="bg-black/90 border border-white/10 rounded-lg p-3 shadow-lg">
+          <p className="text-sm font-medium text-white mb-1">{data.category}</p>
+          <p className="text-xs text-blue-400">
+            Value: <span className="text-white">{data.value}</span>
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   // Render different chart types
   const renderChart = () => {
     const { chart_type, variant, formatted_data: data } = chart;
@@ -292,60 +317,71 @@ const MLBStatistics: React.FC<MLBStatisticsProps> = ({ chart }) => {
           </ResponsiveContainer>
         );
 
-      case 'bar':
-      default:
-        return (
-          <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={data}>
-              <XAxis 
-                dataKey={data[0]?.month ? 'month' : 'browser'}
-                tickFormatter={data[0]?.date ? formatDate : undefined}
-                className={chart.styles.typography.label}
-              />
-              <YAxis 
-                className={chart.styles.typography.label}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: chart.styles.colors.background,
-                  border: `1px solid ${chart.styles.colors.border}`,
-                  borderRadius: '8px',
-                }}
-                labelStyle={{ color: chart.styles.colors.foreground }}
-                itemStyle={{ color: chart.styles.colors.mutedForeground }}
-                formatter={(value: number, name: string) => [value, name]}
-                labelFormatter={data[0]?.date ? formatDate : undefined}
-              />
-              {variant === 'grouped' ? (
-                dataKeys.map((key, index) => (
-                  <Bar
-                    key={key}
-                    dataKey={key}
-                    fill={chart.styles.colors.chart[index + 1]}
-                    radius={[4, 4, 0, 0]}
-                  />
-                ))
-              ) : (
-                <Bar
-                  dataKey={data[0]?.visitors ? 'visitors' : 'value'}
-                  fill={chart.styles.colors.chart.primary}
-                  radius={[4, 4, 0, 0]}
-                >
-                  {variant === 'mixed' && data.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Bar>
-              )}
-              {chart.components?.legend?.position && (
-                <Legend 
-                  verticalAlign={chart.components.legend.position as "top" | "bottom"}
-                  align={chart.components.legend.alignment as "left" | "center" | "right"} 
-                  className={chart.styles.typography.label}
-                />
-              )}
-            </BarChart>
-          </ResponsiveContainer>
-        );
+        case 'bar':
+            default:
+              return (
+                <ResponsiveContainer width="100%" height={400}>
+                  <BarChart data={data}>
+                    <XAxis 
+                      dataKey={data[0]?.category ? 'category' : (data[0]?.month ? 'month' : 'browser')}
+                      tickFormatter={data[0]?.date ? formatDate : undefined}
+                      className={chart.styles.typography.label}
+                      interval={0}
+                      angle={-45}
+                      textAnchor="end"
+                      height={100}
+                    />
+                    <YAxis 
+                      className={chart.styles.typography.label}
+                    />
+                    {data[0]?.category ? (
+                      <Tooltip content={<CustomTooltip />} />
+                    ) : (
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: chart.styles.colors.background,
+                          border: `1px solid ${chart.styles.colors.border}`,
+                          borderRadius: '8px',
+                        }}
+                        formatter={formatMLBTooltip}
+                        labelStyle={{ color: chart.styles.colors.foreground }}
+                        itemStyle={{ color: chart.styles.colors.mutedForeground }}
+                        labelFormatter={data[0]?.date ? formatDate : undefined}
+                      />
+                    )}
+                    {variant === 'grouped' ? (
+                      dataKeys.map((key, index) => (
+                        <Bar
+                          key={key}
+                          dataKey={key}
+                          fill={chart.styles.colors.chart[index + 1]}
+                          radius={[4, 4, 0, 0]}
+                        />
+                      ))
+                    ) : (
+                      <Bar
+                        dataKey="value"
+                        fill={chart.styles.colors.chart[1]}
+                        radius={[4, 4, 0, 0]}
+                      >
+                        {data.map((entry, index) => (
+                          <Cell 
+                            key={`cell-${index}`} 
+                            fill={chart.styles.colors.chart[(index % 5) + 1]}
+                          />
+                        ))}
+                      </Bar>
+                    )}
+                    {chart.components?.legend?.position && (
+                      <Legend 
+                        verticalAlign={chart.components.legend.position as "top" | "bottom"}
+                        align={chart.components.legend.alignment as "left" | "center" | "right"} 
+                        className={chart.styles.typography.label}
+                      />
+                    )}
+                  </BarChart>
+                </ResponsiveContainer>
+              );
     }
   };
 

@@ -5,6 +5,8 @@ install:
 	pip install poetry 
 	cd backend && poetry install 
 	cd frontend && npm install 
+all:
+	frontend backend
 
 backend:
 	@echo "Starting backend"

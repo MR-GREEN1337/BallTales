@@ -7,7 +7,6 @@ import tempfile
 import traceback
 from typing import List, Optional, Dict, Any
 import json
-import aiohttp
 import google.generativeai as genai
 import pandas as pd
 from src.api.models import (
@@ -32,7 +31,12 @@ from src.core.settings import settings
 
 class MLBAgent:
     def __init__(
-        self, api_key: str, endpoints_json: str, functions_json: str, media_json: str, charts_json: str
+        self,
+        api_key: str,
+        endpoints_json: str,
+        functions_json: str,
+        media_json: str,
+        charts_json: str,
     ):
         genai.configure(api_key=api_key)
 
@@ -48,6 +52,7 @@ class MLBAgent:
         self.homeruns = pd.read_csv("src/core/constants/mlb_homeruns.csv")
         self.media_source = json.loads(media_json)["sources"]
         self.charts_docs = json.loads(charts_json)["charts"]
+
         self.intent = None
         self.plan = None
         self.repl = MLBPythonREPL(timeout=8)
@@ -58,8 +63,7 @@ class MLBAgent:
     def _setup_prompts(self):
         """Set up all prompts used by the agent"""
         self.intent_prompt = f"""
-        Available MLB Stats API Functions:
-
+            Available MLB Stats API Functions:
             {json.dumps(self.functions, indent=2)}
 
             Available Endpoints:
@@ -140,14 +144,17 @@ Season Progress:
 - Data needed: Season schedule, current date
 
     Query to analyze: """
-#Available Endpoints:
-#{json.dumps(self.endpoints, indent=2)}
+        # Available Endpoints:
+        # {json.dumps(self.endpoints, indent=2)}
 
         self.plan_prompt = f"""Create a detailed MLB data retrieval plan optimizing for accuracy and efficiency.
 
-Choose from the given functions
+Choose from the given functions/endpoints
 Available Functions:
 {json.dumps(self.functions, indent=2)}
+
+Available Endpoints:
+{json.dumps(self.endpoints, indent=2)}
 
 Current Intent Analysis:
 {json.dumps(self.intent, indent=2)}
@@ -156,7 +163,7 @@ KNOWN CONTEXT (Use these values directly - DO NOT create steps to fetch them):
 - Current Season (seasonId): {datetime.now().year}
 - Current Time: {datetime.now().isoformat()}
 - Regular Season Status: In Progress
-- League IDs: AL=103, NL=104
+- League IDs: AL=103, NL=104 For other IDs execute the appropritate endpoints/functions
 
 PLANNING EXAMPLES:
 
@@ -289,14 +296,6 @@ The plan must follow this exact schema:
             Suggestions should be relevant to the current context and encourage exploration.
             Return exactly as a JSON array of strings."""
 
-        self.action_prompt = """Generate 1-3 clickable actions for an MLB query response.
-            Actions should help users navigate to related content.
-            Each action must have:
-            - type: The action type (e.g., view_team, view_player)
-            - label: User-friendly text
-            - data: Required parameters with IDs
-            Return as a JSON array of action objects."""
-
         self.conversation_prompt = """You are a friendly baseball-loving AI assistant.
             Generate a warm, conversational response to the user's query.
             Even if the query isn't baseball-related, respond in a helpful and engaging way,
@@ -309,21 +308,6 @@ The plan must follow this exact schema:
             
             Query: "What's the weather like?"
             Response: "While I can't check the weather, I can tell you it's always a perfect day for baseball! Would you like to know which games are scheduled today?" """
-
-        self.conversation_prompt = """You are a friendly baseball-loving AI assistant. 
-            Generate a warm, conversational response to the user's query.
-            Even if the query isn't baseball-related, respond in a helpful and engaging way,
-            while gently steering the conversation back to baseball when appropriate.
-            Keep responses concise but personable.
-            
-            Examples:
-            Query: "I'm feeling sad today"
-            Response: "I'm sorry to hear you're feeling down today. Sometimes watching a great baseball game can lift our spirits - there's nothing quite like the excitement of a close game! Would you like me to show you some of today's most thrilling moments?"
-            
-            Query: "What's the weather like?"
-            Response: "While I can't check the current weather, I can tell you it's always a perfect day for baseball! Would you like to know if there are any games scheduled today?"
-            
-            Return a string with your conversational response."""
 
     async def analyze_intent(self, query: str) -> IntentAnalysis:
         """Enhanced intent analysis with structured schema"""
@@ -441,20 +425,20 @@ The plan must follow this exact schema:
 
     async def create_data_plan(self, intent: IntentAnalysis) -> DataRetrievalPlan:
         """Generate structured data retrieval plan with improved schema validation"""
-        #TODO: Fix endpoint data handling, for now we'll use functions only
+        # TODO: Fix endpoint data handling, for now we'll use functions only
         try:
             # Compile available resources
             available_endpoints = list(self.endpoints.keys())
             available_functions = [f["name"] for f in self.functions]
 
             # Define valid types and methods statically
-            valid_types = {"function": True} #, "endpoint": True}
+            valid_types = {"function": True, "endpoint": True}
 
-            valid_methods = {} #{method: True for method in available_endpoints}
+            valid_methods = {method: True for method in available_endpoints}
             valid_methods.update({method: True for method in available_functions})
 
             plan_types = {
-                #"endpoint": True,
+                "endpoint": True,
                 "function": True,
             }
 
@@ -1351,6 +1335,8 @@ print(json.dumps(result))
     "teamId=143, season=2025"
     "personId=12345, group='[hitting,pitching]'"
     "gamePk=123456"
+    
+    If a param requires date format, return it as 'MM/DD/YYYY'
 
     Return only the parameter string, no explanations or json formatting."""
 
@@ -1563,7 +1549,7 @@ print(json.dumps(result))
         )
         return json.loads(result.text)
 
-    async def process_message(self, deps: MLBDeps, message: str) -> MLBResponse:
+    async def process_message(self, deps: MLBDeps, message: str, context: Dict[str, Any]) -> MLBResponse:
         """Enhanced message processing with media resolution"""
         try:
             # Get intent analysis
@@ -1592,7 +1578,7 @@ print(json.dumps(result))
                         message, response_data
                     )
 
-                    return {
+                    result =  {
                         "message": response_data["summary"],
                         "conversation": conversation,
                         "data_type": self.intent["intent"],
@@ -1600,19 +1586,21 @@ print(json.dumps(result))
                         "context": {"intent": self.intent},
                         "suggestions": suggestions,
                         "media": response_data.get("media"),
-                        "chart": chart
+                        "chart": chart,
                     }
+                    translated_result = await self.translate_response(response=result, target_language=context["user_info"]["language"])
+
+                    return translated_result
 
                 except Exception as execution_error:
                     print(f"Execution error: {str(execution_error)}")
                     return self._create_error_response(message, str(execution_error))
 
-            # Handle non-MLB queries as before...
             else:
                 conversation = await self.generate_conversation(message, self.intent)
                 suggestions = self._get_default_suggestions()
 
-                return {
+                result = {
                     "message": self.intent.get(
                         "intent_description", "Let's talk baseball!"
                     ),
@@ -1623,6 +1611,10 @@ print(json.dumps(result))
                     "suggestions": suggestions,
                     "media": None,
                 }
+
+                translated_result = await self.translate_response(response=result, target_language=context["user_info"]["language"])
+
+                return translated_result
 
         except Exception as e:
             print(f"Critical error in process_message: {str(e)}")
@@ -1732,7 +1724,7 @@ print(json.dumps(result))
                         ).ratio()
                         for keyword in media_plan["homerun_search"]
                     )
-                    if score > 0.5:  # Threshold for good matches
+                    if score > 0.55:  # Threshold for good matches
                         video_data = self.homeruns[
                             self.homeruns["title"] == title
                         ].iloc[0]
@@ -1746,6 +1738,7 @@ print(json.dumps(result))
                                     "exit_velocity": float(video_data["ExitVelocity"]),
                                     "launch_angle": float(video_data["LaunchAngle"]),
                                     "distance": float(video_data["HitDistance"]),
+                                    "year": int(video_data["season"]),
                                 },
                             }
                         )
@@ -1754,22 +1747,22 @@ print(json.dumps(result))
                 homerun_matches.sort(
                     key=lambda x: x["metadata"]["exit_velocity"], reverse=True
                 )
-                media_plan["direct_media"].extend(
-                    homerun_matches[:20]
-                )
+                media_plan["direct_media"].extend(homerun_matches[:100])
 
             return media_plan
 
         except Exception as e:
             print(f"Error in media resolution: {str(e)}")
             return {"direct_media": [], "homerun_search": []}
-    
-    async def _resolve_chart(self, deps: MLBDeps, data: Dict[str, Any], steps: List[Dict[str, Any]]) -> Dict[str, Any]:
+
+    async def _resolve_chart(
+        self, deps: MLBDeps, data: Dict[str, Any], steps: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Analyze if data can be visualized as a chart and return appropriate chart configuration"""
         try:
             # Get chart documentation
             chart_specs = self.charts_docs
-            
+
             # Create prompt for chart analysis
             chart_prompt = f"""Analyze this MLB data and determine if it can be visualized as a chart.
 
@@ -1795,7 +1788,7 @@ print(json.dumps(result))
 
             # Get chart recommendation from LLM
             result = await asyncio.to_thread(
-                self.model.generate_content,
+                self.gemini_2_model.generate_content,
                 chart_prompt,
                 generation_config=genai.GenerationConfig(
                     temperature=0.2,
@@ -1815,15 +1808,22 @@ print(json.dumps(result))
                                         "label": {"type": "string"},
                                         "category": {"type": "string"},
                                         "date": {"type": "string"},
-                                        "fill": {"type": "string"}
-                                    }
-                                }
+                                        "fill": {"type": "string"},
+                                    },
+                                },
                             },
                             "title": {"type": "string"},
-                            "description": {"type": "string"}
+                            "description": {"type": "string"},
                         },
-                        "required": ["requires_chart", "title", "description", "formatted_data", "variant", "chart_type"]
-                    }
+                        "required": [
+                            "requires_chart",
+                            "title",
+                            "description",
+                            "formatted_data",
+                            "variant",
+                            "chart_type",
+                        ],
+                    },
                 ),
             )
 
@@ -1834,77 +1834,85 @@ print(json.dumps(result))
                 # Get chart type specs
                 chart_type = chart_plan.get("chart_type")
                 variant = chart_plan.get("variant")
-                
+
                 if not chart_type or not variant:
                     raise ValueError("Missing chart type or variant")
-                    
+
                 chart_specs = self.charts_docs.get(chart_type, {})
                 variant_specs = chart_specs.get("variants", {}).get(variant, {})
-                
+
                 if not variant_specs:
-                    raise ValueError(f"Invalid chart type {chart_type} or variant {variant}")
-                    
+                    raise ValueError(
+                        f"Invalid chart type {chart_type} or variant {variant}"
+                    )
+
                 # Validate data against schema
                 input_schema = variant_specs.get("inputSchema", {})
                 formatted_data = chart_plan.get("formatted_data", [])
-                
+
                 """if not self._validate_chart_data(formatted_data, input_schema):
                     raise ValueError("Formatted data does not match schema")"""
-                    
+
                 # Add styling information
                 chart_plan["styles"] = self.charts_docs["common"]["styling"]
-                
+
                 # Add component configurations
                 chart_plan["components"] = {
                     "tooltip": {"variant": "default"},
-                    "legend": {"position": "bottom", "alignment": "center"}
+                    "legend": {"position": "bottom", "alignment": "center"},
                 }
-                
+
                 return chart_plan
-            
+
             return {"requires_chart": False}
 
         except Exception as e:
             print(f"Error in chart resolution: {str(e)}")
             return {"requires_chart": False}
-            
-    def _validate_chart_data(self, data: List[Dict[str, Any]], schema: Dict[str, Any]) -> bool:
+
+    def _validate_chart_data(
+        self, data: List[Dict[str, Any]], schema: Dict[str, Any]
+    ) -> bool:
         """Validate chart data against its schema"""
         try:
             if not isinstance(data, list):
                 return False
-                
+
             required_props = schema.get("items", {}).get("required", [])
             properties = schema.get("items", {}).get("properties", {})
-            
+
             for item in data:
                 # Check required properties
                 if not all(prop in item for prop in required_props):
                     return False
-                    
+
                 # Validate property types
                 for prop, value in item.items():
                     expected_type = properties.get(prop)
                     if not expected_type:
                         continue
-                        
+
                     if expected_type == "string" and not isinstance(value, str):
                         return False
-                    elif expected_type == "number" and not isinstance(value, (int, float)):
+                    elif expected_type == "number" and not isinstance(
+                        value, (int, float)
+                    ):
                         return False
-                        
+
             return True
-            
+
         except Exception as e:
             print(f"Error validating chart data: {str(e)}")
             return False
 
-    async def _resolve_media(self, deps: MLBDeps, data: Dict[str, Any], steps: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def _resolve_media(
+        self, deps: MLBDeps, data: Dict[str, Any], steps: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Resolve media using optimized search and image analysis"""
         try:
             # Get ready-to-use media items and homerun search terms
             media_plan = await self._get_search_parameters(self.intent, data)
-            print("meedia", media_plan)
+            #print("meedia", media_plan)
             # Analyze and enhance media items with descriptions
             enhanced_media = []
             for media_item in media_plan.get("direct_media", []):
@@ -1924,30 +1932,39 @@ print(json.dumps(result))
                             Return a natural, engaging description that captures the image's essence.
                             Return a concise description
                             """
-                            
-                            image_type="svg" if "logo" in media_item["description"].lower() else "jpeg"
+
+                            image_type = (
+                                "svg"
+                                if "logo" in media_item["description"].lower()
+                                else "jpeg"
+                            )
                             # Generate image description using Gemini
                             result = await asyncio.to_thread(
                                 self.gemini_2_model.generate_content,
                                 [
                                     prompt,
-                                    {'data': base64.b64encode(image_data.content).decode('utf-8'), 'mime_type': f'image/{image_type}'}
+                                    {
+                                        "data": base64.b64encode(
+                                            image_data.content
+                                        ).decode("utf-8"),
+                                        "mime_type": f"image/{image_type}",
+                                    },
                                 ],
                                 generation_config=genai.GenerationConfig(
                                     temperature=0.7,
-                                )
+                                ),
                             )
-                            #print("response media:", result)
+                            # print("response media:", result)
                             # Add enhanced description to media item
                             media_item["description"] = result.text.strip()
-                            
+
                     enhanced_media.append(media_item)
-                    
+
                 except Exception as media_error:
                     print(f"Error processing media item: {str(media_error)}")
                     # Still include item even if enhancement fails
                     enhanced_media.append(media_item)
-                    
+
             return enhanced_media
 
         except Exception as e:
@@ -1955,31 +1972,42 @@ print(json.dumps(result))
             traceback.print_exc()
             return []
 
-    async def _enhance_media_metadata(self, media_item: Dict[str, Any]) -> Dict[str, Any]:
+    async def _enhance_media_metadata(
+        self, media_item: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Enhance media metadata with additional context"""
         try:
             if media_item["type"] == "image":
                 # Generate contextual metadata for images
                 if "player_id" in media_item.get("metadata", {}):
-                    media_item["metadata"]["player_context"] = await self._generate_player_description(
+                    media_item["metadata"][
+                        "player_context"
+                    ] = await self._generate_player_description(
                         media_item["metadata"]["player_id"]
                     )
                 elif "team_id" in media_item.get("metadata", {}):
-                    media_item["metadata"]["team_context"] = await self._generate_team_description(
+                    media_item["metadata"][
+                        "team_context"
+                    ] = await self._generate_team_description(
                         media_item["metadata"]["team_id"]
                     )
-                
-            elif media_item["type"] == "video" and "homerun_data" in media_item.get("metadata", {}):
+
+            elif media_item["type"] == "video" and "homerun_data" in media_item.get(
+                "metadata", {}
+            ):
                 # Add enhanced homerun context
-                media_item["metadata"]["game_context"] = await self._generate_highlight_description(
+                media_item["metadata"][
+                    "game_context"
+                ] = await self._generate_highlight_description(
                     media_item["metadata"]["homerun_data"]
                 )
-                
+
             return media_item
-            
+
         except Exception as e:
             print(f"Error enhancing media metadata: {str(e)}")
             return media_item
+
     def _extract_and_filter(
         self, data: Any, path: Optional[str], filter_condition: Optional[str]
     ) -> Any:
@@ -2165,6 +2193,44 @@ print(json.dumps(result))
         return filtered_data
     """
 
+    async def translate_response(self, response: Any, target_language: str) -> MLBResponse:
+            """Translate human-readable fields in the MLB response while preserving structure and technical data."""
+            if not target_language or target_language.lower() == "english":
+                return response
+                
+            prompt = f"""Translate this MLB baseball response from English to {target_language}.
+            The response is provided as JSON. Return the exact same JSON structure.
+            
+            Rules:
+            1. Translate ONLY human-readable text like descriptions, messages, and titles
+            2. DO NOT translate or modify:
+            - Technical fields (ids, urls, types, flags)
+            - Player names and team names
+            - Statistics and numbers
+            - Data structure or field names
+            - Boolean flags or status indicators
+            3. Preserve all JSON structure and formatting exactly
+            
+            Input Response:
+            {json.dumps(response, indent=2)}
+            
+            Return the translated JSON with identical structure."""
+
+            try:
+                result = await asyncio.to_thread(
+                    self.gemini_2_model.generate_content,
+                    prompt,
+                    generation_config=genai.GenerationConfig(
+                        temperature=0.1,
+                        response_mime_type="application/json"
+                    )
+                )
+                
+                return json.loads(result.text)
+                
+            except Exception as e:
+                print(f"Translation error: {str(e)}")
+                return response
 
 # Create agent instance
 with open("src/core/constants/endpoints.json", "r") as f:

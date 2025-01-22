@@ -1,8 +1,11 @@
 from httpx import AsyncClient
+from pydantic import BaseModel
 import typing_extensions as typing
 import enum
 from dataclasses import dataclass
 from typing import NotRequired, TypedDict, List, Optional, Dict, Any, Literal
+
+from src.core import LANGUAGES_FOR_LABELLING
 
 
 @dataclass
@@ -11,6 +14,11 @@ class MLBDeps:
     season: int = 2025
     endpoints: Dict[str, Any] = None
 
+class REPLResult(TypedDict):
+    status: str
+    logs: List[str]
+    error: Optional[str]
+    output: Optional[str]
 
 class MLBResponse(TypedDict):
     message: str  # Technical/data summary
@@ -107,7 +115,7 @@ class IntentAnalysis(TypedDict):
     entities: Entities
     context: Context
     is_mlb_related: bool
-
+    description: str
 
 # Data Plan Enums
 class PlanType(str, enum.Enum):
@@ -183,3 +191,33 @@ class SearchParameters(TypedDict):
     player_search: SearchIdentifiers
     team_search: SearchIdentifiers
     media_endpoints: List[MediaEndpoint]
+
+class Message(BaseModel):
+    """Represents a single message in the chat"""
+    content: str
+    sender: Literal["bot", "user"]
+    type: Literal["text", "options", "selection"]
+    suggestions: Optional[List[str]] = None
+
+class UserPreferences(BaseModel):
+    """Represents user's baseball preferences"""
+    favorite_teams: Optional[List[str]] = []
+    favorite_players: Optional[List[str]] = []
+    interests: Optional[List[str]] = []
+
+class User(BaseModel):
+    """Represents the user data structure"""
+    id: Optional[str] = None
+    name: str
+    email: str
+
+class UserData(User):
+    """Represents complete user information"""
+    preferences: Optional[UserPreferences] = None
+    language: str
+
+class ChatRequest(BaseModel):
+    """Complete chat request schema matching frontend data structure"""
+    message: str
+    history: List[Message]
+    user_data: UserData

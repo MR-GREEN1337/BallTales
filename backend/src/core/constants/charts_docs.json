@@ -262,47 +262,47 @@
         }
       },
       "common": {
-        "components": {
-          "tooltip": {
-            "variants": ["default", "line", "dot", "dashed"],
-            "customization": {
-              "hideLabel": "boolean",
-              "hideIndicator": "boolean",
-              "indicator": "string"
-            }
-          },
-          "legend": {
-            "position": ["top", "bottom", "left", "right"],
-            "alignment": ["start", "center", "end"]
+      "components": {
+        "tooltip": {
+          "variants": ["default", "line", "dot", "dashed"],
+          "customization": {
+            "hideLabel": "boolean",
+            "hideIndicator": "boolean",
+            "indicator": "string"
           }
         },
-        "styling": {
-          "colors": {
-            "background": "hsl(var(--background))",
-            "foreground": "hsl(var(--foreground))",
-            "muted": "hsl(var(--muted))",
-            "mutedForeground": "hsl(var(--muted-foreground))",
-            "chart": {
-              "1": "hsl(var(--chart-1))",
-              "2": "hsl(var(--chart-2))",
-              "3": "hsl(var(--chart-3))",
-              "4": "hsl(var(--chart-4))",
-              "5": "hsl(var(--chart-5))"
-            },
-            "categories": {
-              "chrome": "var(--color-chrome)",
-              "safari": "var(--color-safari)",
-              "firefox": "var(--color-firefox)",
-              "edge": "var(--color-edge)",
-              "other": "var(--color-other)"
-            }
+        "legend": {
+          "position": ["top", "bottom", "left", "right"],
+          "alignment": ["start", "center", "end"]
+        }
+      },
+      "styling": {
+        "colors": {
+          "background": "hsl(220, 13%, 18%)",      
+          "foreground": "hsl(0, 0%, 98%)",         
+          "muted": "hsl(215, 16%, 47%)",          
+          "mutedForeground": "hsl(215, 20%, 65%)", 
+          "chart": {
+            "1": "hsl(214, 90%, 52%)",    
+            "2": "hsl(0, 100%, 40%)",     
+            "3": "hsl(27, 90%, 55%)",     
+            "4": "hsl(203, 39%, 44%)",    
+            "5": "hsl(42, 87%, 55%)"      
           },
-          "typography": {
-            "title": "text-lg font-semibold",
-            "description": "text-sm text-muted-foreground",
-            "label": "text-xs"
+          "categories": {
+            "home": "hsl(214, 90%, 52%)",      
+            "away": "hsl(0, 100%, 40%)",       
+            "neutral": "hsl(203, 39%, 44%)",   
+            "highlight": "hsl(27, 90%, 55%)",  
+            "accent": "hsl(42, 87%, 55%)"      
           }
+        },
+        "typography": {
+          "title": "text-xl font-bold font-baseball tracking-wide",
+          "description": "text-sm text-muted-foreground font-sans",
+          "label": "text-xs font-medium uppercase tracking-wider"
         }
       }
     }
+  }
   }

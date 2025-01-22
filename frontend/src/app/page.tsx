@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import BaseballBat from '@/components/global/Baseball';
 
 const translations = {
   en: {
@@ -17,13 +16,13 @@ const translations = {
     title: "Tu Juego,",
     titleSpan: "Tus Momentos",
     subtitle: "Momentos destacados personalizados de la MLB en inglés, español y japonés. Mantente conectado a cada momento importante.",
-    cta: "Prueba la Demo"
+    cta: "Prueba la Aplicación"
   },
   ja: {
     title: "あなたの試合、",
     titleSpan: "あなたのハイライト",
     subtitle: "英語、スペイン語、日本語で楽しめるパーソナライズされたMLBハイライト。大切な瞬間をお見逃しなく。",
-    cta: "デモを体験"
+    cta: "アプリを体験"
   }
 };
 
