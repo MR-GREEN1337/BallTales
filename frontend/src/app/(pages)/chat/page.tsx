@@ -358,27 +358,31 @@ const OnboardingChat = () => {
 
   return (
     <div
-      className="min-h-screen relative overflow-hidden"
-      style={{
-        backgroundImage: 'url(/chat.jpg)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed',
-        backgroundColor: 'rgba(17, 24, 39, 0.85)',
-        backgroundBlendMode: 'multiply'
-      }}
-    >
-      <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
-        <ClearButton onClear={handleReset} disabled={messages.length === 1} />
-        <MLBProfile
-          user={userData.user}
-          preferences={userData.preferences}
-          onLogout={handleLogout}
-        />
+    className="min-h-screen relative overflow-hidden"
+    style={{
+      backgroundImage: 'url(/chat.jpg)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundAttachment: 'fixed',
+      backgroundColor: 'rgba(17, 24, 39, 0.85)',
+      backgroundBlendMode: 'multiply'
+    }}
+  >
+    <div className="fixed top-0 left-0 right-0 bg-gradient-to-b from-gray-900 to-transparent p-4 z-50">
+      <div className="max-w-4xl mx-auto flex justify-end">
+        <div className="flex items-center gap-2">
+          <ClearButton onClear={handleReset} disabled={messages.length === 1} />
+          <MLBProfile
+            user={userData.user}
+            preferences={userData.preferences}
+            onLogout={handleLogout}
+          />
+        </div>
       </div>
+    </div>
       {/* Chat Container */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="space-y-8 pb-24">
+      <div className="max-w-4xl mx-auto px-4">
+      <div className="pt-24 pb-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -388,13 +392,14 @@ const OnboardingChat = () => {
             <h1 className="text-4xl font-bold text-white mb-2">
               {languageContent[userLanguage as keyof typeof languageContent]?.pageTitle || languageContent.en.pageTitle}
             </h1>
-            <p className="text-gray-300">
+            <p className="text-gray-300 mb-3">
               {languageContent[userLanguage as keyof typeof languageContent]?.pageSubtitle || languageContent.en.pageSubtitle}
             </p>
           </motion.div>
 
           {/* Messages */}
-          <div className="space-y-6">
+          <div className="space-y-8 pb-24">
+        <div className="space-y-6">
             <AnimatePresence>
               {clearingMessages && (
                 <div className="fixed inset-0 pointer-events-none">
@@ -496,6 +501,7 @@ const OnboardingChat = () => {
             </AnimatePresence>
           </div>
           <div ref={messagesEndRef} />
+        </div>
         </div>
 
         {/* Input */}

@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import Cookies from "js-cookie"
+import BackgroundSlideshow from '../_components/BackgroundSlideShow'
 
 interface SignUpFormData {
   email: string
@@ -149,10 +150,10 @@ const SignUpPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-950 to-red-950 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background animations remain the same */}
+      <BackgroundSlideshow />
       
-      <Card className="w-full max-w-md relative bg-white/10 backdrop-blur-xl border-white/20">
-        <CardContent className="p-6">
+      <Card className="w-full max-w-md relative bg-black/80 backdrop-blur-xl border-white/10">
+      <CardContent className="p-6">
           {/* Logo and Title section remains the same */}
 
           {/* Progress Steps */}
@@ -248,9 +249,10 @@ const SignUpPage = () => {
                       placeholder="Email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      className={`pl-10 bg-white/10 border-white/20 text-white placeholder:text-gray-400 ${
-                        formErrors.email ? 'border-red-500' : ''
-                      }`}
+                      className={`pl-10 bg-black/50 border-white/20 text-white placeholder:text-gray-400
+                        ${formErrors.email ? 'border-red-500' : 'focus:border-blue-400'}
+                      `}
+                      
                       required
                     />
                   </div>
@@ -268,9 +270,9 @@ const SignUpPage = () => {
                       placeholder="Password"
                       value={formData.password}
                       onChange={handleInputChange}
-                      className={`pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder:text-gray-400 ${
-                        formErrors.password ? 'border-red-500' : ''
-                      }`}
+                      className={`pl-10 bg-black/50 border-white/20 text-white placeholder:text-gray-400
+                        ${formErrors.password ? 'border-red-500' : 'focus:border-blue-400'}
+                      `}
                       required
                     />
                     <button
@@ -358,7 +360,7 @@ const SignUpPage = () => {
 
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-red-500 to-blue-500 text-white hover:opacity-90"
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white hover:from-blue-700 hover:to-blue-900"
               disabled={isPending}
             >
               {isPending ? (

@@ -94,110 +94,115 @@ const Home = () => {
       {/* Wind effect overlay */}
       <WindEffect />
 
-      {/* Main content */}
-      <div className="container mx-auto px-4 py-12 relative z-20">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="flex flex-col items-center justify-center min-h-[80vh] gap-8"
-        >
-          {/* 
-          3D Baseball Bat
-          <motion.div
-            whileHover={{ scale: 1.1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <BaseballBat />
-          </motion.div> */}
-
-          {/* Title */}
-          <AnimatePresence mode="wait">
-            <motion.h1
-              key={language}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5 }}
-              className="text-5xl md:text-7xl font-bold text-center mb-4"
-            >
-              {t.title}
-              <span className="text-red-500"> {t.titleSpan}</span>
-            </motion.h1>
-          </AnimatePresence>
-
-          {/* Subtitle */}
-          <AnimatePresence mode="wait">
-            <motion.p
-              key={language}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.5 }}
-              className="text-xl md:text-2xl text-gray-300 text-center max-w-2xl mb-8"
-            >
-              {t.subtitle}
-            </motion.p>
-          </AnimatePresence>
-
-          {/* CTA Button */}
+      {/* Main content wrapper - encompasses all content including language selection */}
+      <div className="relative z-20 min-h-screen">
+        {/* Content container */}
+        <div className="container mx-auto px-4 py-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.9 }}
+            transition={{ duration: 0.8 }}
+            className="flex flex-col items-center justify-center min-h-[80vh] gap-8"
           >
-            <Button 
-              size="lg"
-              className={cn(
-                "bg-red-600 hover:bg-red-700 text-white",
-                "px-8 py-6 text-xl rounded-full",
-                "transition-transform hover:scale-105 shadow-lg"
-              )}
-              onClick={() => window.location.href = '/chat'}
-            >
-              {t.cta}
-            </Button>
-          </motion.div>
-        </motion.div>
+            {/* Title */}
+            <AnimatePresence mode="wait">
+              <motion.h1
+                key={language}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5 }}
+                className="text-5xl md:text-7xl font-bold text-center mb-4"
+              >
+                {t.title}
+                <span className="text-red-500"> {t.titleSpan}</span>
+              </motion.h1>
+            </AnimatePresence>
 
-        {/* Language Selection */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2 }}
-          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-4"
-        >
-          <Button 
-            variant={language === 'en' ? 'default' : 'ghost'} 
-            onClick={() => setLanguage('en')}
-            className={cn(
-              "text-white",
-              language === 'en' ? "bg-red-600 hover:bg-red-700" : "hover:text-red-500"
-            )}
-          >
-            English
-          </Button>
-          <Button 
-            variant={language === 'es' ? 'default' : 'ghost'}
-            onClick={() => setLanguage('es')}
-            className={cn(
-              "text-white",
-              language === 'es' ? "bg-red-600 hover:bg-red-700" : "hover:text-red-500"
-            )}
-          >
-            Español
-          </Button>
-          <Button 
-            variant={language === 'ja' ? 'default' : 'ghost'}
-            onClick={() => setLanguage('ja')}
-            className={cn(
-              "text-white",
-              language === 'ja' ? "bg-red-600 hover:bg-red-700" : "hover:text-red-500"
-            )}
-          >
-            日本語
-          </Button>
-        </motion.div>
+            {/* Subtitle */}
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={language}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5 }}
+                className="text-xl md:text-2xl text-gray-300 text-center max-w-2xl mb-8"
+              >
+                {t.subtitle}
+              </motion.p>
+            </AnimatePresence>
+
+            {/* CTA Button */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.9 }}
+            >
+              <Button 
+                size="lg"
+                className={cn(
+                  "bg-red-600 hover:bg-red-700 text-white",
+                  "px-8 py-6 text-xl rounded-full",
+                  "transition-transform hover:scale-105 shadow-lg"
+                )}
+                onClick={() => window.location.href = '/chat'}
+              >
+                {t.cta}
+              </Button>
+            </motion.div>
+          </motion.div>
+
+          {/* Language Selection - now properly nested within the main content structure */}
+          <div className="absolute bottom-8 left-0 right-0 flex flex-col items-center">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.2 }}
+              className="flex gap-4"
+            >
+              <Button 
+                variant={language === 'en' ? 'default' : 'ghost'} 
+                onClick={() => setLanguage('en')}
+                className={cn(
+                  "text-white",
+                  language === 'en' ? "bg-red-600 hover:bg-red-700" : "hover:text-red-500"
+                )}
+              >
+                English
+              </Button>
+              <Button 
+                variant={language === 'es' ? 'default' : 'ghost'}
+                onClick={() => setLanguage('es')}
+                className={cn(
+                  "text-white",
+                  language === 'es' ? "bg-red-600 hover:bg-red-700" : "hover:text-red-500"
+                )}
+              >
+                Español
+              </Button>
+              <Button 
+                variant={language === 'ja' ? 'default' : 'ghost'}
+                onClick={() => setLanguage('ja')}
+                className={cn(
+                  "text-white",
+                  language === 'ja' ? "bg-red-600 hover:bg-red-700" : "hover:text-red-500"
+                )}
+              >
+                日本語
+              </Button>
+            </motion.div>
+            
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.4 }}
+              className="text-sm text-gray-400 mt-4 tracking-wide"
+            >
+              A Google Cloud × MLB™ Hackathon App Submission
+            </motion.p>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -185,19 +185,18 @@ const VideoGrid: React.FC<{ videos: MediaItem[] }> = ({ videos }) => {
   );
 
   return (
-    <Dialog>
+<Dialog>
       <DialogTrigger asChild>
         <button className="w-full flex items-center justify-center gap-2 p-4 bg-blue-500/20 hover:bg-blue-500/30 rounded-lg transition-all">
           <Grid2X2 className="w-5 h-5" />
           <span>View All Videos ({videos.length})</span>
         </button>
       </DialogTrigger>
-      <DialogContent className="max-w-6xl w-full h-full max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl w-full h-full max-h-[90vh] overflow-y-auto bg-black/90 border border-white/10">
         <DialogHeader>
-          <DialogTitle>Home Run Gallery</DialogTitle>
+          <DialogTitle className="text-white">Home Run Gallery</DialogTitle>
         </DialogHeader>
         
-        {/* Search Bar */}
         <div className="px-4 pt-2">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -206,7 +205,7 @@ const VideoGrid: React.FC<{ videos: MediaItem[] }> = ({ videos }) => {
               placeholder="Search home runs..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-black/20 border-white/10 focus:border-blue-500/50 transition-colors"
+              className="pl-10 bg-black/20 border-white/10 focus:border-blue-500/50 transition-colors text-white"
             />
           </div>
           <div className="mt-2 text-sm text-gray-400">
@@ -221,7 +220,7 @@ const VideoGrid: React.FC<{ videos: MediaItem[] }> = ({ videos }) => {
               className="overflow-hidden bg-black/50 hover:bg-black/60 transition-colors border-white/10 hover:border-white/20"
             >
               <CardHeader className="space-y-2">
-                <CardTitle className="text-sm font-medium line-clamp-2">
+                <CardTitle className="text-sm font-medium line-clamp-2 text-white">
                   {video.title}
                 </CardTitle>
                 {video.metadata && (
