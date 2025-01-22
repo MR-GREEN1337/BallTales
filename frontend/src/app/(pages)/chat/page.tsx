@@ -14,6 +14,7 @@ import Cookies from "js-cookie"
 import { redirect, useRouter } from 'next/navigation'
 import { ClearButton, MessageDust } from './_components/ResetButton'
 import { languageContent, typingPhrases } from '@/lib/constants'
+import AnimatedBotIcon from './_components/AnimatedBotIcon'
 
 
 interface Message {
@@ -419,11 +420,13 @@ const OnboardingChat = () => {
                   className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div className={`flex items-start gap-3 max-w-[80%] ${message.sender === 'user' ? 'flex-row-reverse' : ''}`}>
+                  <div className="flex-shrink-0 w-8 h-8">
                     {message.sender === 'bot' ? (
-                      <Bot className="w-8 h-8 text-blue-400 mt-1" />
+                      <AnimatedBotIcon uniqueId={`bot-${message.id}`} state="default" />
                     ) : (
                       <UserCircle2 className="w-8 h-8 text-gray-400 mt-1" />
                     )}
+                    </div>
 
                     <div className={`rounded-2xl p-4 backdrop-blur-sm ${message.sender === 'user'
                       ? 'bg-blue-600/90 text-white'
@@ -464,7 +467,7 @@ const OnboardingChat = () => {
                   exit={{ opacity: 0, y: -20 }}
                   className="flex items-start gap-3"
                 >
-                  <Bot className="w-8 h-8 text-blue-400 mt-1" />
+                  <AnimatedBotIcon uniqueId="thinking" state="thinking"/>
                   <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
                     <div className="text-white">
                       <TypingText text="Thinking..." language={userLanguage} />
@@ -480,7 +483,7 @@ const OnboardingChat = () => {
                   animate={{ opacity: 1, y: 0 }}
                   className="flex items-start gap-3"
                 >
-                  <Bot className="w-8 h-8 text-blue-400 mt-1" />
+                  <AnimatedBotIcon uniqueId="processing" state="processing" />
                   <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
                     <div className="flex space-x-2">
                       <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" />
