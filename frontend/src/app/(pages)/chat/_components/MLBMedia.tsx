@@ -14,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import MLBStatistics from './MLBStatistics';
 
 // TypeScript interfaces
 interface MediaMetadata {
@@ -32,6 +33,7 @@ interface MediaItem {
 
 interface MLBMediaProps {
   media: MediaItem | MediaItem[];
+  chart: any
 }
 
 interface MediaStatsProps {
@@ -208,7 +210,7 @@ const VideoGrid: React.FC<{ videos: MediaItem[] }> = ({ videos }) => {
   );
 };
 
-const MLBMedia: React.FC<MLBMediaProps> = ({ media }) => {
+const MLBMedia: React.FC<MLBMediaProps> = ({ media, chart }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   if (!media) return null;
 
@@ -298,6 +300,15 @@ const MLBMedia: React.FC<MLBMediaProps> = ({ media }) => {
               ))}
             </div>
           )}
+                {/* Add statistics section */}
+      {chart && chart.requires_chart && (
+        <>
+        {/*<pre>{JSON.stringify(chart, null, 2)}</pre>*/}
+        <div className="mt-8">
+          <MLBStatistics chart={chart} />
+        </div>
+        </>
+      )}
         </div>
       )}
     </div>

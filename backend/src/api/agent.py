@@ -32,7 +32,7 @@ from src.core.settings import settings
 
 class MLBAgent:
     def __init__(
-        self, api_key: str, endpoints_json: str, functions_json: str, media_json: str
+        self, api_key: str, endpoints_json: str, functions_json: str, media_json: str, charts_json: str
     ):
         genai.configure(api_key=api_key)
 
@@ -47,7 +47,7 @@ class MLBAgent:
         self.functions = json.loads(functions_json)["functions"]
         self.homeruns = pd.read_csv("src/core/constants/mlb_homeruns.csv")
         self.media_source = json.loads(media_json)["sources"]
-
+        self.charts_docs = json.loads(charts_json)["charts"]
         self.intent = None
         self.plan = None
         self.repl = MLBPythonREPL(timeout=8)
@@ -1585,6 +1585,8 @@ print(json.dumps(result))
                     if media:
                         response_data["media"] = media
 
+                    chart = await self._resolve_chart(deps, data, plan.get("steps", []))
+
                     suggestions = await self._generate_suggestions(response_data)
                     conversation = await self.generate_conversation(
                         message, response_data
@@ -1598,6 +1600,7 @@ print(json.dumps(result))
                         "context": {"intent": self.intent},
                         "suggestions": suggestions,
                         "media": response_data.get("media"),
+                        "chart": chart
                     }
 
                 except Exception as execution_error:
@@ -1729,7 +1732,7 @@ print(json.dumps(result))
                         ).ratio()
                         for keyword in media_plan["homerun_search"]
                     )
-                    if score > 0.6:  # Threshold for good matches
+                    if score > 0.5:  # Threshold for good matches
                         video_data = self.homeruns[
                             self.homeruns["title"] == title
                         ].iloc[0]
@@ -1752,14 +1755,149 @@ print(json.dumps(result))
                     key=lambda x: x["metadata"]["exit_velocity"], reverse=True
                 )
                 media_plan["direct_media"].extend(
-                    homerun_matches
-                )  # Add top 2 matches
+                    homerun_matches[:20]
+                )
 
             return media_plan
 
         except Exception as e:
             print(f"Error in media resolution: {str(e)}")
             return {"direct_media": [], "homerun_search": []}
+    
+    async def _resolve_chart(self, deps: MLBDeps, data: Dict[str, Any], steps: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Analyze if data can be visualized as a chart and return appropriate chart configuration"""
+        try:
+            # Get chart documentation
+            chart_specs = self.charts_docs
+            
+            # Create prompt for chart analysis
+            chart_prompt = f"""Analyze this MLB data and determine if it can be visualized as a chart.
+
+            Data:
+            {json.dumps(data, indent=2)}
+
+            Available Chart Types:
+            {json.dumps(chart_specs, indent=2)}
+
+            Return a JSON object with:
+            1. requires_chart (boolean): Whether data should be displayed as a chart
+            2. chart_type (string): One of: "area", "bar", "pie", "radar", "radial" (if requires_chart is true)
+            3. variant (string): Specific variant of the chart type (if requires_chart is true)
+            4. formatted_data (array): Data formatted according to chart's inputSchema (if requires_chart is true)
+            5. title (string): Chart title (if requires_chart is true)
+            6. description (string): Brief description of what the chart shows (if requires_chart is true)
+
+            Focus on:
+            - Only suggest chart if data structure matches a chart type's schema
+            - Choose most appropriate chart type for data visualization
+            - Format data to match exact schema requirements
+            - Return null for chart-specific fields if requires_chart is false"""
+
+            # Get chart recommendation from LLM
+            result = await asyncio.to_thread(
+                self.model.generate_content,
+                chart_prompt,
+                generation_config=genai.GenerationConfig(
+                    temperature=0.2,
+                    response_mime_type="application/json",
+                    response_schema={
+                        "type": "object",
+                        "properties": {
+                            "requires_chart": {"type": "boolean"},
+                            "chart_type": {"type": "string"},
+                            "variant": {"type": "string"},
+                            "formatted_data": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "value": {"type": "number"},
+                                        "label": {"type": "string"},
+                                        "category": {"type": "string"},
+                                        "date": {"type": "string"},
+                                        "fill": {"type": "string"}
+                                    }
+                                }
+                            },
+                            "title": {"type": "string"},
+                            "description": {"type": "string"}
+                        },
+                        "required": ["requires_chart", "title", "description", "formatted_data", "variant", "chart_type"]
+                    }
+                ),
+            )
+
+            chart_plan = json.loads(result.text)
+            print("chart plan: ", chart_plan)
+            # Validate chart data if chart is required
+            if chart_plan.get("requires_chart", False):
+                # Get chart type specs
+                chart_type = chart_plan.get("chart_type")
+                variant = chart_plan.get("variant")
+                
+                if not chart_type or not variant:
+                    raise ValueError("Missing chart type or variant")
+                    
+                chart_specs = self.charts_docs.get(chart_type, {})
+                variant_specs = chart_specs.get("variants", {}).get(variant, {})
+                
+                if not variant_specs:
+                    raise ValueError(f"Invalid chart type {chart_type} or variant {variant}")
+                    
+                # Validate data against schema
+                input_schema = variant_specs.get("inputSchema", {})
+                formatted_data = chart_plan.get("formatted_data", [])
+                
+                """if not self._validate_chart_data(formatted_data, input_schema):
+                    raise ValueError("Formatted data does not match schema")"""
+                    
+                # Add styling information
+                chart_plan["styles"] = self.charts_docs["common"]["styling"]
+                
+                # Add component configurations
+                chart_plan["components"] = {
+                    "tooltip": {"variant": "default"},
+                    "legend": {"position": "bottom", "alignment": "center"}
+                }
+                
+                return chart_plan
+            
+            return {"requires_chart": False}
+
+        except Exception as e:
+            print(f"Error in chart resolution: {str(e)}")
+            return {"requires_chart": False}
+            
+    def _validate_chart_data(self, data: List[Dict[str, Any]], schema: Dict[str, Any]) -> bool:
+        """Validate chart data against its schema"""
+        try:
+            if not isinstance(data, list):
+                return False
+                
+            required_props = schema.get("items", {}).get("required", [])
+            properties = schema.get("items", {}).get("properties", {})
+            
+            for item in data:
+                # Check required properties
+                if not all(prop in item for prop in required_props):
+                    return False
+                    
+                # Validate property types
+                for prop, value in item.items():
+                    expected_type = properties.get(prop)
+                    if not expected_type:
+                        continue
+                        
+                    if expected_type == "string" and not isinstance(value, str):
+                        return False
+                    elif expected_type == "number" and not isinstance(value, (int, float)):
+                        return False
+                        
+            return True
+            
+        except Exception as e:
+            print(f"Error validating chart data: {str(e)}")
+            return False
 
     async def _resolve_media(self, deps: MLBDeps, data: Dict[str, Any], steps: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Resolve media using optimized search and image analysis"""
@@ -1787,7 +1925,7 @@ print(json.dumps(result))
                             Return a concise description
                             """
                             
-                            image_type="svg" if "team" in media_item["description"].lower() else "jpeg"
+                            image_type="svg" if "logo" in media_item["description"].lower() else "jpeg"
                             # Generate image description using Gemini
                             result = await asyncio.to_thread(
                                 self.gemini_2_model.generate_content,
@@ -2038,9 +2176,13 @@ with open("src/core/constants/mlb_functions.json", "r") as f:
 with open("src/core/constants/media_sources.json", "r") as f:
     media_json = f.read()
 
+with open("src/core/constants/charts_docs.json", "r") as f:
+    charts_json = f.read()
+
 mlb_agent = MLBAgent(
     api_key=settings.GEMINI_API_KEY,
     endpoints_json=endpoints_json,
     functions_json=functions_json,
     media_json=media_json,
+    charts_json=charts_json,
 )

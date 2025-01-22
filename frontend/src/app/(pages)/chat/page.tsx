@@ -27,6 +27,7 @@ interface Message {
   }
   suggestions?: string[]
   media?: any
+  chart: any
 }
 
 interface MLBResponse {
@@ -42,6 +43,7 @@ interface MLBResponse {
     thumbnail: string
     description: string
   }
+  chart: any
 }
 
 const TypingText = ({ text }: { text: string }) => {
@@ -204,9 +206,10 @@ const OnboardingChat = () => {
         sender: 'bot',
         type: 'text',
         suggestions: response.data.suggestions,
-        media: response.data.media
+        media: response.data.media,
+        chart: response.data.chart
       }
-      console.log(response.data.media)
+      //console.log(response.data.media)
 
       setIsTyping(false)
       addMessage(botMessage)
@@ -344,7 +347,7 @@ const OnboardingChat = () => {
                       </div>
 
                       {message.media && (
-                        <MLBMedia media={message.media} />
+                        <MLBMedia media={message.media} chart={message.chart} />
                       )}
 
                       {message.options && (
