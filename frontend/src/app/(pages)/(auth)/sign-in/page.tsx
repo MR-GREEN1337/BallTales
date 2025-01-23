@@ -266,13 +266,6 @@ const SignInPage = () => {
                   Remember me
                 </label>
               </div>
-              <button
-                type="button"
-                className="text-sm text-blue-400 hover:text-blue-300"
-                onClick={() => router.push('/forgot-password')}
-              >
-                Forgot password?
-              </button>
             </div>
 
             {/* Submit Button with more vibrant gradient */}

@@ -71,223 +71,276 @@ class MLBAgent:
 
             Current Date: {datetime.now().isoformat()}
 
-        Please analyze the baseball query and return a structured JSON response with detailed intent analysis, and if mlb related.
+            Please analyze the baseball query and return a structured JSON response with detailed intent analysis, and if mlb related.
 
-COMMON MLB QUERIES AND HOW TO UNDERSTAND THEM:
+            COMMON MLB QUERIES AND HOW TO UNDERSTAND THEM:
 
-Team Information:
-"Tell me about the Yankees"
-- Wants: Basic team information
-- Focus: Team details, current season performance
-- Data needed: Team stats, record, key players
+            Team Information:
+            "Tell me about the Yankees"
+            - Wants: Basic team information
+            - Focus: Team details, current season performance
+            - Data needed: Team stats, record, key players
 
-"Show me who's on the Dodgers"
-- Wants: Current roster information
-- Focus: Active players on team
-- Data needed: Full team roster, positions
+            "Show me who's on the Dodgers"
+            - Wants: Current roster information
+            - Focus: Active players on team
+            - Data needed: Full team roster, positions
 
-Player Stats:
-"How's Judge doing this season?"
-- Wants: Current season performance
-- Focus: Key offensive statistics
-- Data needed: Player batting stats
+            Player Stats:
+            "How's Judge doing this season?"
+            - Wants: Current season performance
+            - Focus: Key offensive statistics
+            - Data needed: Player batting stats
 
-"What are Scherzer's career numbers?"
-- Wants: Career statistics
-- Focus: Historical pitching performance
-- Data needed: Career pitching stats
+            "What are Scherzer's career numbers?"
+            - Wants: Career statistics
+            - Focus: Historical pitching performance
+            - Data needed: Career pitching stats
 
-Game Information:
-"When do the Cubs play next?"
-- Wants: Upcoming game schedule
-- Focus: Next scheduled game
-- Data needed: Team schedule
+            Game Information:
+            "When do the Cubs play next?"
+            - Wants: Upcoming game schedule
+            - Focus: Next scheduled game
+            - Data needed: Team schedule
 
-"What was the score of yesterday's Red Sox game?"
-- Wants: Recent game result
-- Focus: Game score and outcome
-- Data needed: Game results, box score
+            "What was the score of yesterday's Red Sox game?"
+            - Wants: Recent game result
+            - Focus: Game score and outcome
+            - Data needed: Game results, box score
 
-Standings & Rankings:
-"Show me the AL East standings"
-- Wants: Division standings
-- Focus: Teams' current positions
-- Data needed: Division standings data
+            Standings & Rankings:
+            "Show me the AL East standings"
+            - Wants: Division standings
+            - Focus: Teams' current positions
+            - Data needed: Division standings data
 
-"Who leads the league in home runs?"
-- Wants: League leaders
-- Focus: Specific statistic leaders
-- Data needed: League batting stats
+            "Who leads the league in home runs?"
+            - Wants: League leaders
+            - Focus: Specific statistic leaders
+            - Data needed: League batting stats
 
-Comparative Analysis:
-"Compare Ohtani and Trout's numbers"
-- Wants: Player comparison
-- Focus: Statistical comparison
-- Data needed: Both players' stats
+            Comparative Analysis:
+            "Compare Ohtani and Trout's numbers"
+            - Wants: Player comparison
+            - Focus: Statistical comparison
+            - Data needed: Both players' stats
 
-Historical Context:
-"What were the Braves' stats last season?"
-- Wants: Historical team performance
-- Focus: Previous season data
-- Data needed: Team historical stats
+            Historical Context:
+            "What were the Braves' stats last season?"
+            - Wants: Historical team performance
+            - Focus: Previous season data
+            - Data needed: Team historical stats
 
-Game Details:
-"Show me the box score from the Mets game"
-- Wants: Detailed game information
-- Focus: Complete game statistics
-- Data needed: Full box score, game events
+            Game Details:
+            "Show me the box score from the Mets game"
+            - Wants: Detailed game information
+            - Focus: Complete game statistics
+            - Data needed: Full box score, game events
 
-Season Progress:
-"How many games are left in the season?"
-- Wants: Schedule information
-- Focus: Season timeline
-- Data needed: Season schedule, current date
+            Season Progress:
+            "How many games are left in the season?"
+            - Wants: Schedule information
+            - Focus: Season timeline
+            - Data needed: Season schedule, current date
 
-    Query to analyze: """
-        # Available Endpoints:
-        # {json.dumps(self.endpoints, indent=2)}
-
+                Query to analyze: """
         self.plan_prompt = f"""Create a detailed MLB data retrieval plan optimizing for accuracy and efficiency.
 
-Choose from the given functions/endpoints
-Available Functions:
-{json.dumps(self.functions, indent=2)}
+        Choose from the given functions/endpoints
+        Available Functions:
+        {json.dumps(self.functions, indent=2)}
 
-Available Endpoints:
-{json.dumps(self.endpoints, indent=2)}
+        Available Endpoints:
+        {json.dumps(self.endpoints, indent=2)}
 
-Current Intent Analysis:
-{json.dumps(self.intent, indent=2)}
+        Current Intent Analysis:
+        {json.dumps(self.intent, indent=2)}
 
-KNOWN CONTEXT (Use these values directly - DO NOT create steps to fetch them):
-- Current Season (seasonId): {datetime.now().year}
-- Current Time: {datetime.now().isoformat()}
-- Regular Season Status: In Progress
-- League IDs: AL=103, NL=104 For other IDs execute the appropritate endpoints/functions
+        KNOWN CONTEXT (Use these values directly - DO NOT create steps to fetch them):
+        - Current Season (seasonId): {datetime.now().year}
+        - Current Time: {datetime.now().isoformat()}
+        - Regular Season Status: In Progress
+        - League IDs: AL=103, NL=104 For other IDs execute the appropritate endpoints/functions
 
-PLANNING EXAMPLES:
+        PLANNING EXAMPLES:
 
-3. Simple Logo Request:
-Input: "Show me the Yankees logo"
-You should return:
-{{
-    "plan_type": "endpoint",
-    "steps": [
+        1. Complex Player Comparison Request:
+        Input: "How do Ohtani's pitching stats compare to deGrom's in games where they both had 10+ strikeouts?"
+        Plan:
         {{
-            "id": "step1",
-            "type": "function",
-            "name": "lookup_team",
-            "description": "Get Yankees team ID",
-            "parameters": {{"value": "Yankees"}},
-            "extract": {{"fields": {{"team_id": "$.teams[0].id"}}}},
-            "depends_on": []
-        }},
-        {{
-            "id": "step2",
-            "type": "endpoint",
-            "name": "team_logo",
-            "description": "Get team logo using ID",
-            "parameters": {{
-                "teamId": {{"source_step": "step1", "source_path": "team_id"}}
-            }},
-            "extract": {{"fields": {{"url": "$.url"}}}},
-            "depends_on": ["step1"]
-        }}
-    ]
-}}
-
-4. Player Stats Request:
-Input: "How's Aaron Judge doing this season?"
-Intent: {{
-    "type": "PLAYER_STATS",
-    "entities": {{"players": ["Judge"]}}
-}}
-Plan:
-{{
-    "plan_type": "function",
-    "steps": [
-        {{
-            "id": "step1", 
-            "type": "function",
-            "name": "lookup_player",
-            "description": "Get Aaron Judge's player ID",
-            "parameters": {{"value": "Judge"}},
-            "extract": {{"fields": {{"player_id": "$.id"}}}},
-            "depends_on": []
-        }},
-        {{
-            "id": "step2",
-            "type": "function",
-            "name": "player_stats",
-            "description": "Get current season stats",
-            "parameters": {{
-                "personId": {{"source_step": "step1", "source_path": "player_id"}},
-                "group": {{"value": "[hitting]"}},
-                "type": {{"value": "season"}}
-            }},
-            "extract": {{"fields": {{"stats": "$.stats"}}}},
-            "depends_on": ["step1"]
-        }}
-    ]
-}}
-
-PLANNING RULES:
-GENERALLY OPT FOR MORE THAN ONE STEP
-
-1. Highlight Request Handling:
-   • When intent type is HIGHLIGHT, prioritize video search
-   • Use highlight_search step type for video lookups
-   • Consider entity context (players, teams, dates) for search
-   • Include relevant metadata in extraction
-
-2. Data Source Selection:
-   • Prefer direct data source if available (highlight database)
-   • Fall back to API endpoints if needed
-   • Combine sources for mixed requests
-
-3. Input Resolution:
-   • team_logo, team_stats need → teamId from lookup_team
-   • player_stats, player_info need → personId from lookup_player
-   • game endpoints need → gamePk from schedule
-   
-4. Efficiency:
-   • Use direct endpoint if all inputs available
-   • Minimize steps - don't fetch unnecessary data
-   • Batch related queries when possible
-   • Each step must feed required inputs to next step
-
-The plan must follow this exact schema:
-{{
-    "plan_type": "string",        # Must be one of: "endpoint", "function"
-    "steps": [
-        {{
-            "id": "string",       # Unique step identifier
-            "type": "string",     # Must be either "endpoint" or "function" 
-            "name": "string",     # Valid endpoint/function name
-            "description": "string", # Purpose of this step
-            "parameters": {{       # Parameters needed by endpoint/function
-                "param_name": {{
-                    "source_step": "string?",  # Step ID where value comes from
-                    "source_path": "string?",  # JSON path to value in source step result
-                    "value": "any"            # Direct value if not from prior step
-                }}
-            }},
-            "extract": {{          # What to extract from step result
-                "fields": {{       # Target fields mapped to JSON paths
-                    "field_name": "json.path"
+            "plan_type": "function",
+            "steps": [
+                {{
+                    "id": "player_ids",
+                    "type": "function",
+                    "name": "lookup_player",
+                    "description": "Get player IDs for both players",
+                    "parameters": {{
+                        "value": {{
+                            "value": "[Ohtani, deGrom]"
+                        }}
+                    }},
+                    "extract": {{
+                        "fields": {{
+                            "ohtani_id": "$.players[?(@.fullName=='Shohei Ohtani')].id",
+                            "degrom_id": "$.players[?(@.fullName=='Jacob deGrom')].id"
+                        }}
+                    }}
                 }},
-                "filter": "string?" # Optional filter condition
-            }},
-            "depends_on": ["string"] # Step IDs this step depends on
+                {{
+                    "id": "pitching_stats",
+                    "type": "function", 
+                    "name": "player_stats",
+                    "description": "Get detailed pitching stats",
+                    "parameters": {{
+                        "personIds": {{
+                            "source_step": "player_ids",
+                            "source_path": "[ohtani_id, degrom_id]"
+                        }},
+                        "group": {{"value": "pitching"}},
+                        "gameType": {{"value": "R"}},
+                        "stats": {{"value": "byGame"}},
+                        "fields": {{"value": "stats.splits.stat"}}
+                    }},
+                    "extract": {{
+                        "fields": {{
+                            "game_stats": "$.stats[?(@.stat.strikeouts>=10)]"
+                        }},
+                        "filter": "strikeouts>=10"
+                    }},
+                    "depends_on": ["player_ids"]
+                }},
+                {{
+                    "id": "game_details",
+                    "type": "endpoint",
+                    "name": "game",
+                    "description": "Get full game contexts",
+                    "parameters": {{
+                        "gamePk": {{
+                            "source_step": "pitching_stats",
+                            "source_path": "game_stats.game.pk"
+                        }}
+                    }},
+                    "extract": {{
+                        "fields": {{
+                            "weather": "$.gameData.weather",
+                            "venue": "$.gameData.venue",
+                            "attendance": "$.gameData.attendance"
+                        }}
+                    }},
+                    "depends_on": ["pitching_stats"]
+                }}
+            ]
         }}
-    ],
-    "fallback": {{
-        "enabled": true,         # Whether fallback is enabled
-        "strategy": "string",    # Description of fallback approach
-        "steps": []             # Same structure as primary steps
-    }}
-}}"""
 
+        2. Advanced Team Analysis Request:
+        Input: "Which relievers have the best ERA in high-leverage situations against division rivals?"
+        Plan:
+        {{
+            "plan_type": "function",
+            "steps": [
+                {{
+                    "id": "division_teams",
+                    "type": "endpoint",
+                    "name": "standings",
+                    "description": "Get teams in division",
+                    "parameters": {{
+                        "leagueId": {{"value": "103,104"}},
+                        "season": {{"value": "2024"}}
+                    }},
+                    "extract": {{
+                        "fields": {{
+                            "team_ids": "$.records[*].teamRecords[*].team.id"
+                        }}
+                    }}
+                }},
+                {{
+                    "id": "reliever_stats",
+                    "type": "function",
+                    "name": "stats",
+                    "description": "Get detailed pitching splits",
+                    "parameters": {{
+                        "stats": {{"value": "statSplits"}},
+                        "group": {{"value": "pitching"}},
+                        "playerPool": {{"value": "relievers"}},
+                        "sitCodes": {{"value": "risp,men_on"}},
+                        "opposingTeamIds": {{
+                            "source_step": "division_teams",
+                            "source_path": "team_ids"
+                        }}
+                    }},
+                    "extract": {{
+                        "fields": {{
+                            "stats": "$.stats",
+                            "player_info": "$.player"
+                        }},
+                        "filter": "stats.era < 3.50"
+                    }},
+                    "depends_on": ["division_teams"]
+                }}
+            ]
+        }}
+
+        PLANNING CONSIDERATIONS:
+
+        1. Data Flow Optimization:
+        - Minimize API calls by batching related requests
+        - Extract only needed fields to reduce payload size
+        - Use appropriate filters at data source
+
+        2. Dependency Management:
+        - Clearly define data dependencies between steps
+        - Handle conditional execution paths
+        - Consider parallel execution when possible
+
+        3. Error Handling:
+        - Include fallback strategies for key steps
+        - Validate intermediate results
+        - Handle missing or incomplete data gracefully
+
+        4. Performance Optimization:
+        - Batch similar requests together
+        - Use appropriate indexes and filters
+        - Cache frequently used reference data
+
+        5. Data Integration:
+        - Define clear data joining points
+        - Handle data type conversions
+        - Preserve relationship context
+
+        Please return a detailed plan following the exact schema provided.
+
+        The plan must follow this exact schema:
+        {{
+            "plan_type": "string",        # Must be one of: "endpoint", "function"
+            "steps": [
+                {{
+                    "id": "string",       # Unique step identifier
+                    "type": "string",     # Must be either "endpoint" or "function" 
+                    "name": "string",     # Valid endpoint/function name
+                    "description": "string", # Purpose of this step
+                    "parameters": {{       # Parameters needed by endpoint/function
+                        "param_name": {{
+                            "source_step": "string?",  # Step ID where value comes from
+                            "source_path": "string?",  # JSON path to value in source step result
+                            "value": "any"            # Direct value if not from prior step
+                        }}
+                    }},
+                    "extract": {{          # What to extract from step result
+                        "fields": {{       # Target fields mapped to JSON paths
+                            "field_name": "json.path"
+                        }},
+                        "filter": "string?" # Optional filter condition
+                    }},
+                    "depends_on": ["string"] # Step IDs this step depends on
+                }}
+            ],
+            "fallback": {{
+                "enabled": true,         # Whether fallback is enabled
+                "strategy": "string",    # Description of fallback approach
+                "steps": []             # Same structure as primary steps
+            }}
+        }}"""
         self.response_prompt = """You create natural, informative responses from MLB data.
             Return structured response with summary, details, and optional stats and media.
             Follow the schema exactly for all fields."""
