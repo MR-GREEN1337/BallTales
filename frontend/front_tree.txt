@@ -1,4 +1,4 @@
-src
+frontend/src
 ├── actions
 │   ├── auth
 │   │   ├── sign-in.ts
@@ -8,14 +8,19 @@ src
 ├── app
 │   ├── (pages)
 │   │   ├── (auth)
+│   │   │   ├── _components
+│   │   │   │   └── BackgroundSlideShow.tsx
 │   │   │   ├── sign-in
 │   │   │   │   └── page.tsx
 │   │   │   └── sign-up
 │   │   │       └── page.tsx
 │   │   └── chat
 │   │       ├── _components
+│   │       │   ├── AnimatedBotIcon.tsx
 │   │       │   ├── MLBMedia.tsx
 │   │       │   ├── MLBProfile.tsx
+│   │       │   ├── MLBStatistics.tsx
+│   │       │   ├── ResetButton.tsx
 │   │       │   └── ThinkingAnimation.tsx
 │   │       └── page.tsx
 │   ├── favicon.ico
@@ -81,8 +86,9 @@ src
 │   ├── use-mobile.tsx
 │   └── use-toast.ts
 ├── lib
+│   ├── constants.ts
 │   ├── prisma.ts
 │   └── utils.ts
 └── middleware.ts
 
-17 directories, 69 files
+18 directories, 74 files

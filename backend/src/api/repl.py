@@ -2,10 +2,8 @@ import os
 import tempfile
 import subprocess
 import json
-from typing import TypedDict, Dict, List, Optional
 
 from src.api.models import REPLResult
-
 
 
 class MLBPythonREPL:
@@ -34,7 +32,6 @@ class MLBPythonREPL:
             wrapped_code = f"""
 import sys
 import io
-import json
 
 # Capture stdout
 captured_output = io.StringIO()
@@ -42,7 +39,7 @@ sys.stdout = captured_output
 
 try:
     # Execute the provided code
-{code}
+    {code.replace("\n", "\n    ")}
 
     # Get captured output
     sys.stdout = sys.__stdout__
@@ -76,7 +73,7 @@ except Exception as e:
             # Write the wrapped code to temp file
             with open(code_file_path, "w", encoding="utf-8") as f:
                 f.write(wrapped_code)
-                # print(wrapped_code)
+                print("repl code", wrapped_code)
 
             try:
                 # Execute the code

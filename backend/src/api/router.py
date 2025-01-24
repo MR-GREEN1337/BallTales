@@ -15,11 +15,11 @@ router = APIRouter(
 @router.post(
     "/",
     description="Return Agent's response to chat request",
-    #response_model=MLBResponse,
+    # response_model=MLBResponse,
 )
 async def chat(request: ChatRequest):
     """Process chat messages with context from message history and user preferences"""
-    print(request)
+    # print(request)
     async with httpx.AsyncClient() as client:
         deps = MLBDeps(client=client)
 
@@ -39,7 +39,7 @@ async def chat(request: ChatRequest):
                     "id": request.user_data.id,
                 },
             }
-            print("Incoming Data...: ", context)
+            # print("Incoming Data...: ", context)
             result = await mlb_agent.process_message(
                 deps=deps, message=request.message, context=context
             )

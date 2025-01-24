@@ -171,9 +171,7 @@ const OnboardingChat = () => {
     // Get user language from userData when it's available
     if (userData?.preferences?.preferences?.language) {
       const lang = userData.preferences.preferences.language.toLowerCase();
-      // Map 'sp' to 'es' for Spanish
-      const mappedLang = lang === 'sp' ? 'es' : lang;
-      setUserLanguage(mappedLang);
+      setUserLanguage(lang);
     }
 
     // Set initial message based on language

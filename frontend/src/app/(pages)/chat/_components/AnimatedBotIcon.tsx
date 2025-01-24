@@ -7,7 +7,7 @@ const AnimatedBotIcon = ({ uniqueId = "bot", state = "default" }) => {
   };
 
   return (
-    <div className="w-8 h-8 relative">
+    <div className="w-10 h-10 relative">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" className="w-full h-full">
         {/* Base circle */}
         <circle cx="32" cy="32" r="30" fill={`url(#${gradientIds.glow})`} />

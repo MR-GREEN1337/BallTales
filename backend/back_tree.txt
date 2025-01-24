@@ -6,36 +6,24 @@ backend/src
 ├── api
 │   ├── __init__.py
 │   ├── __pycache__
-│   │   └── __init__.cpython-313.pyc
-│   ├── models
-│   │   ├── __init__.py
-│   │   ├── __pycache__
-│   │   │   ├── __init__.cpython-313.pyc
-│   │   │   └── schemas.cpython-313.pyc
-│   │   └── schemas.py
-│   └── views
-│       ├── __init__.py
-│       ├── __pycache__
-│       │   ├── __init__.cpython-313.pyc
-│       │   └── agent.cpython-313.pyc
-│       └── onboarding
-│           ├── __init__.py
-│           ├── __pycache__
-│           │   ├── __init__.cpython-313.pyc
-│           │   ├── agent.cpython-313.pyc
-│           │   ├── models.cpython-313.pyc
-│           │   ├── repl.cpython-313.pyc
-│           │   └── router.cpython-313.pyc
-│           ├── agent.py
-│           ├── models.py
-│           ├── repl.py
-│           └── router.py
+│   │   ├── __init__.cpython-313.pyc
+│   │   ├── agent.cpython-313.pyc
+│   │   ├── models.cpython-313.pyc
+│   │   ├── repl.cpython-313.pyc
+│   │   ├── router.cpython-313.pyc
+│   │   └── utils.cpython-313.pyc
+│   ├── agent.py
+│   ├── models.py
+│   ├── repl.py
+│   ├── router.py
+│   └── utils.py
 ├── core
 │   ├── __init__.py
 │   ├── __pycache__
 │   │   ├── __init__.cpython-313.pyc
 │   │   └── settings.cpython-313.pyc
 │   ├── constants
+│   │   ├── charts_docs.json
 │   │   ├── endpoints.json
 │   │   ├── functions-wiki
 │   │   │   ├── Function:-boxscore.md
@@ -56,7 +44,6 @@ backend/src
 │   │   │   ├── Function:-lookup_team.md
 │   │   │   ├── Function:-meta.md
 │   │   │   ├── Function:-next_game.md
-│   │   │   ├── Function:-notes.md
 │   │   │   ├── Function:-player_stat_data.md
 │   │   │   ├── Function:-player_stats.md
 │   │   │   ├── Function:-roster.md
@@ -65,15 +52,15 @@ backend/src
 │   │   │   ├── Function:-standings_data.md
 │   │   │   ├── Function:-team_leader_data.md
 │   │   │   └── Function:-team_leaders.md
-│   │   ├── mlb_api_responses.json
+│   │   ├── media_sources.json
+│   │   ├── mlb_functions.json
 │   │   └── mlb_homeruns.csv
 │   └── settings.py
 ├── main.py
-├── mlb_api_extractor.log
 └── scripts
     ├── __init__.py
     ├── endpoints_with_example_outputs.py
     ├── index_mlb_homeruns.py
     └── wiki_functions_md_to_json.py
 
-15 directories, 62 files
+9 directories, 55 files

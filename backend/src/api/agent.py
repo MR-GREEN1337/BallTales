@@ -53,6 +53,7 @@ class MLBAgent:
         self.media_source = json.loads(media_json)["sources"]
         self.charts_docs = json.loads(charts_json)["charts"]
 
+        self.user_query = ""
         self.intent = None
         self.plan = None
         self.repl = MLBPythonREPL(timeout=8)
@@ -144,203 +145,439 @@ class MLBAgent:
             - Data needed: Season schedule, current date
 
                 Query to analyze: """
-        self.plan_prompt = f"""Create a detailed MLB data retrieval plan optimizing for accuracy and efficiency.
+        self.plan_prompt = f"""Create an optimized MLB data retrieval plan that leverages data flow relationships.
 
-        Choose from the given functions/endpoints
-        Available Functions:
-        {json.dumps(self.functions, indent=2)}
+Available Resources:
+Functions: {json.dumps(self.functions, indent=2)}
+Endpoints: {json.dumps(self.endpoints, indent=2)}
 
-        Available Endpoints:
-        {json.dumps(self.endpoints, indent=2)}
+PLANNING PRINCIPLES:
+1. Data Flow Optimization
+- Follow recommended next steps from endpoints/functions
+- Use established data pipelines for common scenarios
+- Leverage output-input relationships between steps
+- Batch related requests when possible
 
-        Current Intent Analysis:
-        {json.dumps(self.intent, indent=2)}
+2. Error Handling
+- Include fallback options for each critical step
 
-        KNOWN CONTEXT (Use these values directly - DO NOT create steps to fetch them):
-        - Current Season (seasonId): {datetime.now().year}
-        - Current Time: {datetime.now().isoformat()}
-        - Regular Season Status: In Progress
-        - League IDs: AL=103, NL=104 For other IDs execute the appropritate endpoints/functions
+3. Context Preservation
+- Maintain relationships between data points
+- Track data lineage through transformations
+- Preserve metadata for context
+- Ensure entity relationships remain clear
 
-        PLANNING EXAMPLES:
+COMPREHENSIVE EXAMPLE PATTERNS:
 
-        1. Complex Player Comparison Request:
-        Input: "How do Ohtani's pitching stats compare to deGrom's in games where they both had 10+ strikeouts?"
-        Plan:
+1. Advanced Judge's Career Analysis:
+{{
+    "steps": [
         {{
-            "plan_type": "function",
-            "steps": [
-                {{
-                    "id": "player_ids",
-                    "type": "function",
-                    "name": "lookup_player",
-                    "description": "Get player IDs for both players",
-                    "parameters": {{
-                        "value": {{
-                            "value": "[Ohtani, deGrom]"
-                        }}
-                    }},
-                    "extract": {{
-                        "fields": {{
-                            "ohtani_id": "$.players[?(@.fullName=='Shohei Ohtani')].id",
-                            "degrom_id": "$.players[?(@.fullName=='Jacob deGrom')].id"
-                        }}
+            "id": "player_lookup",
+            "type": "function",
+            "name": "lookup_player",
+            "description": "Get player ID and basic info",
+            "parameters": {{
+                "value": "names=Judge"
+            }},
+            "extract": {{
+                "fields": {{
+                    "player_ids": "$.players[*].id",
+                    "names": "$.players[*].fullName",
+                    "team_ids": "$.players[*].currentTeam.id"
+                }}
+            }},
+            "depends_on": []
+        }},
+        {{
+            "id": "career_stats",
+            "type": "function",
+            "name": "player_stat_data",
+            "description": "Get career statistics",
+            "parameters": {{
+                "value": "personIds=${{player_lookup.player_ids}}&group=hitting,pitching&type=yearByYear"
+            }},
+            "extract": {{
+                "fields": {{
+                    "stats": "$.stats[*].splits[*]",
+                    "info": "$.stats[*].group"
+                }}
+            }},
+            "depends_on": ["player_lookup"]
+        }},
+        {{
+            "id": "league_context",
+            "type": "function",
+            "name": "league_leader_data",
+            "description": "Get league context for performance",
+            "parameters": {{
+                "value": "leaderCategories=homeRuns,battingAverage&season=2024"
+            }},
+            "extract": {{
+                "fields": {{
+                    "stats": "$.leagueLeaders[*]",
+                    "info": "$.leagueLeaders[*].person"
+                }}
+            }},
+            "depends_on": ["career_stats"]
+        }}
+    ],
+    "dependencies": {{
+        "career_stats": ["player_lookup"],
+        "league_context": ["career_stats"]
+    }}
+}}
+
+2. Team Performance Analysis:
+{{
+    "steps": [
+        {{
+            "id": "team_lookup",
+            "type": "function",
+            "name": "lookup_team",
+            "description": "Get team ID and basic info",
+            "parameters": {{
+                "value": "teamId=143"
+            }},
+            "extract": {{
+                "fields": {{
+                    "team_ids": "$.teams[0].id",
+                    "names": "$.teams[0].name",
+                    "info": "$.teams[0].league"
+                }}
+            }},
+            "depends_on": []
+        }},
+        {{
+            "id": "team_stats",
+            "type": "function",
+            "name": "team_stats",
+            "description": "Get detailed team statistics",
+            "parameters": {{
+                "value": "teamId=${{team_lookup.team_ids}}&stats=season&group=hitting,pitching,fielding"
+            }},
+            "extract": {{
+                "fields": {{
+                    "stats": "$.stats[*].splits[*]",
+                    "info": "$.stats[*].group"
+                }}
+            }},
+            "depends_on": ["team_lookup"]
+        }},
+        {{
+            "id": "roster_info",
+            "type": "function",
+            "name": "roster",
+            "description": "Get current team roster",
+            "parameters": {{
+                "value": "teamId=${{team_lookup.team_ids}}&rosterType=active"
+            }},
+            "extract": {{
+                "fields": {{
+                    "player_ids": "$.roster[*].person.id",
+                    "names": "$.roster[*].person.fullName",
+                    "info": "$.roster[*].position"
+                }}
+            }},
+            "depends_on": ["team_lookup"]
+        }}
+    ],
+    "dependencies": {{
+        "team_stats": ["team_lookup"],
+        "roster_info": ["team_lookup"]
+    }}
+}}
+
+3. Game Analysis with Play-by-Play:
+{{
+    "steps": [
+        {{
+            "id": "schedule_lookup",
+            "type": "function",
+            "name": "schedule",
+            "description": "Get game schedule and identifiers",
+            "parameters": {{
+                "value": "date=2024-01-24&teamId=143"
+            }},
+            "extract": {{
+                "fields": {{
+                    "game_ids": "$.dates[0].games[*].gamePk",
+                    "dates": "$.dates[0].date",
+                    "team_ids": "$.dates[0].games[*].teams.home.team.id"
+                }}
+            }},
+            "depends_on": []
+        }},
+        {{
+            "id": "game_playbyplay",
+            "type": "function",
+            "name": "game_playByPlay",
+            "description": "Get detailed play-by-play data",
+            "parameters": {{
+                "value": "gamePk=${{schedule_lookup.game_ids}}"
+            }},
+            "extract": {{
+                "fields": {{
+                    "stats": "$.allPlays[*].matchup",
+                    "info": "$.allPlays[*].result",
+                    "scores": "$.allPlays[?(@.about.isScoringPlay==true)].result"
+                }}
+            }},
+            "depends_on": ["schedule_lookup"]
+        }},
+        {{
+            "id": "game_boxscore",
+            "type": "function",
+            "name": "game_boxscore",
+            "description": "Get game statistics and boxscore",
+            "parameters": {{
+                "value": "gamePk=${{schedule_lookup.game_ids}}&fields=teams,pitchers,batters"
+            }},
+            "extract": {{
+                "fields": {{
+                    "stats": "$.teams[*].players[*].stats",
+                    "info": "$.info",
+                    "scores": "$.teams[*].runs"
+                }}
+            }},
+            "depends_on": ["schedule_lookup"]
+        }}
+    ],
+    "dependencies": {{
+        "game_playbyplay": ["schedule_lookup"],
+        "game_boxscore": ["schedule_lookup"]
+    }}
+}}
+
+4. League Standings and Statistics:
+{{
+    "steps": [
+        {{
+            "id": "standings",
+            "type": "function",
+            "name": "standings",
+            "description": "Get current league standings",
+            "parameters": {{
+                "value": "leagueId=103,104&season=2024"
+            }},
+            "extract": {{
+                "fields": {{
+                    "stats": "$.records[*].teamRecords[*]",
+                    "team_ids": "$.records[*].teamRecords[*].team.id",
+                    "info": "$.records[*].division"
+                }}
+            }},
+            "depends_on": []
+        }},
+        {{
+            "id": "league_leaders",
+            "type": "function",
+            "name": "league_leader_data",
+            "description": "Get league statistical leaders",
+            "parameters": {{
+                "value": "leaderCategories=homeRuns,battingAverage,era,strikeouts&season=2024"
+            }},
+            "extract": {{
+                "fields": {{
+                    "player_ids": "$.leagueLeaders[*].person.id",
+                    "names": "$.leagueLeaders[*].person.fullName",
+                    "stats": "$.leagueLeaders[*]",
+                    "team_ids": "$.leagueLeaders[*].team.id"
+                }}
+            }},
+            "depends_on": []
+        }},
+        {{
+            "id": "division_stats",
+            "type": "function",
+            "name": "division_stats",
+            "description": "Get division-level statistics",
+            "parameters": {{
+                "value": "divisionId=${{standings.info[0].id}}&season=2024"
+            }},
+            "extract": {{
+                "fields": {{
+                    "stats": "$.teams[*].stats[*]",
+                    "info": "$.division"
+                }}
+            }},
+            "depends_on": ["standings"]
+        }}
+    ],
+    "dependencies": {{
+        "division_stats": ["standings"]
+    }}
+}}
+
+5. Player Comparison Analysis:
+{{
+    "steps": [
+        {{
+            "id": "players_lookup",
+            "type": "function",
+            "name": "lookup_player",
+            "description": "Get player IDs and basic info",
+            "parameters": {{
+                "value": "names=Ohtani,Judge,Trout"
+            }},
+            "extract": {{
+                "fields": {{
+                    "player_ids": "$.players[*].id",
+                    "names": "$.players[*].fullName",
+                    "team_ids": "$.players[*].currentTeam.id"
+                }}
+            }},
+            "depends_on": []
+        }},
+        {{
+            "id": "comparison_stats",
+            "type": "function",
+            "name": "player_stat_data",
+            "description": "Get detailed statistics for comparison",
+            "parameters": {{
+                "value": "personIds=${{players_lookup.player_ids}}&group=hitting&type=season"
+            }},
+            "extract": {{
+                "fields": {{
+                    "stats": "$.stats[*].splits[*]",
+                    "info": "$.stats[*].group"
+                }}
+            }},
+            "depends_on": ["players_lookup"]
+        }},
+        {{
+            "id": "stat_percentiles",
+            "type": "function",
+            "name": "player_percentiles",
+            "description": "Get statistical percentiles for context",
+            "parameters": {{
+                "value": "personIds=${{players_lookup.player_ids}}&stats=batting_exit_velocity,batting_average,ops"
+            }},
+            "extract": {{
+                "fields": {{
+                    "stats": "$.stats[*].percentiles",
+                    "info": "$.stats[*].group"
+                }}
+            }},
+            "depends_on": ["players_lookup", "comparison_stats"]
+        }}
+    ],
+    "dependencies": {{
+        "stat_percentiles": ["players_lookup", "comparison_stats"]
+    }}
+}}
+
+Return a complete plan following this schema with appropriate data flows and dependencies:
+{{
+    'steps': [
+        {{
+            'id': 'step_id',
+            'type': 'function',  # Must always be either 'function' or 'endpoint'
+            'name': 'function_name', # From available functions/endpoints
+            'description': 'what this step does',
+            'parameters': {{
+                'value': 'parameter string that can reference prior results with ${{step.field}}'
+            }},
+            'extract': {{
+                'fields': {{
+                    'player_ids': 'jsonpath for player ids',
+                    'names': 'jsonpath for names',
+                    'stats': 'jsonpath for statistics',
+                    'info': 'jsonpath for additional info',
+                    'team_ids': 'jsonpath for team ids',
+                    'game_ids': 'jsonpath for game ids',
+                    'dates': 'jsonpath for dates',
+                    'scores': 'jsonpath for scores'
+                }}
+            }},
+            'depends_on': ['list of step ids that must complete first']
+        }}
+    ],
+    'fallback': {{
+        'enabled': true,
+        'strategy': 'fallback approach name',
+        'steps': [
+            {{
+                'id': 'fallback_step_id',
+                'type': 'function',
+                'name': 'fallback_function_name',
+                'parameters': {{
+                    'value': 'parameter string'
+                }},
+                'extract': {{
+                    'fields': {{
+                        'info': 'jsonpath for basic info',
+                        'stats': 'jsonpath for basic stats'
                     }}
                 }},
-                {{
-                    "id": "pitching_stats",
-                    "type": "function", 
-                    "name": "player_stats",
-                    "description": "Get detailed pitching stats",
-                    "parameters": {{
-                        "personIds": {{
-                            "source_step": "player_ids",
-                            "source_path": "[ohtani_id, degrom_id]"
-                        }},
-                        "group": {{"value": "pitching"}},
-                        "gameType": {{"value": "R"}},
-                        "stats": {{"value": "byGame"}},
-                        "fields": {{"value": "stats.splits.stat"}}
-                    }},
-                    "extract": {{
-                        "fields": {{
-                            "game_stats": "$.stats[?(@.stat.strikeouts>=10)]"
-                        }},
-                        "filter": "strikeouts>=10"
-                    }},
-                    "depends_on": ["player_ids"]
-                }},
-                {{
-                    "id": "game_details",
-                    "type": "endpoint",
-                    "name": "game",
-                    "description": "Get full game contexts",
-                    "parameters": {{
-                        "gamePk": {{
-                            "source_step": "pitching_stats",
-                            "source_path": "game_stats.game.pk"
-                        }}
-                    }},
-                    "extract": {{
-                        "fields": {{
-                            "weather": "$.gameData.weather",
-                            "venue": "$.gameData.venue",
-                            "attendance": "$.gameData.attendance"
-                        }}
-                    }},
-                    "depends_on": ["pitching_stats"]
-                }}
-            ]
-        }}
-
-        2. Advanced Team Analysis Request:
-        Input: "Which relievers have the best ERA in high-leverage situations against division rivals?"
-        Plan:
-        {{
-            "plan_type": "function",
-            "steps": [
-                {{
-                    "id": "division_teams",
-                    "type": "endpoint",
-                    "name": "standings",
-                    "description": "Get teams in division",
-                    "parameters": {{
-                        "leagueId": {{"value": "103,104"}},
-                        "season": {{"value": "2024"}}
-                    }},
-                    "extract": {{
-                        "fields": {{
-                            "team_ids": "$.records[*].teamRecords[*].team.id"
-                        }}
-                    }}
-                }},
-                {{
-                    "id": "reliever_stats",
-                    "type": "function",
-                    "name": "stats",
-                    "description": "Get detailed pitching splits",
-                    "parameters": {{
-                        "stats": {{"value": "statSplits"}},
-                        "group": {{"value": "pitching"}},
-                        "playerPool": {{"value": "relievers"}},
-                        "sitCodes": {{"value": "risp,men_on"}},
-                        "opposingTeamIds": {{
-                            "source_step": "division_teams",
-                            "source_path": "team_ids"
-                        }}
-                    }},
-                    "extract": {{
-                        "fields": {{
-                            "stats": "$.stats",
-                            "player_info": "$.player"
-                        }},
-                        "filter": "stats.era < 3.50"
-                    }},
-                    "depends_on": ["division_teams"]
-                }}
-            ]
-        }}
-
-        PLANNING CONSIDERATIONS:
-
-        1. Data Flow Optimization:
-        - Minimize API calls by batching related requests
-        - Extract only needed fields to reduce payload size
-        - Use appropriate filters at data source
-
-        2. Dependency Management:
-        - Clearly define data dependencies between steps
-        - Handle conditional execution paths
-        - Consider parallel execution when possible
-
-        3. Error Handling:
-        - Include fallback strategies for key steps
-        - Validate intermediate results
-        - Handle missing or incomplete data gracefully
-
-        4. Performance Optimization:
-        - Batch similar requests together
-        - Use appropriate indexes and filters
-        - Cache frequently used reference data
-
-        5. Data Integration:
-        - Define clear data joining points
-        - Handle data type conversions
-        - Preserve relationship context
-
-        Please return a detailed plan following the exact schema provided.
-
-        The plan must follow this exact schema:
-        {{
-            "plan_type": "string",        # Must be one of: "endpoint", "function"
-            "steps": [
-                {{
-                    "id": "string",       # Unique step identifier
-                    "type": "string",     # Must be either "endpoint" or "function" 
-                    "name": "string",     # Valid endpoint/function name
-                    "description": "string", # Purpose of this step
-                    "parameters": {{       # Parameters needed by endpoint/function
-                        "param_name": {{
-                            "source_step": "string?",  # Step ID where value comes from
-                            "source_path": "string?",  # JSON path to value in source step result
-                            "value": "any"            # Direct value if not from prior step
-                        }}
-                    }},
-                    "extract": {{          # What to extract from step result
-                        "fields": {{       # Target fields mapped to JSON paths
-                            "field_name": "json.path"
-                        }},
-                        "filter": "string?" # Optional filter condition
-                    }},
-                    "depends_on": ["string"] # Step IDs this step depends on
-                }}
-            ],
-            "fallback": {{
-                "enabled": true,         # Whether fallback is enabled
-                "strategy": "string",    # Description of fallback approach
-                "steps": []             # Same structure as primary steps
+                'depends_on': []
             }}
-        }}"""
+        ]
+    }},
+    'dependencies': {{
+        'step2': ['step1'],
+        'step3': ['step1', 'step2']
+    }}
+}}
+
+SCHEMA VALIDATION REQUIREMENTS:
+
+1. Type Field
+- Must be exactly "function" for all steps
+- No other values are allowed
+- This applies to both main steps and fallback steps
+
+2. Step IDs
+- Must be unique across all steps
+- Must be referenced correctly in depends_on and dependencies
+- Should be descriptive of the step's purpose
+
+3. Parameters
+- Must use proper reference syntax: ${{step_id.field}}
+- All referenced steps must exist
+- All referenced fields must be defined in the extract.fields of the referenced step
+
+4. Extract Fields
+- Must use valid JSONPath syntax
+- Should extract only necessary data
+- Common patterns:
+  - player_ids: "$.players[*].id"
+  - names: "$.players[*].fullName"
+  - stats: "$.stats[*].splits[*]"
+  - info: For metadata and additional information
+  - team_ids: "$.teams[*].id"
+  - game_ids: "$.games[*].gamePk"
+  - dates: For date-related fields
+  - scores: For scoring information
+
+5. Dependencies
+- Must be properly mapped in the dependencies object
+- Must only reference existing step IDs
+- Must form a valid directed acyclic graph (no circular dependencies)
+- Each dependency must have corresponding depends_on entries
+
+6. Fallback Plan
+- Must follow the same schema as main steps
+- Must be properly structured with enabled flag and strategy
+- Should provide simpler alternative when main plan fails
+- Must maintain proper dependencies even in fallback
+
+Choose the most relevant example pattern based on the current intent and modify it accordingly:
+
+Make sure the returned plan:
+1. Follows the schema exactly
+2. Uses appropriate functions for the intent
+3. Maintains proper data flow between steps
+4. Includes comprehensive error handling
+5. Preserves context through transformations
+6. Uses correct reference syntax
+7. Has valid JSONPath expressions
+8. Contains all required fields
+9. Maps dependencies correctly
+10. Provides appropriate fallback options
+
+Return the complete plan as a single valid JSON object strictly following this schema."""
+
         self.response_prompt = """You create natural, informative responses from MLB data.
             Return structured response with summary, details, and optional stats and media.
             Follow the schema exactly for all fields."""
@@ -478,7 +715,6 @@ class MLBAgent:
 
     async def create_data_plan(self, intent: IntentAnalysis) -> DataRetrievalPlan:
         """Generate structured data retrieval plan with improved schema validation"""
-        # TODO: Fix endpoint data handling, for now we'll use functions only
         try:
             # Compile available resources
             available_endpoints = list(self.endpoints.keys())
@@ -490,16 +726,10 @@ class MLBAgent:
             valid_methods = {method: True for method in available_endpoints}
             valid_methods.update({method: True for method in available_functions})
 
-            plan_types = {
-                "endpoint": True,
-                "function": True,
-            }
-
             # Define response schema
             response_schema = {
                 "type": "object",
                 "properties": {
-                    "plan_type": {"type": "string"},
                     "steps": {
                         "type": "array",
                         "items": {
@@ -558,61 +788,6 @@ class MLBAgent:
                             ],
                         },
                     },
-                    "fallback": {
-                        "type": "object",
-                        "properties": {
-                            "enabled": {"type": "boolean"},
-                            "strategy": {"type": "string"},
-                            "steps": {
-                                "type": "array",
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "id": {"type": "string"},
-                                        "endpoint": {"type": "string"},
-                                        "parameters": {
-                                            "type": "object",
-                                            "properties": {
-                                                "source_step": {"type": "string"},
-                                                "source_path": {"type": "string"},
-                                                "filter": {"type": "string"},
-                                            },
-                                        },
-                                        "extract": {
-                                            "type": "object",
-                                            "properties": {
-                                                "fields": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "player_ids": {
-                                                            "type": "string"
-                                                        },
-                                                        "names": {"type": "string"},
-                                                        "stats": {"type": "string"},
-                                                        "info": {"type": "string"},
-                                                    },
-                                                },
-                                                "filter": {"type": "string"},
-                                            },
-                                            "required": ["fields"],
-                                        },
-                                        "depends_on": {
-                                            "type": "array",
-                                            "items": {"type": "string"},
-                                        },
-                                    },
-                                    "required": [
-                                        "id",
-                                        "endpoint",
-                                        "parameters",
-                                        "extract",
-                                        "depends_on",
-                                    ],
-                                },
-                            },
-                        },
-                        "required": ["enabled", "strategy", "steps"],
-                    },
                     "dependencies": {
                         "type": "object",
                         "properties": {
@@ -621,24 +796,20 @@ class MLBAgent:
                         },
                     },
                 },
-                "required": ["plan_type", "steps", "fallback", "dependencies"],
+                "required": ["steps", "dependencies"],
             }
             # Generate plan using LLM
             result = await asyncio.to_thread(
                 self.model.generate_content,
-                self.plan_prompt,
+                f"""{self.plan_prompt}\nCurrent Intent:\n{json.dumps(self.intent, indent=2)}""",
                 generation_config=genai.GenerationConfig(
                     temperature=0.2,
                     response_mime_type="application/json",
                     response_schema=response_schema,
                 ),
             )
-
             parsed_result = json.loads(result.text)
             print(parsed_result)
-            # Validate plan type
-            if parsed_result["plan_type"] not in plan_types:
-                raise ValueError(f"Invalid plan type: {parsed_result['plan_type']}")
 
             # Process steps
             for step in parsed_result["steps"]:
@@ -646,14 +817,6 @@ class MLBAgent:
                     raise ValueError(f"Invalid step type: {step['type']}")
                 if step["name"] not in valid_methods:
                     raise ValueError(f"Invalid step name: {step['name']}")
-
-            # Process fallback steps
-            if parsed_result["fallback"]["steps"]:
-                for step in parsed_result["fallback"]["steps"]:
-                    if step["type"] not in valid_types:
-                        raise ValueError(f"Invalid fallback step type: {step['type']}")
-                    if step["name"] not in valid_methods:
-                        raise ValueError(f"Invalid fallback step name: {step['name']}")
 
             # Validate dependencies
             step_ids = {step["id"]: True for step in parsed_result["steps"]}
@@ -668,6 +831,40 @@ class MLBAgent:
             print(f"Error in create_data_plan: {str(e)}")
             # Return simplified fallback plan
             return self._create_fallback_plan(intent)
+
+    def _create_fallback_plan(self, intent: IntentAnalysis) -> DataRetrievalPlan:
+        """Create a simplified fallback plan when main plan creation fails"""
+
+        # Basic fallback plan structure
+        return {
+            "steps": [
+                {
+                    "id": "basic_data",
+                    "type": "function",
+                    "name": "standings"
+                    if intent["intent"]["type"] == "standings"
+                    else "schedule",
+                    "description": "Get basic MLB data",
+                    "parameters": {
+                        "value": "leagueId=103,104"
+                        if intent["intent"]["type"] == "standings"
+                        else "sportId=1"
+                    },
+                    "extract": {
+                        "fields": {
+                            "stats": "$.records[*].teamRecords[*]"
+                            if intent["intent"]["type"] == "standings"
+                            else "$.dates[*].games[*]",
+                            "info": "$.records[*].division"
+                            if intent["intent"]["type"] == "standings"
+                            else "$.dates[*].date",
+                        }
+                    },
+                    "depends_on": [],
+                }
+            ],
+            "dependencies": {},
+        }
 
     async def execute_plan(
         self, deps: MLBDeps, plan: DataRetrievalPlan
@@ -684,11 +881,7 @@ class MLBAgent:
 
             # Apply extraction and filtering if specified
             if "extract" in step:
-                filtered_result = self._extract_and_filter(
-                    raw_result,
-                    step["extract"].get("source_path"),
-                    step["extract"].get("filter"),
-                )
+                filtered_result = self._extract_and_filter(raw_result, step["extract"])
                 results[step["id"]] = filtered_result
             else:
                 results[step["id"]] = raw_result
@@ -797,38 +990,26 @@ class MLBAgent:
     async def _execute_function_step(
         self, deps: MLBDeps, step: Dict[str, Any], prior_results: Dict[str, Any]
     ) -> Optional[Dict[str, Any]]:
-        """Execute MLB stats function"""
+        """Execute MLB stats function with dynamic handling of parameters"""
         try:
-            # Get function name from parameters
-            function_name = step["name"]  # .get('function')
-            if not function_name or function_name.lower() == "none":
-                # Handle custom processing functions
-                return await self._execute_custom_processing(step, prior_results)
-            # print("lj", function_name)
-            # Find function info
+            # Get function name and info
+            function_name = step["name"]
             function_info = next(
                 (f for f in self.functions if f["name"] == function_name), None
             )
             if not function_info:
                 raise ValueError(f"Invalid function: {function_name}")
 
-            # Prepare function parameters
+            # Resolve parameters
             resolved_params = await self._resolve_parameters(step, prior_results)
 
-            # Generate function execution code
-            execution_code = f"""
-    import statsapi
+            # Generate execution code using LLM
+            execution_code = await self._generate_execution_code(
+                function_name=function_name,
+                function_info=function_info,
+                parameters=resolved_params,
+            )
 
-    try:
-        result = statsapi.{function_name}({resolved_params["value"]})
-        if result:
-            print(json.dumps(result))
-    except Exception as e:
-        print(json.dumps({{"error": str(e)}}))
-    """
-
-            print(execution_code)
-            # Execute function using REPL
             repl_result = await self.repl(code=execution_code)
             print("repl result:", repl_result)
 
@@ -847,17 +1028,6 @@ class MLBAgent:
                 if isinstance(result, dict) and "error" in result:
                     raise RuntimeError(f"Function error: {result['error']}")
 
-                # TODO: If result is large than a threshold, continue, but if less, route to LLM to extract params for next steps
-                # Process data extraction if specified
-                """                
-                if step.get("extract").get("filter"):
-                    result = await self._apply_filtering(result, step["extract"])
-                
-                # Apply filtering if specified
-                if step.get("extract"):
-                    result = await self._process_extraction(result, step["extract"])
-                """
-
                 return result
 
             except json.JSONDecodeError as e:
@@ -866,6 +1036,89 @@ class MLBAgent:
         except Exception as e:
             print(f"Function execution error: {str(e)}")
             return None
+
+    async def _generate_execution_code(
+        self,
+        function_name: str,
+        function_info: Dict[str, Any],
+        parameters: Dict[str, Any],
+    ) -> str:
+        """Generate Python code to execute the MLB stats function based on parameter analysis"""
+
+        prompt = f"""Analyze these MLB Stats API function parameters and generate appropriate Python execution code.
+
+    Function Information:
+    {json.dumps(function_info, indent=2)}
+
+    Resolved Parameters:
+    {json.dumps(parameters, indent=2)}
+
+    Requirements:
+    1. Return Python code that executes statsapi.{function_name} with the given parameters
+    2. If any parameter contains multiple values that should be processed separately:
+    - Generate code that handles each value appropriately
+    - Include logic to aggregate the results
+    3. Include proper error handling for both single and multiple executions
+    4. Return results in JSON format via print(json.dumps(result))
+    5. Handle any parameter patterns found in the input
+    6. Structure the code to work with the analysis tool environment
+
+    Return only the Python code without any explanation or markdown.
+    The code must be complete and runnable as is.
+
+    Example of basic single-value execution:
+        import statsapi
+        import json
+
+        try:
+            result = statsapi.{function_name}(param1="value1")
+            if result:
+                print(json.dumps(result))
+        except Exception as e:
+            print(json.dumps({{"error": str(e)}}))
+
+    Example of multi-value execution:
+        import statsapi
+        import json
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
+        def process_param(value):
+            try:
+                result = statsapi.{function_name}(param1=value)
+                return {{"success": True, "value": value, "result": result}}
+            except Exception as e:
+                return {{"success": False, "value": value, "error": str(e)}}
+
+    values = ["value1", "value2", "value3"]
+    results = []
+
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        futures = [executor.submit(process_param, v) for v in values]
+        for future in as_completed(futures):
+            results.append(future.result())
+
+    print(json.dumps(results))
+    
+    I want the returned code to be all indented one tab to the right
+    """
+
+        result = await asyncio.to_thread(
+            self.code_model.generate_content,
+            prompt,
+            generation_config=genai.GenerationConfig(
+                temperature=0.2, response_mime_type="text/plain"
+            ),
+        )
+
+        # Clean and validate the generated code
+        generated_code = result.text
+        generated_code = generated_code.replace("```python", "").replace("```", "")
+        print("generated code:", generated_code)
+        # Ensure the code has proper imports
+        if "import statsapi" not in generated_code:
+            generated_code = "import statsapi\nimport json\n" + generated_code
+
+        return generated_code
 
     async def _execute_endpoint_step(
         self, deps: MLBDeps, step: Dict[str, Any], prior_results: Dict[str, Any]
@@ -1358,6 +1611,7 @@ print(json.dumps(result))
             # Get function/endpoint info
             step_type = step.get("type")
             step_name = step.get("name")
+            step_description = step.get("description")
 
             if step_type == "function":
                 function_info = next(
@@ -1377,6 +1631,12 @@ print(json.dumps(result))
     Prior Results Available:
     {json.dumps(prior_results, indent=2)}
 
+    Step Description:
+    {step_description}
+
+    Step:
+    {json.dumps(step, indent=2)}
+
     Requirements:
     1. Return ONLY the parameter string to go between parentheses in: statsapi.{step_name}()
     2. Replace any $referenced values with actual values from prior results
@@ -1384,11 +1644,15 @@ print(json.dumps(result))
     4. Include parameter names for clarity
     5. Handle missing optional parameters appropriately
 
-    Example good outputs:
+    Example outputs:
     "teamId=143, season=2025"
     "personId=12345, group='[hitting,pitching]'"
     "gamePk=123456"
     
+    Current date: {datetime.now().isoformat()}
+
+    Dont forget to wrap string variables in parentheses
+    Never return None or empty string
     If a param requires date format, return it as 'MM/DD/YYYY'
 
     Return only the parameter string, no explanations or json formatting."""
@@ -1408,6 +1672,11 @@ print(json.dumps(result))
 
     Prior Results Available:
     {json.dumps(prior_results, indent=2)}
+
+    Step Description:
+    {step_description}
+
+    Current date: {datetime.now().isoformat()}
 
     Requirements:
     1. Return a dictionary with a single 'parameters' key containing the query parameters
@@ -1602,12 +1871,14 @@ print(json.dumps(result))
         )
         return json.loads(result.text)
 
-    async def process_message(self, deps: MLBDeps, message: str, context: Dict[str, Any]) -> MLBResponse:
+    async def process_message(
+        self, deps: MLBDeps, message: str, context: Dict[str, Any]
+    ) -> MLBResponse:
         """Enhanced message processing with media resolution"""
         try:
             # Get intent analysis
             self.intent = await self.analyze_intent(message)
-
+            self.user_query = message
             # MLB-related query path
             if self.intent["is_mlb_related"] and self.intent["context"].get(
                 "requires_data", True
@@ -1631,7 +1902,7 @@ print(json.dumps(result))
                         message, response_data
                     )
 
-                    result =  {
+                    result = {
                         "message": response_data["summary"],
                         "conversation": conversation,
                         "data_type": self.intent["intent"],
@@ -1641,7 +1912,10 @@ print(json.dumps(result))
                         "media": response_data.get("media"),
                         "chart": chart,
                     }
-                    translated_result = await self.translate_response(response=result, target_language=context["user_info"]["language"])
+                    translated_result = await self.translate_response(
+                        response=result,
+                        target_language=context["user_info"]["language"],
+                    )
 
                     return translated_result
 
@@ -1665,7 +1939,9 @@ print(json.dumps(result))
                     "media": None,
                 }
 
-                translated_result = await self.translate_response(response=result, target_language=context["user_info"]["language"])
+                translated_result = await self.translate_response(
+                    response=result, target_language=context["user_info"]["language"]
+                )
 
                 return translated_result
 
@@ -1684,6 +1960,7 @@ print(json.dumps(result))
             # Create the prompt for comprehensive media resolution
             media_prompt = """Based on this MLB context, generate a complete media plan with ready-to-use URLs and relevant homerun search terms.
 
+            User query: {user_query}
             Intent: {intent}
             Data: {data}
             Sample Homerun Data: {homerun_sample}
@@ -1697,7 +1974,7 @@ print(json.dumps(result))
             - metadata: Additional info (esp. for homeruns)
 
             2. homerun_search: Array of relevant search terms
-            for finding matching homerun clips
+            for finding matching homerun clips, focus more on relevance with user query
 
             URL Templates:
             - Player headshots: https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/[player_id]/headshot/67/current
@@ -1716,6 +1993,7 @@ print(json.dumps(result))
                 data=json.dumps(data, indent=2),
                 homerun_sample=json.dumps(sample_homerun, indent=2),
                 media_sources=json.dumps(self.media_source, indent=2),
+                user_query=self.user_query,
             )
 
             # Get media plan from LLM
@@ -1777,7 +2055,7 @@ print(json.dumps(result))
                         ).ratio()
                         for keyword in media_plan["homerun_search"]
                     )
-                    if score > 0.55:  # Threshold for good matches
+                    if score >= 0.6:  # Threshold for good matches
                         video_data = self.homeruns[
                             self.homeruns["title"] == title
                         ].iloc[0]
@@ -1965,7 +2243,7 @@ print(json.dumps(result))
         try:
             # Get ready-to-use media items and homerun search terms
             media_plan = await self._get_search_parameters(self.intent, data)
-            #print("meedia", media_plan)
+            print("meedia", media_plan)
             # Analyze and enhance media items with descriptions
             enhanced_media = []
             for media_item in media_plan.get("direct_media", []):
@@ -2062,38 +2340,13 @@ print(json.dumps(result))
             return media_item
 
     def _extract_and_filter(
-        self, data: Any, path: Optional[str], filter_condition: Optional[str]
+        self,
+        data: Any,
+        extract_schema: Optional[Dict[str, Any]],
+        filter_condition: Optional[str],
     ) -> Any:
         """Extract and filter data based on specified path and condition"""
-        if not path:
-            return data
-
-        # Extract data using path
-        result = data
-        for key in path.split("."):
-            if "[" in key:  # Handle array access
-                key, index = key.split("[")
-                index = int(index.rstrip("]"))
-                result = result[key][index]
-            else:
-                result = result.get(key, {})
-
-        # Apply filter if specified
-        if filter_condition and isinstance(result, list):
-            try:
-                # Create safe evaluation environment
-                def evaluate_condition(item, condition):
-                    return eval(condition, {"__builtins__": {}}, {"item": item})
-
-                result = [
-                    item
-                    for item in result
-                    if evaluate_condition(item, filter_condition)
-                ]
-            except Exception as e:
-                print(f"Filter evaluation failed: {str(e)}")
-
-        return result
+        pass
 
     async def _generate_processing_code(
         self,
@@ -2246,12 +2499,14 @@ print(json.dumps(result))
         return filtered_data
     """
 
-    async def translate_response(self, response: Any, target_language: str) -> MLBResponse:
-            """Translate human-readable fields in the MLB response while preserving structure and technical data."""
-            if not target_language or target_language.lower() == "english":
-                return response
-                
-            prompt = f"""Translate this MLB baseball response from English to {target_language}.
+    async def translate_response(
+        self, response: Any, target_language: str
+    ) -> MLBResponse:
+        """Translate human-readable fields in the MLB response while preserving structure and technical data."""
+        if not target_language or target_language.lower() == "english":
+            return response
+
+        prompt = f"""Translate this MLB baseball response from English to {target_language}.
             The response is provided as JSON. Return the exact same JSON structure.
             
             Rules:
@@ -2269,23 +2524,22 @@ print(json.dumps(result))
             
             Return the translated JSON with identical structure."""
 
-            try:
-                result = await asyncio.to_thread(
-                    self.gemini_2_model.generate_content,
-                    prompt,
-                    generation_config=genai.GenerationConfig(
-                        temperature=0.1,
-                        response_mime_type="application/json"
-                    )
-                )
-                
-                return json.loads(result.text)
-                
-            except Exception as e:
-                print(f"Translation error: {str(e)}")
-                return response
+        try:
+            result = await asyncio.to_thread(
+                self.gemini_2_model.generate_content,
+                prompt,
+                generation_config=genai.GenerationConfig(
+                    temperature=0.1, response_mime_type="application/json"
+                ),
+            )
 
-# Create agent instance
+            return json.loads(result.text)
+
+        except Exception as e:
+            print(f"Translation error: {str(e)}")
+            return response
+
+
 with open("src/core/constants/endpoints.json", "r") as f:
     endpoints_json = f.read()
 
@@ -2295,9 +2549,11 @@ with open("src/core/constants/mlb_functions.json", "r") as f:
 with open("src/core/constants/media_sources.json", "r") as f:
     media_json = f.read()
 
+# Useful to return valid charts data
 with open("src/core/constants/charts_docs.json", "r") as f:
     charts_json = f.read()
 
+# Create agent instance
 mlb_agent = MLBAgent(
     api_key=settings.GEMINI_API_KEY,
     endpoints_json=endpoints_json,

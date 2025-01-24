@@ -124,27 +124,90 @@ const MLBStatistics: React.FC<MLBStatisticsProps> = ({ chart }) => {
   const formatMLBTooltip = (value: any, name: string, props: any) => {
     // Check if we're dealing with MLB team data
     const payload = props.payload;
+    if (payload && payload[0] && payload[0].payload.label) {
+      return [`${value}`, payload[0].payload.label];
+    }
     if (payload && payload[0] && payload[0].payload.category) {
       const teamName = payload[0].payload.category;
       return [`${value}`, teamName];
     }
-    return [value, name];
+    return [`${value}`, name];
   };
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="bg-black/90 border border-white/10 rounded-lg p-3 shadow-lg">
-          <p className="text-sm font-medium text-white mb-1">{data.category}</p>
-          <p className="text-xs text-blue-400">
-            Value: <span className="text-white">{data.value}</span>
-          </p>
-        </div>
-      );
+  // Define TypeScript interfaces for our props and data structure
+  interface TooltipData {
+    label?: string;
+    category?: string;
+    value: number | string;
+    [key: string]: any; // Allow for additional fields
+  }
+  
+  interface CustomTooltipProps {
+    active?: boolean;
+    payload?: Array<{
+      payload: TooltipData;
+    }>;
+    label?: string;
+    // Custom styling options
+    backgroundColor?: string;
+    borderColor?: string;
+    labelColor?: string;
+    valueColor?: string;
+  }
+  
+  const CustomTooltip: React.FC<CustomTooltipProps> = ({
+    active,
+    payload,
+    label,
+    // Default values for styling props
+    backgroundColor = "bg-black/90",
+    borderColor = "border-white/10",
+    labelColor = "text-white",
+    valueColor = "text-blue-400"
+  }) => {
+    // Early return if tooltip shouldn't be shown
+    if (!active || !payload || !payload.length) {
+      return null;
     }
-    return null;
+  
+    // Extract data from the payload
+    const data = payload[0].payload;
+    
+    // Determine which field to use for the display label
+    // Priority: explicit label > category > fallback to default
+    const displayLabel = data.label || data.category || 'No Label';
+    
+    // Format the value based on its type
+    const formatValue = (value: number | string) => {
+      // Handle number formatting
+      if (typeof value === 'number') {
+        // Format numbers with commas for thousands
+        return value.toLocaleString();
+      }
+      return value;
+    };
+  
+    return (
+      <div className={`${backgroundColor} border ${borderColor} rounded-lg p-3 shadow-lg min-w-[120px]`}>
+        {/* Label Section */}
+        <p className={`text-sm font-medium ${labelColor} mb-1`}>
+          {displayLabel}
+        </p>
+        
+        {/* Value Section */}
+        <p className={`text-xs ${valueColor}`}>
+          Value: {' '}
+          <span className={labelColor}>
+            {formatValue(data.value)}
+          </span>
+        </p>
+      </div>
+    );
   };
+  
+  // Add component display name for better debugging
+  CustomTooltip.displayName = 'CustomTooltip';
+  
 
   // Render different chart types
   const renderChart = () => {
