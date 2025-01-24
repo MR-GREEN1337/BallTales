@@ -235,3 +235,10 @@ class ChatRequest(BaseModel):
     message: str
     history: List[Message]
     user_data: UserData
+
+
+class VideoAnalysisRequest(BaseModel):
+    """Complete chat request schema matching frontend data structure"""
+
+    message: str
+    videoUrl: str

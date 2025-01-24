@@ -27,6 +27,7 @@ from src.api.models import (
 )
 from src.api.repl import MLBPythonREPL
 from src.core.settings import settings
+from src.api.utils import sanitize_code
 
 
 class MLBAgent:
@@ -881,7 +882,9 @@ Return the complete plan as a single valid JSON object strictly following this s
 
             # Apply extraction and filtering if specified
             if "extract" in step:
-                filtered_result = self._extract_and_filter(raw_result, step["extract"])
+                filtered_result = await self._process_extraction(
+                    raw_result, step["extract"]
+                )
                 results[step["id"]] = filtered_result
             else:
                 results[step["id"]] = raw_result
@@ -1009,8 +1012,10 @@ Return the complete plan as a single valid JSON object strictly following this s
                 function_info=function_info,
                 parameters=resolved_params,
             )
+            sanitized_code = sanitize_code(execution_code)
+            print("sanitized code:", sanitized_code)
 
-            repl_result = await self.repl(code=execution_code)
+            repl_result = await self.repl(code=sanitized_code)
             print("repl result:", repl_result)
 
             if repl_result.get("status") == "error":
@@ -2055,7 +2060,7 @@ print(json.dumps(result))
                         ).ratio()
                         for keyword in media_plan["homerun_search"]
                     )
-                    if score >= 0.6:  # Threshold for good matches
+                    if score >= 0.55:  # Threshold for good matches
                         video_data = self.homeruns[
                             self.homeruns["title"] == title
                         ].iloc[0]
@@ -2254,11 +2259,8 @@ print(json.dumps(result))
                         if image_data:
                             # Create prompt for image analysis
                             prompt = f"""Analyze this baseball image and provide:
-                            1. Detailed visual description
-                            2. Key elements and subjects
                             3. Baseball-specific context
-                            4. Historical or statistical significance if apparent
-                            
+                            Return a phrase describing the image,an augmented version of description below
                             This image is supposed to be {media_item["description"]}
                             Return a natural, engaging description that captures the image's essence.
                             Return a concise description

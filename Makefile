@@ -10,7 +10,7 @@ all:
 
 backend:
 	@echo "Starting backend"
-	cd backend && python3.13 -m uvicorn src.main:app --reload --port 8000 &
+	cd backend && python3.13 -m uvicorn src.main:app --reload --port 8000 --proxy-headers --forwarded-allow-ips "*" &
 
 
 frontend:

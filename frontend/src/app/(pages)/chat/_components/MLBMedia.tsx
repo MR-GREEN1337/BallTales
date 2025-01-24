@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, Grid2X2, Play, Search } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { BarChart3, ChevronDown, ChevronUp, Grid2X2, Play, Search, Send, X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -16,6 +17,9 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import MLBStatistics from './MLBStatistics';
+import { Button } from '@/components/ui/button';
+import { AnimatePresence, motion } from 'framer-motion';
+import axios from 'axios';
 
 // TypeScript interfaces remain the same
 interface MediaMetadata {
@@ -82,10 +86,226 @@ const MediaStats: React.FC<MediaStatsProps> = ({ metadata }) => (
   </div>
 );
 
-// VideoPlayer component remains the same
+
+// Define types for our API response and request
+interface MLBResponse {
+  analysis: {
+    pitchType: string;
+    velocity: string;
+    spinRate: string;
+    expectedBA: string;
+    xwOBA: string;
+    launchAngle: string;
+    situation: string;
+    additionalInsights?: string;
+  };
+}
+
+interface ChatRequestData {
+  videoUrl: string;
+  message: string;
+}
+
+interface AnalysisDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  videoUrl: string;
+}
+
+const AnalysisDialog: React.FC<AnalysisDialogProps> = ({ 
+  isOpen, 
+  onClose,
+  videoUrl
+}) => {
+  const [message, setMessage] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisData, setAnalysisData] = useState<MLBResponse['analysis'] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden';
+    }
+    
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, onClose]);
+
+  const handleAnalyze = async () => {
+    setError(null);
+    setIsAnalyzing(true);
+
+    try {
+      // Prepare the request data
+      const backData: ChatRequestData = {
+        videoUrl,
+        message: message.trim()
+      };
+
+      // Make the API request
+      const response = await axios.post<MLBResponse>(
+        `${process.env.NEXT_PUBLIC_API_URL}/chat/analyze-video`,
+        backData
+      );
+
+      setAnalysisData(response.data.analysis);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to analyze play');
+      console.error('Analysis error:', err);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+        />
+        
+        <div className="relative w-full max-w-2xl px-4">
+          <span className="inline-block h-screen align-middle" aria-hidden="true">
+            &#8203;
+          </span>
+          
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ type: "spring", duration: 0.5 }}
+            className="inline-block w-full max-w-2xl p-6 my-8 text-left align-middle bg-black/95 
+              border border-white/10 rounded-xl shadow-2xl transform transition-all relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 p-1 rounded-full hover:bg-white/10 
+                transition-colors duration-200"
+            >
+              <X className="w-5 h-5 text-gray-400 hover:text-white" />
+            </button>
+
+            <div className="mb-6">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-green-500" />
+                Home run Analysis
+              </h3>
+            </div>
+
+            <div className="mb-6">
+              <VideoPlayer video={{ type: 'video', url: videoUrl }} />
+            </div>
+    
+            <div className="space-y-6">
+              {/* Message Input Section */}
+              <div className="space-y-2">
+                <div className="relative">
+                  <textarea
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder="Ask about specific aspects of this play..."
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white 
+                      placeholder-gray-500 focus:border-green-500/50 focus:ring-0 focus:outline-none
+                      transition-colors resize-none h-24"
+                  />
+                  <button
+                    onClick={handleAnalyze}
+                    disabled={isAnalyzing || !message.trim()}
+                    className={`absolute bottom-3 right-3 p-2 rounded-full transition-all duration-200
+                      ${message.trim() ? 
+                        'bg-green-500 hover:bg-green-600 text-white' : 
+                        'bg-white/5 text-gray-500 cursor-not-allowed'
+                      }`}
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Error Message */}
+              {error && (
+                <div className="text-red-400 bg-red-500/10 px-4 py-3 rounded-lg text-sm">
+                  {error}
+                </div>
+              )}
+
+              {/* Analysis Results */}
+              {analysisData && (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+                >
+                  {Object.entries(analysisData).map(([key, value], index) => (
+                    key !== 'additionalInsights' && (
+                      <motion.div
+                        key={key}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="group bg-white/5 hover:bg-white/10 p-4 rounded-lg space-y-1 
+                          transition-all duration-300"
+                      >
+                        <div className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
+                          {key.replace(/([A-Z])/g, ' $1').trim()}
+                        </div>
+                        <div className="text-lg font-semibold text-white">
+                          {value}
+                        </div>
+                      </motion.div>
+                    )
+                  ))}
+                </motion.div>
+              )}
+
+              {/* Additional Insights */}
+              {analysisData?.additionalInsights && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="bg-white/5 p-4 rounded-lg"
+                >
+                  <div className="text-sm text-gray-400 mb-2">Additional Insights</div>
+                  <div className="text-white">
+                    {analysisData.additionalInsights}
+                  </div>
+                </motion.div>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </AnimatePresence>
+  );
+};
+
+// Enhanced VideoPlayer component with mobile-friendly analysis button
 const VideoPlayer: React.FC<{ video: MediaItem }> = ({ video }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [showAnalysis, setShowAnalysis] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+
+  // Detect touch device on mount
+  useEffect(() => {
+    setIsTouchDevice('ontouchstart' in window);
+  }, []);
 
   const handlePlayClick = () => {
     setIsPlaying(true);
@@ -102,63 +322,96 @@ const VideoPlayer: React.FC<{ video: MediaItem }> = ({ video }) => {
   const thumbnailUrl = `/homeruns/${formatImageNum(getRandomImageNum())}.jpg`;
 
   return (
-    <div 
-      className="relative aspect-video w-full bg-black/30 rounded-lg overflow-hidden group"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {!isPlaying ? (
-        <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 ease-in-out" />
-          
-          <img
-            src={thumbnailUrl}
-            alt={video.title || "Video thumbnail"}
-            className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-in-out
-              ${isHovered ? 'scale-110 blur-sm brightness-75' : 'scale-100 blur-none brightness-100'}
-            `}
-          />
-          
-          <div className="relative z-10 transform transition-all duration-500 ease-in-out">
-            <button
-              onClick={handlePlayClick}
-              className={`relative p-4 rounded-full bg-blue-500/90 hover:bg-blue-500 
-                transition-all duration-500 ease-in-out group/button
-                ${isHovered ? 'scale-110 shadow-lg shadow-blue-500/20' : 'scale-100'}
+    <>
+      <div 
+        className="relative aspect-video w-full bg-black/30 rounded-lg overflow-hidden group"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {!isPlaying ? (
+          <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent 
+              opacity-0 group-hover:opacity-100 md:transition-opacity md:duration-500 md:ease-in-out" 
+            />
+            
+            <img
+              src={thumbnailUrl}
+              alt={video.title || "Video thumbnail"}
+              className={`absolute inset-0 w-full h-full object-cover md:transition-all md:duration-700 md:ease-in-out
+                ${isHovered ? 'scale-110 blur-sm brightness-75' : 'scale-100 blur-none brightness-100'}
               `}
-              aria-label="Play video"
-            >
-              <div className="absolute inset-0 rounded-full bg-blue-400/20 animate-ping" />
-              <Play className={`w-8 h-8 text-white transition-all duration-500 ease-in-out
-                ${isHovered ? 'scale-110' : 'scale-100'}
-              `} />
-              
-              <div className={`absolute inset-0 rounded-full border-2 border-white/30
-                transition-all duration-500 ease-in-out
-                ${isHovered ? 'scale-110 opacity-100' : 'scale-90 opacity-0'}
-              `} />
-            </button>
-          </div>
-          
-          {video.title && (
-            <div className={`absolute bottom-0 left-0 right-0 p-4 transform transition-all duration-500 ease-in-out
-              ${isHovered ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}
-            `}>
-              <h4 className="text-white font-medium text-shadow-lg line-clamp-2">
-                {video.title}
-              </h4>
+            />
+            
+            <div className="relative z-10 transform md:transition-all md:duration-500 md:ease-in-out">
+              <button
+                onClick={handlePlayClick}
+                className="relative p-4 rounded-full bg-blue-500/90 hover:bg-blue-500 
+                  transition-all duration-500 ease-in-out group/button"
+                aria-label="Play video"
+              >
+                <div className="absolute inset-0 rounded-full bg-blue-400/20 animate-ping" />
+                <Play className="w-8 h-8 text-white" />
+              </button>
             </div>
-          )}
-        </div>
-      ) : (
-        <iframe
-          src={`${video.url}?autoplay=1`}
-          className="w-full h-full"
-          allow="autoplay; encrypted-media"
-          allowFullScreen
-        />
-      )}
-    </div>
+
+            <motion.button
+              onClick={() => setShowAnalysis(true)}
+              className={`absolute bottom-4 right-4 flex items-center gap-0 overflow-hidden
+                bg-green-700/90 hover:bg-green-800 rounded-full text-sm font-medium text-white
+                transform transition-all duration-500 ease-out group/analyze
+                ${isTouchDevice ? 'opacity-100 px-3' : 'opacity-0 group-hover:opacity-100 group-hover:px-3 px-2'}
+                hover:shadow-lg hover:shadow-green-500/20 py-2
+                ${isTouchDevice ? 'gap-2' : 'group-hover:gap-2'}`}
+            >
+              <BarChart3 className={`w-4 h-4 transition-transform duration-500 ease-out
+                ${isTouchDevice ? 'rotate-0' : 'group-hover:rotate-0 rotate-12'}`} 
+              />
+              <span className={`overflow-hidden transition-all duration-500 ease-out
+                ${isTouchDevice ? 
+                  'w-auto opacity-100' : 
+                  'w-0 group-hover:w-14 opacity-0 group-hover:opacity-100'
+                }`}>
+                Analyze
+              </span>
+              
+              {/* Subtle background pulse effect */}
+              <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100">
+                <div className="absolute inset-0 bg-white/20 rounded-full animate-ping-slow" />
+              </div>
+              
+              {/* Elegant border animation */}
+              <div className={`absolute inset-0 rounded-full border border-white/20
+                transition-all duration-500 ease-out scale-50 opacity-0
+                group-hover:scale-100 group-hover:opacity-100`} 
+              />
+            </motion.button>
+
+            {video.title && (
+              <div className={`absolute bottom-0 left-0 right-16 p-4 transform transition-all duration-500 ease-in-out
+                ${isHovered ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}
+              `}>
+                <h4 className="text-white font-medium text-shadow-lg line-clamp-2">
+                  {video.title}
+                </h4>
+              </div>
+            )}
+          </div>
+        ) : (
+          <iframe
+            src={`${video.url}?autoplay=1`}
+            className="w-full h-full"
+            allow="autoplay; encrypted-media"
+            allowFullScreen
+          />
+        )}
+      </div>
+
+      <AnalysisDialog
+        isOpen={showAnalysis}
+        onClose={() => setShowAnalysis(false)}
+        videoUrl={video.url}
+      />
+    </>
   );
 };
 
@@ -187,9 +440,9 @@ const VideoGrid: React.FC<{ videos: MediaItem[] }> = ({ videos }) => {
   return (
 <Dialog>
       <DialogTrigger asChild>
-        <button className="w-full flex items-center justify-center gap-2 p-4 bg-blue-500/20 hover:bg-blue-500/30 rounded-lg transition-all">
+        <button className="w-full flex items-center justify-center gap-2 p-1 bg-blue-500/20 hover:bg-blue-500/30 rounded-lg transition-all">
           <Grid2X2 className="w-5 h-5" />
-          <span>View All Videos ({videos.length})</span>
+          <span className='text-muted-foreground text-sm'>View All Videos ({videos.length})</span>
         </button>
       </DialogTrigger>
       <DialogContent className="max-w-6xl w-full h-full max-h-[90vh] overflow-y-auto bg-black/90 border border-white/10">
