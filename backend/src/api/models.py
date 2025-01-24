@@ -23,13 +23,14 @@ class REPLResult(TypedDict):
 
 
 class MLBResponse(TypedDict):
-    message: str  # Technical/data summary
-    conversation: str  # Friendly AI response
+    message: str
+    conversation: str
     data_type: str
     data: Dict[str, Any]
     context: Dict[str, Any]
     suggestions: List[str]
     media: Optional[Dict[str, Any]]
+    chart: Optional[Dict[str, Any]]
 
 
 class IntentType(str, enum.Enum):

@@ -5,6 +5,8 @@ from src.core import LANGUAGES_FOR_LABELLING
 from src.api.models import ChatRequest, MLBResponse
 from src.api.agent import mlb_agent, MLBDeps
 
+from fastapi_simple_rate_limiter import rate_limiter  # type: ignore
+
 router = APIRouter(
     prefix="/chat",
     tags=["chat"],
@@ -17,6 +19,7 @@ router = APIRouter(
     description="Return Agent's response to chat request",
     # response_model=MLBResponse,
 )
+@rate_limiter(limit=30, period=60)
 async def chat(request: ChatRequest):
     """Process chat messages with context from message history and user preferences"""
     # print(request)
