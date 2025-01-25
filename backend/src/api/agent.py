@@ -1013,7 +1013,7 @@ Return the complete plan as a single valid JSON object strictly following this s
                 parameters=resolved_params,
             )
             sanitized_code = sanitize_code(execution_code)
-            print("sanitized code:", sanitized_code)
+            #print("sanitized code:", sanitized_code)
 
             repl_result = await self.repl(code=sanitized_code)
             print("repl result:", repl_result)
@@ -2250,105 +2250,13 @@ print(json.dumps(result))
             media_plan = await self._get_search_parameters(self.intent, data)
             print("meedia", media_plan)
             # Analyze and enhance media items with descriptions
-            enhanced_media = []
-            for media_item in media_plan.get("direct_media", []):
-                try:
-                    if media_item["type"] == "image":
-                        # Upload image to Gemini for analysis
-                        image_data = await deps.client.get(media_item["url"])
-                        if image_data:
-                            # Create prompt for image analysis
-                            prompt = f"""Analyze this baseball image and provide:
-                            3. Baseball-specific context
-                            Return a phrase describing the image,an augmented version of description below
-                            This image is supposed to be {media_item["description"]}
-                            Return a natural, engaging description that captures the image's essence.
-                            Return a concise description
-                            """
 
-                            image_type = (
-                                "svg"
-                                if "logo" in media_item["description"].lower()
-                                else "jpeg"
-                            )
-                            # Generate image description using Gemini
-                            result = await asyncio.to_thread(
-                                self.gemini_2_model.generate_content,
-                                [
-                                    prompt,
-                                    {
-                                        "data": base64.b64encode(
-                                            image_data.content
-                                        ).decode("utf-8"),
-                                        "mime_type": f"image/{image_type}",
-                                    },
-                                ],
-                                generation_config=genai.GenerationConfig(
-                                    temperature=0.7,
-                                ),
-                            )
-                            # print("response media:", result)
-                            # Add enhanced description to media item
-                            media_item["description"] = result.text.strip()
-
-                    enhanced_media.append(media_item)
-
-                except Exception as media_error:
-                    print(f"Error processing media item: {str(media_error)}")
-                    # Still include item even if enhancement fails
-                    enhanced_media.append(media_item)
-
-            return enhanced_media
+            return media_plan.get("direct_media")
 
         except Exception as e:
             print(f"Media resolution error: {str(e)}")
             traceback.print_exc()
             return []
-
-    async def _enhance_media_metadata(
-        self, media_item: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """Enhance media metadata with additional context"""
-        try:
-            if media_item["type"] == "image":
-                # Generate contextual metadata for images
-                if "player_id" in media_item.get("metadata", {}):
-                    media_item["metadata"][
-                        "player_context"
-                    ] = await self._generate_player_description(
-                        media_item["metadata"]["player_id"]
-                    )
-                elif "team_id" in media_item.get("metadata", {}):
-                    media_item["metadata"][
-                        "team_context"
-                    ] = await self._generate_team_description(
-                        media_item["metadata"]["team_id"]
-                    )
-
-            elif media_item["type"] == "video" and "homerun_data" in media_item.get(
-                "metadata", {}
-            ):
-                # Add enhanced homerun context
-                media_item["metadata"][
-                    "game_context"
-                ] = await self._generate_highlight_description(
-                    media_item["metadata"]["homerun_data"]
-                )
-
-            return media_item
-
-        except Exception as e:
-            print(f"Error enhancing media metadata: {str(e)}")
-            return media_item
-
-    def _extract_and_filter(
-        self,
-        data: Any,
-        extract_schema: Optional[Dict[str, Any]],
-        filter_condition: Optional[str],
-    ) -> Any:
-        """Extract and filter data based on specified path and condition"""
-        pass
 
     async def _generate_processing_code(
         self,

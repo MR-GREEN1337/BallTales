@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useEffect, useState } from 'react';
 import { BarChart3, ChevronDown, ChevronUp, Grid2X2, Play, Search, Send, X } from 'lucide-react';
 import {
@@ -20,6 +22,7 @@ import MLBStatistics from './MLBStatistics';
 import { Button } from '@/components/ui/button';
 import { AnimatePresence, motion } from 'framer-motion';
 import axios from 'axios';
+import ImageAnalysisDialog from './ImageAnalysisDialog';
 
 // TypeScript interfaces remain the same
 interface MediaMetadata {
@@ -119,7 +122,7 @@ const AnalysisDialog: React.FC<AnalysisDialogProps> = ({
 }) => {
   const [message, setMessage] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisData, setAnalysisData] = useState<MLBResponse['analysis'] | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -143,27 +146,21 @@ const AnalysisDialog: React.FC<AnalysisDialogProps> = ({
     setIsAnalyzing(true);
 
     try {
-      // Prepare the request data
-      const backData: ChatRequestData = {
-        videoUrl,
-        message: message.trim()
-      };
-
-      // Make the API request
-      const response = await axios.post<MLBResponse>(
+      const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/chat/analyze-video`,
-        backData
+        {
+          videoUrl,
+          message: message.trim()
+        }
       );
-
-      setAnalysisData(response.data.analysis);
+      alert(response.data)
+      setAnalysisResult(response.data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to analyze play');
-      console.error('Analysis error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to analyze video');
     } finally {
       setIsAnalyzing(false);
     }
   };
-
   if (!isOpen) return null;
 
   return (
@@ -243,50 +240,24 @@ const AnalysisDialog: React.FC<AnalysisDialogProps> = ({
                 </div>
               )}
 
-              {/* Analysis Results */}
-              {analysisData && (
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.2 }}
-                  className="grid grid-cols-1 sm:grid-cols-2 gap-4"
-                >
-                  {Object.entries(analysisData).map(([key, value], index) => (
-                    key !== 'additionalInsights' && (
-                      <motion.div
-                        key={key}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="group bg-white/5 hover:bg-white/10 p-4 rounded-lg space-y-1 
-                          transition-all duration-300"
-                      >
-                        <div className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
-                          {key.replace(/([A-Z])/g, ' $1').trim()}
-                        </div>
-                        <div className="text-lg font-semibold text-white">
-                          {value}
-                        </div>
-                      </motion.div>
-                    )
-                  ))}
-                </motion.div>
-              )}
-
-              {/* Additional Insights */}
-              {analysisData?.additionalInsights && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="bg-white/5 p-4 rounded-lg"
-                >
-                  <div className="text-sm text-gray-400 mb-2">Additional Insights</div>
-                  <div className="text-white">
-                    {analysisData.additionalInsights}
-                  </div>
-                </motion.div>
-              )}
+<motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="p-6"
+          >
+            <div className="relative">
+              {/* Decorative quotation marks */}
+              <span className="absolute -top-4 -left-2 text-4xl text-blue-500/20 font-serif">"</span>
+              <span className="absolute -bottom-8 -right-2 text-4xl text-blue-500/20 font-serif">"</span>
+              
+              {/* Main text with gradient effect */}
+              <p className="text-lg leading-relaxed text-transparent bg-clip-text bg-gradient-to-r 
+                from-white via-gray-200 to-white font-medium px-4">
+                {analysisResult}
+              </p>
+            </div>
+          </motion.div>
             </div>
           </motion.div>
         </div>
@@ -503,9 +474,8 @@ const MLBMedia: React.FC<MLBMediaProps> = ({ media, chart }) => {
   const images = mediaContent.filter(item => item.type === 'image');
 
   const renderMediaItem = (mediaItem: MediaItem) => {
-    const firstLetter = mediaItem.description?.charAt(0) || '';
-    const restOfText = mediaItem.description?.slice(1) || '';
-
+    const [showImageAnalysis, setShowImageAnalysis] = useState(false);
+  
     switch (mediaItem.type) {
       case 'image':
         return (
@@ -514,21 +484,23 @@ const MLBMedia: React.FC<MLBMediaProps> = ({ media, chart }) => {
               <img
                 src={mediaItem.url}
                 alt={mediaItem.description || "MLB Media"}
-                className="w-24 h-24 rounded-lg object-contain bg-white/5 p-2"
+                className="w-24 h-24 rounded-lg object-contain bg-white/5 p-2 cursor-pointer"
+                onClick={() => setShowImageAnalysis(true)}
               />
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent rounded-lg -z-10" />
             </div>
-
+  
             {mediaItem.description && (
               <div className="flex-1 prose prose-invert">
-                <p className="leading-relaxed">
-                  <span className="float-left text-4xl font-serif font-bold mr-2 mt-1 text-blue-400">
-                    {firstLetter}
-                  </span>
-                  {restOfText}
-                </p>
+                <p className="leading-relaxed">{mediaItem.description}</p>
               </div>
             )}
+  
+            <ImageAnalysisDialog
+              isOpen={showImageAnalysis}
+              onClose={() => setShowImageAnalysis(false)}
+              imageUrl={mediaItem.url as any}
+            />
           </div>
         );
       
@@ -536,7 +508,7 @@ const MLBMedia: React.FC<MLBMediaProps> = ({ media, chart }) => {
         return null;
     }
   };
-
+  
   return (
     <div className="mt-4 space-y-4">
       <button
