@@ -2060,7 +2060,7 @@ print(json.dumps(result))
                         ).ratio()
                         for keyword in media_plan["homerun_search"]
                     )
-                    if score >= 0.5:  # Threshold for good matches
+                    if score >= 0.55:  # Threshold for good matches
                         video_data = self.homeruns[
                             self.homeruns["title"] == title
                         ].iloc[0]
@@ -2083,7 +2083,7 @@ print(json.dumps(result))
                 homerun_matches.sort(
                     key=lambda x: x["metadata"]["exit_velocity"], reverse=True
                 )
-                media_plan["direct_media"].extend(homerun_matches[:100])
+                media_plan["direct_media"].extend(homerun_matches[:80])
 
             return media_plan
 

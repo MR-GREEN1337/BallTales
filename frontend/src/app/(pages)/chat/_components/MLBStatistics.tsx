@@ -173,32 +173,23 @@ const MLBStatistics: React.FC<MLBStatisticsProps> = ({ chart }) => {
     // Extract data from the payload
     const data = payload[0].payload;
     
-    // Determine which field to use for the display label
-    // Priority: explicit label > category > fallback to default
-    const displayLabel = data.label || data.category || 'No Label';
-    
-    // Format the value based on its type
-    const formatValue = (value: number | string) => {
-      // Handle number formatting
-      if (typeof value === 'number') {
-        // Format numbers with commas for thousands
-        return value.toLocaleString();
-      }
-      return value;
+    // Format batting average to 3 decimal places
+    const formatBattingAverage = (value: number): string => {
+      return value.toFixed(3);
     };
   
     return (
-      <div className={`${backgroundColor} border ${borderColor} rounded-lg p-3 shadow-lg min-w-[120px]`}>
-        {/* Label Section */}
-        <p className={`text-sm font-medium ${labelColor} mb-1`}>
-          {displayLabel}
+      <div className={`${backgroundColor} border ${borderColor} rounded-lg p-3 shadow-lg min-w-[200px]`}>
+        {/* Player Name Section */}
+        <p className={`text-sm font-medium ${labelColor} mb-2`}>
+          {data.label}
         </p>
         
-        {/* Value Section */}
-        <p className={`text-xs ${valueColor}`}>
-          Value: {' '}
-          <span className={labelColor}>
-            {formatValue(data.value)}
+        {/* Batting Average Section */}
+        <p className={`text-xs ${valueColor} flex justify-between items-center`}>
+          <span>Batting Average:</span>
+          <span className={`${labelColor} font-medium`}>
+            {formatBattingAverage(data.value as any)}
           </span>
         </p>
       </div>

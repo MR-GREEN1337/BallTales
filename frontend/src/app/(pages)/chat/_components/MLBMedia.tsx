@@ -442,7 +442,8 @@ const VideoGrid: React.FC<{ videos: MediaItem[] }> = ({ videos }) => {
 // MLBMedia component remains largely the same
 const MLBMedia: React.FC<MLBMediaProps> = ({ media, chart }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [showImageAnalysis, setShowImageAnalysis] = useState(false);
+  // Track both whether dialog is open and which image is selected
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   if (!media) return null;
 
@@ -451,7 +452,6 @@ const MLBMedia: React.FC<MLBMediaProps> = ({ media, chart }) => {
   const images = mediaContent.filter(item => item.type === 'image');
 
   const renderMediaItem = (mediaItem: MediaItem) => {
-  
     switch (mediaItem.type) {
       case 'image':
         return (
@@ -461,22 +461,16 @@ const MLBMedia: React.FC<MLBMediaProps> = ({ media, chart }) => {
                 src={mediaItem.url}
                 alt={mediaItem.description || "MLB Media"}
                 className="w-24 h-24 rounded-lg object-contain bg-white/5 p-2 cursor-pointer"
-                onClick={() => setShowImageAnalysis(true)}
+                onClick={() => setSelectedImage(mediaItem.url)}
               />
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent rounded-lg -z-10" />
             </div>
-  
+
             {mediaItem.description && (
               <div className="flex-1 prose prose-invert">
                 <p className="leading-relaxed">{mediaItem.description}</p>
               </div>
             )}
-  
-            <ImageAnalysisDialog
-              isOpen={showImageAnalysis}
-              onClose={() => setShowImageAnalysis(false)}
-              imageUrl={mediaItem.url as any}
-            />
           </div>
         );
       
@@ -484,6 +478,73 @@ const MLBMedia: React.FC<MLBMediaProps> = ({ media, chart }) => {
         return null;
     }
   };
+  
+  return (
+    <div className="mt-4 space-y-4">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="flex items-center justify-between w-full p-3 rounded-lg bg-gradient-to-r from-blue-500/20 to-blue-400/5 hover:from-blue-500/30 hover:to-blue-400/10 transition-all group"
+      >
+        <span className="text-sm font-medium text-gray-200 group-hover:text-white transition-colors">
+          Baseball Media ({mediaContent.length})
+        </span>
+        <div className="flex items-center gap-2">
+          <div className="text-xs text-gray-400">
+            {isExpanded ? 'Click to collapse' : 'Click to expand'}
+          </div>
+          {isExpanded ? (
+            <ChevronUp className="w-4 h-4 text-gray-300" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-gray-300" />
+          )}
+        </div>
+      </button>
+
+      {isExpanded && (
+        <div className="space-y-4">
+          {videos.length > 0 && (
+            <div className="space-y-4">
+              {videos.length >= VIDEO_GALLERY_THRESHOLD ? (
+                <VideoGrid videos={videos} />
+              ) : (
+                videos.map((video, index) => (
+                  <SingleVideo key={index} video={video} />
+                ))
+              )}
+            </div>
+          )}
+          
+          {images.length > 0 && (
+            <div className="space-y-2">
+              {images.map((item, index) => (
+                <div 
+                  key={index}
+                  className="first:rounded-t-lg last:rounded-b-lg border border-white/10 hover:border-white/20 transition-colors"
+                >
+                  {renderMediaItem(item)}
+                </div>
+              ))}
+            </div>
+          )}
+          
+          {/* Image Analysis Dialog */}
+          {selectedImage && (
+            <ImageAnalysisDialog
+              isOpen={!!selectedImage}
+              onClose={() => setSelectedImage(null)}
+              imageUrl={selectedImage}
+            />
+          )}
+          
+          {chart && chart.requires_chart && (
+            <div className="mt-8">
+              <MLBStatistics chart={chart} />
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
   
   return (
     <div className="mt-4 space-y-4">

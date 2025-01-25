@@ -19,10 +19,10 @@ const ImageAnalysisDialog: React.FC<{
 
     try {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/analyze-image`,
+        `${process.env.NEXT_PUBLIC_API_URL}/chat/analyze-image`,
         {
           imageUrl,
-          query: query.trim()
+          message: query.trim()
         }
       );
 

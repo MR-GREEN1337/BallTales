@@ -369,7 +369,7 @@ const OnboardingChat = () => {
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundAttachment: 'fixed',
-      filter: 'brightness(0.35)', // This ensures consistent dimming across browsers
+      filter: 'brightness(0.2)', // This ensures consistent dimming across browsers
     }}
   />
     <div className="fixed top-0 left-0 right-0 bg-gradient-to-b from-gray-900 to-transparent p-4 z-50">
