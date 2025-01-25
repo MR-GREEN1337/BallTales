@@ -1013,7 +1013,7 @@ Return the complete plan as a single valid JSON object strictly following this s
                 parameters=resolved_params,
             )
             sanitized_code = sanitize_code(execution_code)
-            #print("sanitized code:", sanitized_code)
+            # print("sanitized code:", sanitized_code)
 
             repl_result = await self.repl(code=sanitized_code)
             print("repl result:", repl_result)
@@ -2060,7 +2060,7 @@ print(json.dumps(result))
                         ).ratio()
                         for keyword in media_plan["homerun_search"]
                     )
-                    if score >= 0.55:  # Threshold for good matches
+                    if score >= 0.5:  # Threshold for good matches
                         video_data = self.homeruns[
                             self.homeruns["title"] == title
                         ].iloc[0]

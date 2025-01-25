@@ -236,32 +236,42 @@ class ChatRequest(BaseModel):
     history: List[Message]
     user_data: UserData
 
+
 class AnalysisRequest(BaseModel):
     """Base class for analysis requests with common fields."""
+
     message: str
     metadata: Optional[Dict[str, Any]] = None
 
+
 class VideoAnalysisRequest(AnalysisRequest):
     """Request model for video analysis."""
+
     videoUrl: HttpUrl
+
 
 class ImageAnalysisRequest(BaseModel):
     """Request model for image analysis with enhanced fields."""
+
     imageUrl: HttpUrl
     message: str
     metadata: Optional[Dict[str, Any]] = None
     generate_variation: bool = True  # Flag to control whether to generate a new image
 
+
 class ImageAnalysisResponse(BaseModel):
     """Enhanced response model for image analysis including generated image."""
+
     summary: str
     details: Dict[str, Any]
     timestamp: datetime
     request_id: str
     generated_image: Optional[str] = None  # Base64 encoded generated image
 
+
 class AnalysisResponse(BaseModel):
     """Response model for analysis results."""
+
     summary: str
     details: Dict[str, Any]
     timestamp: datetime

@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { AnimatePresence, motion } from 'framer-motion';
 import axios from 'axios';
 import ImageAnalysisDialog from './ImageAnalysisDialog';
+import VideoAnalysis, { AnalysisResponse } from './VideoAnalysis';
 
 // TypeScript interfaces remain the same
 interface MediaMetadata {
@@ -89,32 +90,11 @@ const MediaStats: React.FC<MediaStatsProps> = ({ metadata }) => (
   </div>
 );
 
-
-// Define types for our API response and request
-interface MLBResponse {
-  analysis: {
-    pitchType: string;
-    velocity: string;
-    spinRate: string;
-    expectedBA: string;
-    xwOBA: string;
-    launchAngle: string;
-    situation: string;
-    additionalInsights?: string;
-  };
-}
-
-interface ChatRequestData {
-  videoUrl: string;
-  message: string;
-}
-
 interface AnalysisDialogProps {
   isOpen: boolean;
   onClose: () => void;
   videoUrl: string;
 }
-
 const AnalysisDialog: React.FC<AnalysisDialogProps> = ({ 
   isOpen, 
   onClose,
@@ -122,7 +102,7 @@ const AnalysisDialog: React.FC<AnalysisDialogProps> = ({
 }) => {
   const [message, setMessage] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState<string | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -144,16 +124,18 @@ const AnalysisDialog: React.FC<AnalysisDialogProps> = ({
   const handleAnalyze = async () => {
     setError(null);
     setIsAnalyzing(true);
+    setAnalysisResult(null);
 
     try {
-      const response = await axios.post(
+      const response = await axios.post<AnalysisResponse>(
         `${process.env.NEXT_PUBLIC_API_URL}/chat/analyze-video`,
         {
           videoUrl,
           message: message.trim()
         }
       );
-      alert(response.data)
+      
+      // response.data is already parsed by axios
       setAnalysisResult(response.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to analyze video');
@@ -161,6 +143,7 @@ const AnalysisDialog: React.FC<AnalysisDialogProps> = ({
       setIsAnalyzing(false);
     }
   };
+
   if (!isOpen) return null;
 
   return (
@@ -174,7 +157,7 @@ const AnalysisDialog: React.FC<AnalysisDialogProps> = ({
           className="fixed inset-0 bg-black/80 backdrop-blur-sm"
         />
         
-        <div className="relative w-full max-w-2xl px-4">
+        <div className="relative w-full max-w-4xl px-4">
           <span className="inline-block h-screen align-middle" aria-hidden="true">
             &#8203;
           </span>
@@ -184,7 +167,7 @@ const AnalysisDialog: React.FC<AnalysisDialogProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: "spring", duration: 0.5 }}
-            className="inline-block w-full max-w-2xl p-6 my-8 text-left align-middle bg-black/95 
+            className="inline-block w-full max-w-4xl p-6 my-8 text-left align-middle bg-black/95 
               border border-white/10 rounded-xl shadow-2xl transform transition-all relative"
             onClick={(e) => e.stopPropagation()}
           >
@@ -199,7 +182,7 @@ const AnalysisDialog: React.FC<AnalysisDialogProps> = ({
             <div className="mb-6">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-green-500" />
-                Home run Analysis
+                Video Analysis
               </h3>
             </div>
 
@@ -240,24 +223,17 @@ const AnalysisDialog: React.FC<AnalysisDialogProps> = ({
                 </div>
               )}
 
-<motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="p-6"
-          >
-            <div className="relative">
-              {/* Decorative quotation marks */}
-              <span className="absolute -top-4 -left-2 text-4xl text-blue-500/20 font-serif">"</span>
-              <span className="absolute -bottom-8 -right-2 text-4xl text-blue-500/20 font-serif">"</span>
-              
-              {/* Main text with gradient effect */}
-              <p className="text-lg leading-relaxed text-transparent bg-clip-text bg-gradient-to-r 
-                from-white via-gray-200 to-white font-medium px-4">
-                {analysisResult}
-              </p>
-            </div>
-          </motion.div>
+              {/* Loading State */}
+              {isAnalyzing && (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-green-500"></div>
+                </div>
+              )}
+
+              {/* Analysis Result */}
+              {analysisResult && (
+                <VideoAnalysis analysis={analysisResult} />
+              )}
             </div>
           </motion.div>
         </div>
