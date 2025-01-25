@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useState } from 'react'
 import { ChevronDown, User, Volleyball, Heart, LogOut } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'

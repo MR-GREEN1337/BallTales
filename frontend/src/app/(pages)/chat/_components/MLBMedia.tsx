@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import MLBStatistics from './MLBStatistics';
-import { Button } from '@/components/ui/button';
 import { AnimatePresence, motion } from 'framer-motion';
 import axios from 'axios';
 import ImageAnalysisDialog from './ImageAnalysisDialog';
@@ -443,6 +442,8 @@ const VideoGrid: React.FC<{ videos: MediaItem[] }> = ({ videos }) => {
 // MLBMedia component remains largely the same
 const MLBMedia: React.FC<MLBMediaProps> = ({ media, chart }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showImageAnalysis, setShowImageAnalysis] = useState(false);
+
   if (!media) return null;
 
   const mediaContent = Array.isArray(media) ? media : [media];
@@ -450,7 +451,6 @@ const MLBMedia: React.FC<MLBMediaProps> = ({ media, chart }) => {
   const images = mediaContent.filter(item => item.type === 'image');
 
   const renderMediaItem = (mediaItem: MediaItem) => {
-    const [showImageAnalysis, setShowImageAnalysis] = useState(false);
   
     switch (mediaItem.type) {
       case 'image':

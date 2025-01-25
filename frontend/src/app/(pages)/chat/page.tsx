@@ -355,17 +355,23 @@ const OnboardingChat = () => {
 
 
   return (
-    <div
-    className="min-h-screen relative overflow-hidden"
+    <div 
+  className="min-h-screen relative overflow-hidden"
+  style={{
+    position: 'relative',
+  }}
+>
+  {/* Add a pseudo-element for the background image and overlay */}
+  <div 
+    className="absolute inset-0 z-0"
     style={{
       backgroundImage: 'url(/chat.jpg)',
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundAttachment: 'fixed',
-      backgroundColor: 'rgba(17, 24, 39, 0.85)',
-      backgroundBlendMode: 'multiply'
+      filter: 'brightness(0.35)', // This ensures consistent dimming across browsers
     }}
-  >
+  />
     <div className="fixed top-0 left-0 right-0 bg-gradient-to-b from-gray-900 to-transparent p-4 z-50">
       <div className="max-w-4xl mx-auto flex justify-end">
         <div className="flex items-center gap-2">

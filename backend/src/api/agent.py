@@ -1118,7 +1118,7 @@ Return the complete plan as a single valid JSON object strictly following this s
         # Clean and validate the generated code
         generated_code = result.text
         generated_code = generated_code.replace("```python", "").replace("```", "")
-        print("generated code:", generated_code)
+        #print("generated code:", generated_code)
         # Ensure the code has proper imports
         if "import statsapi" not in generated_code:
             generated_code = "import statsapi\nimport json\n" + generated_code
