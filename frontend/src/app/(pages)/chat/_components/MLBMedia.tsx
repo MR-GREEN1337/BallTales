@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { BarChart3, ChevronDown, ChevronUp, Grid2X2, Play, Search, Send, X } from 'lucide-react';
 import {
   Dialog,
@@ -242,11 +242,44 @@ const AnalysisDialog: React.FC<AnalysisDialogProps> = ({
 };
 
 // Enhanced VideoPlayer component with mobile-friendly analysis button
-const VideoPlayer: React.FC<{ video: MediaItem }> = ({ video }) => {
+const VideoPlayer: React.FC<{ video: MediaItem, onAnalyze?: () => void }> = ({ video, onAnalyze }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Handle analysis button click with smooth scrolling
+  const handleAnalysisClick = () => {
+    const element = containerRef.current;
+    if (!element) {
+      // If we can't get the element, still show the dialog
+      setShowAnalysis(true);
+      if (onAnalyze) onAnalyze();
+      return;
+    }
+
+    const rect = element.getBoundingClientRect();
+    const isOffscreen = rect.top < 0 || rect.bottom > window.innerHeight;
+
+    if (isOffscreen) {
+      const targetPosition = window.scrollY + rect.top - 20;
+      window.scrollTo({
+        top: targetPosition,
+        behavior: 'smooth'
+      });
+      // Wait for scroll to complete before showing dialog
+      setTimeout(() => {
+        setShowAnalysis(true);
+        if (onAnalyze) onAnalyze();
+      }, 300);
+    } else {
+      // If not offscreen, show dialog immediately
+      setShowAnalysis(true);
+      if (onAnalyze) onAnalyze();
+    }
+  };
 
   // Detect touch device on mount
   useEffect(() => {
@@ -301,7 +334,7 @@ const VideoPlayer: React.FC<{ video: MediaItem }> = ({ video }) => {
             </div>
 
             <motion.button
-              onClick={() => setShowAnalysis(true)}
+              onClick={handleAnalysisClick}
               className={`absolute bottom-4 right-4 flex items-center gap-0 overflow-hidden
                 bg-green-700/90 hover:bg-green-800 rounded-full text-sm font-medium text-white
                 transform transition-all duration-500 ease-out group/analyze

@@ -482,11 +482,18 @@ const OnboardingChat = () => {
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundAttachment: 'fixed',
-      filter: 'brightness(0.35  )', // This ensures consistent dimming across browsers
+      filter: 'brightness(0.35  )',
     }}
   />
-    <div className="fixed top-0 left-0 right-0 bg-gradient-to-b from-gray-900 to-transparent p-4 z-50">
-      <div className="max-w-4xl mx-auto flex justify-end">
+      <motion.div 
+        className="fixed top-0 left-0 right-0 bg-gradient-to-b from-gray-900 to-transparent p-4 z-30"
+        initial={{ opacity: 1, y: 0 }}
+        animate={{ 
+          opacity: 1 ? 1 : 0,
+          y: 1 ? 0 : -100
+        }}
+        transition={{ duration: 0.3 }}
+      >      <div className="max-w-4xl mx-auto flex justify-end">
         <div className="flex items-center gap-2">
           <ClearButton onClear={handleReset} disabled={messages.length === 1} />
           <MLBProfile
@@ -498,7 +505,7 @@ const OnboardingChat = () => {
           />
         </div>
       </div>
-    </div>
+    </motion.div>
       {/* Chat Container */}
       <div className="max-w-4xl mx-auto px-4">
       <div className="pt-24 pb-8">
@@ -574,7 +581,7 @@ const OnboardingChat = () => {
                       )}
 
                       {message.options && (
-                        <div className="relative z-30 mt-4 flex flex-wrap gap-2">
+                        <div className="relative mt-4 flex flex-wrap gap-2">
                           {message.options.map((option) => (
                             <Button
                               key={`${message.id}-${option}`}

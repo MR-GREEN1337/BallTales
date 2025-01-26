@@ -26,41 +26,6 @@ const translations = {
   }
 };
 
-const WindEffect = () => {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: [0.1, 0.3, 0.1] }}
-      transition={{
-        duration: 5,
-        repeat: Infinity,
-        ease: "easeInOut",
-      }}
-      className="absolute inset-0 z-10 mix-blend-overlay"
-    >
-      {[...Array(6)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute h-full w-1 bg-gradient-to-b from-transparent via-white to-transparent"
-          style={{
-            left: `${i * 20}%`,
-          }}
-          animate={{
-            y: ["0%", "100%"],
-            opacity: [0, 1, 0],
-          }}
-          transition={{
-            duration: 3 + Math.random() * 2,
-            repeat: Infinity,
-            delay: i * 0.2,
-            ease: "easeInOut",
-          }}
-        />
-      ))}
-    </motion.div>
-  );
-};
-
 const Home = () => {
   const [language, setLanguage] = useState<'en' | 'es' | 'ja'>('en');
   const t = translations[language];
@@ -90,9 +55,6 @@ const Home = () => {
           }}
         />
       </motion.div>
-
-      {/* Wind effect overlay */}
-      <WindEffect />
 
       {/* Main content wrapper - encompasses all content including language selection */}
       <div className="relative z-20 min-h-screen">
