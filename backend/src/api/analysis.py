@@ -11,7 +11,12 @@ import aiohttp
 from PIL import Image
 from io import BytesIO
 from fastapi import HTTPException
+import mimetypes
+import cairosvg
+import os
 
+# Initialize mimetypes database
+mimetypes.init()
 
 class AnalysisMetrics:
     """
@@ -66,28 +71,80 @@ class MediaAnalyzer:
         self.api_key = api_key
         genai.configure(api_key=api_key)
         self.analysis_model = genai.GenerativeModel(model_name="gemini-2.0-flash-exp")
+        
+        # Define supported image formats
+        self.supported_formats = {
+            'image/jpeg', 'image/png', 'image/gif', 'image/svg+xml',
+            'image/webp', 'image/tiff'
+        }
 
-    async def generate_content_async(
-        self, content: Union[str, List[Any]], temperature: float = 0.7
-    ) -> GenerateContentResponse:
+    def is_svg(self, url: str) -> bool:
         """
-        Asynchronously generates content analysis using the Gemini model.
-        Wraps the synchronous API call in an asyncio executor for better performance.
+        Determines if a URL points to an SVG file by checking the file extension.
+        
+        Args:
+            url: The URL to check
+            
+        Returns:
+            bool: True if the URL ends with .svg, False otherwise
         """
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(
-            None,
-            partial(
-                self.analysis_model.generate_content,
-                content,
-                generation_config={"temperature": temperature},
-            ),
-        )
+        return url.lower().endswith('.svg')
+
+    def _detect_mime_type(self, file_data: bytes, filename: str = '') -> str:
+        """
+        Detects the MIME type of a file using a hierarchical approach:
+        1. First checks file extension if provided
+        2. Then examines file signatures
+        3. Finally attempts content-based detection
+        
+        Args:
+            file_data: The binary content of the file
+            filename: Optional filename to help with type detection
+            
+        Returns:
+            str: The detected MIME type
+        """
+        # Check filename extension first if provided
+        if filename:
+            mime_type, _ = mimetypes.guess_type(filename)
+            if mime_type and mime_type in self.supported_formats:
+                return mime_type
+
+        # Check common file signatures
+        signatures = {
+            b'\x89PNG\r\n\x1a\n': 'image/png',
+            b'\xff\xd8\xff': 'image/jpeg',
+            b'GIF87a': 'image/gif',
+            b'GIF89a': 'image/gif',
+            b'RIFF': 'image/webp'  # WEBP starts with 'RIFF'
+        }
+        
+        for signature, mime_type in signatures.items():
+            if file_data.startswith(signature):
+                return mime_type
+                
+        # Check for SVG content
+        try:
+            content_start = file_data[:1000].decode('utf-8').lower()
+            if '<?xml' in content_start and '<svg' in content_start:
+                return 'image/svg+xml'
+        except UnicodeDecodeError:
+            pass
+            
+        return 'application/octet-stream'
 
     async def download_image(self, url: str) -> Image.Image:
         """
-        Downloads and processes an image from a URL.
-        Handles various potential errors during image download and processing.
+        Downloads and processes an image from a URL, with enhanced support for various formats.
+        
+        Args:
+            url: The URL of the image to download
+            
+        Returns:
+            PIL.Image: The processed image ready for analysis
+            
+        Raises:
+            HTTPException: If image download or processing fails
         """
         try:
             async with aiohttp.ClientSession() as session:
@@ -95,14 +152,58 @@ class MediaAnalyzer:
                     if response.status != 200:
                         raise HTTPException(
                             status_code=400,
-                            detail=f"Failed to download image: {response.status}",
+                            detail=f"Failed to download image: HTTP {response.status}"
                         )
+                    
                     image_data = await response.read()
-                    return Image.open(BytesIO(image_data))
-        except Exception as e:
-            logger.error(f"Image download failed: {e}")
+                    
+                    # Get filename from URL and detect MIME type
+                    filename = os.path.basename(url)
+                    mime_type = self._detect_mime_type(image_data, filename)
+                    
+                    if mime_type not in self.supported_formats:
+                        raise HTTPException(
+                            status_code=400,
+                            detail=f"Unsupported image format: {mime_type}"
+                        )
+                    
+                    # Handle SVG conversion
+                    if mime_type == 'image/svg+xml' or self.is_svg(url):
+                        try:
+                            png_data = cairosvg.svg2png(bytestring=image_data)
+                            return Image.open(BytesIO(png_data))
+                        except Exception as svg_error:
+                            logger.error(f"SVG conversion failed: {svg_error}")
+                            raise HTTPException(
+                                status_code=400,
+                                detail="Failed to convert SVG image"
+                            )
+                    
+                    # Process other image formats
+                    try:
+                        image = Image.open(BytesIO(image_data))
+                        # Convert to RGB if necessary (handles RGBA, CMYK, etc.)
+                        if image.mode not in ('RGB', 'L'):
+                            image = image.convert('RGB')
+                        return image
+                    except Exception as img_error:
+                        logger.error(f"Image processing failed: {img_error}")
+                        raise HTTPException(
+                            status_code=400,
+                            detail="Failed to process image"
+                        )
+                        
+        except aiohttp.ClientError as e:
+            logger.error(f"Network error during image download: {e}")
             raise HTTPException(
-                status_code=500, detail=f"Image download failed: {str(e)}"
+                status_code=500,
+                detail="Failed to download image: Network error"
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error in image processing: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Image processing failed: {str(e)}"
             )
 
     async def analyze_media(
@@ -153,6 +254,23 @@ class MediaAnalyzer:
             metrics.add_step("analysis", "failed", {"error": str(e)})
             logger.error(f"Media analysis failed: {e}")
             raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+    async def generate_content_async(
+        self, content: Union[str, List[Any]], temperature: float = 0.7
+    ) -> GenerateContentResponse:
+        """
+        Asynchronously generates content analysis using the Gemini model.
+        Wraps the synchronous API call in an asyncio executor for better performance.
+        """
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            None,
+            partial(
+                self.analysis_model.generate_content,
+                content,
+                generation_config={"temperature": temperature},
+            ),
+        )
 
     def _create_analysis_prompt(
         self,

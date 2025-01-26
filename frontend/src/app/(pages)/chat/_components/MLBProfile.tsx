@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { ChevronDown, User, Volleyball, Heart, LogOut } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import ProfileSuccessAnimation from './ProfileSuccessAnimation'
 
 interface UserPreference {
   favoriteTeam?: string
@@ -22,12 +23,14 @@ interface UserPreference {
 
 interface MLBProfileProps {
   user: {
-    name: string
-    email: string
-    avatar?: string
-  }
-  preferences: UserPreference
-  onLogout: () => void
+    name: string;
+    email: string;
+    avatar?: string;
+  };
+  preferences: UserPreference;
+  onLogout: () => void;
+  showSuccessAnimation?: boolean;
+  onAnimationComplete?: () => void;
 }
 
 // Language-specific content configuration for all UI text
@@ -105,22 +108,28 @@ const languageContent = {
 
 const AvatarComponent = () => (
   <div className="relative inline-block">
-    <img 
-      src={"/user.png"} 
-      alt="Profile" 
+    <img
+      src={"/user.png"}
+      alt="Profile"
       className="w-full h-full object-cover rounded-full"
     />
   </div>
 );
 
-const MLBProfile = ({ user, preferences, onLogout }: MLBProfileProps) => {
+const MLBProfile = ({
+  user,
+  preferences,
+  onLogout,
+  showSuccessAnimation = false,
+  onAnimationComplete
+}: MLBProfileProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  
+
   // Get user language from preferences, default to English if not set
   // Map 'sp' to 'es' for Spanish
-  const userLanguage = (preferences?.preferences?.language?.toLowerCase() === 'sp' ? 
+  const userLanguage = (preferences?.preferences?.language?.toLowerCase() === 'sp' ?
     'es' : preferences?.preferences?.language?.toLowerCase()) || 'en';
-  
+
   // Get language-specific content, fallback to English if translation not found
   const content = languageContent[userLanguage as keyof typeof languageContent] || languageContent.en;
 
@@ -137,15 +146,25 @@ const MLBProfile = ({ user, preferences, onLogout }: MLBProfileProps) => {
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-      <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-200">
-          <div className="h-8 w-8">
-            <AvatarComponent />
-          </div>
-          <span className="text-white font-medium hidden md:inline">{user.name}</span>
-          <ChevronDown className="w-4 h-4 text-gray-300" />
-        </button>
-      </DropdownMenuTrigger>
+      <div className="relative">
+        <DropdownMenuTrigger asChild>
+          <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-200 mlb-profile-trigger">
+            <div className="h-8 w-8">
+              <AvatarComponent />
+            </div>
+            <span className="text-white font-medium hidden md:inline">{user.name}</span>
+            <ChevronDown className="w-4 h-4 text-gray-300" />
+          </button>
+        </DropdownMenuTrigger>
+
+          <ProfileSuccessAnimation
+            show={showSuccessAnimation}
+            onComplete={onAnimationComplete}
+            particleCount={12}
+            particleDistance={60}
+            animationDuration={2000}
+          />
+      </div>
 
       <DropdownMenuContent className="w-96 bg-gray-900/95 backdrop-blur-sm text-white border-gray-800">
         {/* User Header */}
@@ -172,9 +191,9 @@ const MLBProfile = ({ user, preferences, onLogout }: MLBProfileProps) => {
             </div>
           </div>
         </div>
-        
+
         <DropdownMenuSeparator className="bg-gray-800" />
-        
+
         {/* Baseball Stats Boxes */}
         <div className="p-4 grid grid-cols-3 gap-3">
           {preferences.stats && Object.entries(preferences.stats).map(([key, value]) => (
@@ -231,7 +250,7 @@ const MLBProfile = ({ user, preferences, onLogout }: MLBProfileProps) => {
         )}
 
         <DropdownMenuSeparator className="bg-gray-800" />
-        
+
         {/* Logout Button */}
         <div className="p-2">
           <button

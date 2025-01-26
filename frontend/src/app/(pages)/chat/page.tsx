@@ -15,7 +15,13 @@ import { redirect, useRouter } from 'next/navigation'
 import { ClearButton, MessageDust } from './_components/ResetButton'
 import { languageContent, typingPhrases } from '@/lib/constants'
 import AnimatedBotIcon from './_components/AnimatedBotIcon'
+import { updateUserPreferences } from '@/actions/user/update-preferences'
 
+
+interface PreferencesState {
+  botMessageCount: number;
+  lastPreferencesUpdate: number;
+}
 
 interface Message {
   id: string
@@ -120,6 +126,7 @@ const TypingText = ({ text, language }: { text: string, language: string }) => {
   );
 };
 
+
 const OnboardingChat = () => {
   const [messages, setMessages] = useState<Message[]>([])
   const [userLanguage, setUserLanguage] = useState('en');
@@ -132,6 +139,13 @@ const OnboardingChat = () => {
   const thinkingTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
   const [clearingMessages, setClearingMessages] = useState(false);
   const [messagesToClear, setMessagesToClear] = useState<Message[]>([]);
+  const [initialMessageSet, setInitialMessageSet] = useState(false);
+  const [showProfileAnimation, setShowProfileAnimation] = useState(false);
+  const [preferencesState, setPreferencesState] = useState<PreferencesState>({
+    botMessageCount: 0,
+    lastPreferencesUpdate: Date.now()
+  });
+  const updateRef = useRef(false);
 
   useEffect(() => {
     const authToken = Cookies.get('auth-token')
@@ -156,10 +170,83 @@ const OnboardingChat = () => {
     fetchUserData()
   }, [])
 
+  //console.log("samaykom", userData)
+
   const handleSuggestionClick = (suggestion: string) => {
     setInputText(suggestion)
     handleSend()
   }
+
+  const handlePreferencesUpdate = async () => {
+    try {
+      const authToken = Cookies.get('auth-token');
+      if (!authToken) {
+        console.error('No auth token found');
+        return;
+      }
+  
+      const recentMessages = messages.slice(-5);
+      
+      const payload = {
+        messages: recentMessages.map(msg => ({
+          content: msg.content,
+          sender: msg.sender,
+          type: msg.type,
+          timestamp: Date.now()
+        })),
+        preferences: userData.preferences,
+        user: {
+          email: userData.user.email,
+          name: userData.user.name,
+          avatar: userData.user.avatar
+        }
+      };
+  
+      const backendResponse = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/user/update-preferences`,
+        payload,
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+  
+      if (!backendResponse.data || !backendResponse.data.preferences) {
+        throw new Error('Invalid response from preferences update API');
+      }
+  
+      // Update user data without triggering a full re-render
+      setUserData((prev: any) => ({
+        ...prev,
+        preferences: {
+          ...prev.preferences,
+          ...backendResponse.data.preferences
+        }
+      }));
+  
+      // Trigger the success animation in the profile component
+      const profileElement = document.querySelector('.mlb-profile-trigger');
+      if (profileElement) {
+        setShowProfileAnimation(true);
+        
+        // Reset the animation state after it completes
+        setTimeout(() => {
+          setShowProfileAnimation(false);
+        }, 2000);
+      }
+  
+    } catch (error) {
+      console.error('Failed to update preferences:', error);
+      toast.error('Failed to update preferences');
+      
+      // Reset counter to 2 so next bot message will trigger update
+      setPreferencesState(prev => ({
+        ...prev,
+        botMessageCount: 2
+      }));
+    }
+  };
 
   const handleLogout = () => {
     Cookies.remove('auth-token')
@@ -168,25 +255,51 @@ const OnboardingChat = () => {
   }
 
   useEffect(() => {
-    // Get user language from userData when it's available
-    if (userData?.preferences?.preferences?.language) {
+    // Only set initial message if it hasn't been set and we have user data
+    if (!initialMessageSet && userData?.preferences?.preferences?.language) {
       const lang = userData.preferences.preferences.language.toLowerCase();
       setUserLanguage(lang);
+      
+      setMessages([{
+        id: 'welcome-message',
+        content: languageContent[lang as keyof typeof languageContent]?.welcomeMessage || languageContent.en.welcomeMessage,
+        sender: 'bot',
+        type: 'text',
+        chart: undefined
+      }]);
+      
+      setInitialMessageSet(true);
     }
-
-    // Set initial message based on language
-    setMessages([{
-      id: 'welcome-message',
-      content: languageContent[userLanguage as keyof typeof languageContent]?.welcomeMessage || languageContent.en.welcomeMessage,
-      sender: 'bot',
-      type: 'text',
-      chart: undefined
-    }]);
-  }, [userData]);
+  }, [userData, initialMessageSet]);
 
   const addMessage = (message: Message) => {
-    setMessages(prev => [...prev, message])
-  }
+    setMessages(prev => [...prev, message]);
+    if (message.sender === 'bot' && !message.id.startsWith('suggestions-')) {
+      setPreferencesState(prev => {
+        const newCount = prev.botMessageCount + 1;
+
+        //console.log('Bot message counter:', newCount);
+        
+        // Only trigger update exactly every 3 messages
+        if (newCount === 3) {
+          // Schedule the update asynchronously to avoid state conflicts
+          setTimeout(() => {
+            handlePreferencesUpdate();
+          }, 0);
+          
+          return {
+            botMessageCount: 0,
+            lastPreferencesUpdate: Date.now()
+          };
+        }
+        
+        return {
+          ...prev,
+          botMessageCount: newCount
+        };
+      });
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -248,7 +361,7 @@ const OnboardingChat = () => {
         type: msg.type || 'text',
         suggestions: msg.suggestions || undefined,
       }))
-      console.log("userData", userData)
+      //console.log("userData", userData)
       // Prepare user data
       const userDataForRequest = {
         id: userData.user.id,
@@ -266,7 +379,7 @@ const OnboardingChat = () => {
         history: messageHistory,
         user_data: userDataForRequest
       }
-      console.log("Back Data", backData)
+      //console.log("Back Data", backData)
       const response = await axios.post<MLBResponse>(`${process.env.NEXT_PUBLIC_API_URL}/chat`, backData as ChatRequestData)
       console.log(response)
       // Clear thinking timeout and hide indicator
@@ -363,13 +476,13 @@ const OnboardingChat = () => {
 >
   {/* Add a pseudo-element for the background image and overlay */}
   <div 
-    className="absolute inset-0 z-0"
+    className="absolute inset-0 -z-10"
     style={{
       backgroundImage: 'url(/chat.jpg)',
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundAttachment: 'fixed',
-      filter: 'brightness(0.2)', // This ensures consistent dimming across browsers
+      filter: 'brightness(0.35  )', // This ensures consistent dimming across browsers
     }}
   />
     <div className="fixed top-0 left-0 right-0 bg-gradient-to-b from-gray-900 to-transparent p-4 z-50">
@@ -380,6 +493,8 @@ const OnboardingChat = () => {
             user={userData.user}
             preferences={userData.preferences}
             onLogout={handleLogout}
+            showSuccessAnimation={showProfileAnimation}
+            onAnimationComplete={() => setShowProfileAnimation(false)}
           />
         </div>
       </div>
@@ -393,12 +508,21 @@ const OnboardingChat = () => {
             transition={{ delay: 0.5 }}
             className="text-center"
           >
-            <h1 className="text-4xl font-bold text-white mb-2">
-              {languageContent[userLanguage as keyof typeof languageContent]?.pageTitle || languageContent.en.pageTitle}
-            </h1>
-            <p className="text-gray-300 mb-3">
+<motion.h1 
+            className="text-4xl font-bold text-white mb-2"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >              {languageContent[userLanguage as keyof typeof languageContent]?.pageTitle || languageContent.en.pageTitle}
+            </motion.h1>
+            <motion.p 
+            className="text-gray-300 mb-3"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.4 }}
+          >
               {languageContent[userLanguage as keyof typeof languageContent]?.pageSubtitle || languageContent.en.pageSubtitle}
-            </p>
+            </motion.p>
           </motion.div>
 
           {/* Messages */}
@@ -450,7 +574,7 @@ const OnboardingChat = () => {
                       )}
 
                       {message.options && (
-                        <div className="mt-4 flex flex-wrap gap-2">
+                        <div className="relative z-30 mt-4 flex flex-wrap gap-2">
                           {message.options.map((option) => (
                             <Button
                               key={`${message.id}-${option}`}

@@ -1957,13 +1957,23 @@ print(json.dumps(result))
     async def _get_search_parameters(
         self, intent: Dict[str, Any], data: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Get ready-to-use media URLs and relevant homerun keywords"""
+        """
+        Get ready-to-use media URLs and relevant homerun keywords, with enhanced search capabilities
+        that consider multiple fields beyond just the title.
+        
+        The function now considers:
+        - Title text
+        - Exit velocity ranges
+        - Launch angle ranges
+        - Distance thresholds
+        - Player names extracted from titles
+        """
         try:
             # Get a small sample of homerun data for context
             sample_homerun = self.homeruns.head(15).to_dict()
 
-            # Create the prompt for comprehensive media resolution
-            media_prompt = """Based on this MLB context, generate a complete media plan with ready-to-use URLs and relevant homerun search terms.
+            # Enhanced prompt focusing on specific, meaningful search parameters
+            media_prompt = """Based on this MLB context, generate a complete media plan with ready-to-use URLs and detailed, specific search parameters that capture the distinctive aspects of each home run.
 
             User query: {user_query}
             Intent: {intent}
@@ -1978,19 +1988,29 @@ print(json.dumps(result))
             - description: Natural description
             - metadata: Additional info (esp. for homeruns)
 
-            2. homerun_search: Array of relevant search terms
-            for finding matching homerun clips, focus more on relevance with user query
+            2. homerun_search: Object containing:
+            - keywords: Array of specific, distinctive search terms such as:
+                * Situational context (e.g., "walk-off", "grand slam", "leadoff", "pinch-hit")
+                * Game situation (e.g., "ties game", "takes lead", "extends lead")
+                * Hit description (e.g., "line drive", "deep drive", "crushed", "monster shot")
+                * Field location (e.g., "center field", "upper deck", "opposite field")
+                * Notable achievements (e.g., "milestone", "career first", "record breaking")
+                Do NOT include generic terms like "homerun", "homer", "hits", as these are implied
+            - stats_criteria: Object with:
+                - min_exit_velocity: Optional minimum exit velocity
+                - max_exit_velocity: Optional maximum exit velocity
+                - min_launch_angle: Optional minimum launch angle
+                - max_launch_angle: Optional maximum launch angle
+                - min_distance: Optional minimum distance
+                - max_distance: Optional maximum distance
+            - player_names: Array containing:
+                * Batter's full name
+                * Batter's common nicknames
+                * Any other players mentioned in the context (e.g., runners who scored)
 
             URL Templates:
             - Player headshots: https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/[player_id]/headshot/67/current
-            - Team logos: https://www.mlbstatic.com/team-logos/[team_id].svg
-
-            Focus on:
-            - Generate complete, ready-to-use URLs
-            - Include relevant player/team IDs
-            - Provide natural descriptions
-            - Select most relevant homerun search terms
-            - Limit to 3-5 most relevant media items"""
+            - Team logos: https://www.mlbstatic.com/team-logos/[team_id].svg"""
 
             # Format prompt with actual data
             formatted_prompt = media_prompt.format(
@@ -2001,7 +2021,7 @@ print(json.dumps(result))
                 user_query=self.user_query,
             )
 
-            # Get media plan from LLM
+            # Get media plan from LLM with enhanced schema
             result = await asyncio.to_thread(
                 self.model.generate_content,
                 formatted_prompt,
@@ -2016,10 +2036,7 @@ print(json.dumps(result))
                                 "items": {
                                     "type": "object",
                                     "properties": {
-                                        "type": {
-                                            "type": "string",
-                                            "enum": ["image", "video"],
-                                        },
+                                        "type": {"type": "string", "enum": ["image", "video"]},
                                         "url": {"type": "string"},
                                         "description": {"type": "string"},
                                         "metadata": {
@@ -2039,8 +2056,23 @@ print(json.dumps(result))
                                 },
                             },
                             "homerun_search": {
-                                "type": "array",
-                                "items": {"type": "string"},
+                                "type": "object",
+                                "properties": {
+                                    "keywords": {"type": "array", "items": {"type": "string"}},
+                                    "stats_criteria": {
+                                        "type": "object",
+                                        "properties": {
+                                            "min_exit_velocity": {"type": "number"},
+                                            "max_exit_velocity": {"type": "number"},
+                                            "min_launch_angle": {"type": "number"},
+                                            "max_launch_angle": {"type": "number"},
+                                            "min_distance": {"type": "number"},
+                                            "max_distance": {"type": "number"},
+                                        },
+                                    },
+                                    "player_names": {"type": "array", "items": {"type": "string"}},
+                                },
+                                "required": ["keywords", "stats_criteria", "player_names"],
                             },
                         },
                         "required": ["direct_media", "homerun_search"],
@@ -2049,40 +2081,78 @@ print(json.dumps(result))
             )
 
             media_plan = json.loads(result.text)
-            print(media_plan)
-            # Process homerun matches if search terms provided
+
+            # Process homerun matches with enhanced criteria
             if media_plan["homerun_search"]:
                 homerun_matches = []
-                for title in self.homeruns["title"]:
-                    score = max(
-                        difflib.SequenceMatcher(
-                            None, str(title).lower(), keyword.lower()
-                        ).ratio()
-                        for keyword in media_plan["homerun_search"]
-                    )
-                    if score >= 0.55:  # Threshold for good matches
-                        video_data = self.homeruns[
-                            self.homeruns["title"] == title
-                        ].iloc[0]
-                        homerun_matches.append(
-                            {
-                                "type": "video",
-                                "url": video_data["video"],
-                                "title": video_data["title"],
-                                "description": f"Incredible home run with {video_data['ExitVelocity']} mph exit velocity, {video_data['LaunchAngle']}° launch angle, traveling {video_data['HitDistance']} feet!",
-                                "metadata": {
-                                    "exit_velocity": float(video_data["ExitVelocity"]),
-                                    "launch_angle": float(video_data["LaunchAngle"]),
-                                    "distance": float(video_data["HitDistance"]),
-                                    "year": int(video_data["season"]),
-                                },
-                            }
-                        )
+                search_criteria = media_plan["homerun_search"]["stats_criteria"]
+                
+                for _, row in self.homeruns.iterrows():
+                    # Check if the homerun meets all statistical criteria
+                    if search_criteria:
+                        if (
+                            ("min_exit_velocity" in search_criteria and 
+                            float(row["ExitVelocity"]) < search_criteria["min_exit_velocity"]) or
+                            ("max_exit_velocity" in search_criteria and 
+                            float(row["ExitVelocity"]) > search_criteria["max_exit_velocity"]) or
+                            ("min_launch_angle" in search_criteria and 
+                            float(row["LaunchAngle"]) < search_criteria["min_launch_angle"]) or
+                            ("max_launch_angle" in search_criteria and 
+                            float(row["LaunchAngle"]) > search_criteria["max_launch_angle"]) or
+                            ("min_distance" in search_criteria and 
+                            float(row["HitDistance"]) < search_criteria["min_distance"]) or
+                            ("max_distance" in search_criteria and 
+                            float(row["HitDistance"]) > search_criteria["max_distance"])
+                        ):
+                            continue
 
-                # Sort by exit velocity and take top matches
+                    # Calculate text similarity scores
+                    title_scores = [
+                        difflib.SequenceMatcher(
+                            None, str(row["title"]).lower(), keyword.lower()
+                        ).ratio()
+                        for keyword in media_plan["homerun_search"]["keywords"]
+                    ]
+                    
+                    player_scores = [
+                        difflib.SequenceMatcher(
+                            None, str(row["title"]).lower(), player.lower()
+                        ).ratio()
+                        for player in media_plan["homerun_search"]["player_names"]
+                    ]
+
+                    # Use the best match from either keywords or player names
+                    best_score = max(title_scores + player_scores) if player_scores else max(title_scores)
+
+                    if best_score >= 0.55:  # Threshold for good matches
+                        homerun_matches.append({
+                            "type": "video",
+                            "url": row["video"],
+                            "title": row["title"],
+                            "description": (
+                                f"Incredible home run by {row['title'].split(' homers')[0]} with "
+                                f"{row['ExitVelocity']} mph exit velocity, {row['LaunchAngle']}° "
+                                f"launch angle, traveling {row['HitDistance']} feet!"
+                            ),
+                            "metadata": {
+                                "exit_velocity": float(row["ExitVelocity"]),
+                                "launch_angle": float(row["LaunchAngle"]),
+                                "distance": float(row["HitDistance"]),
+                                "year": int(row["season"]),
+                            },
+                        })
+
+                # Sort matches by relevance and statistical impressiveness
                 homerun_matches.sort(
-                    key=lambda x: x["metadata"]["exit_velocity"], reverse=True
+                    key=lambda x: (
+                        x["metadata"]["exit_velocity"] * 0.4 +  # Weight exit velocity
+                        x["metadata"]["distance"] * 0.4 +      # Weight distance
+                        x["metadata"]["launch_angle"] * 0.2    # Weight launch angle
+                    ),
+                    reverse=True
                 )
+                
+                # Add top matches to media plan
                 media_plan["direct_media"].extend(homerun_matches[:80])
 
             return media_plan

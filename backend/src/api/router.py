@@ -123,6 +123,7 @@ async def analyze_image(
     """
     try:
         # Perform image analysis
+        print(analysis_request)
         result = await media_analyzer.analyze_media(
             media_url=str(analysis_request.imageUrl),
             user_message=analysis_request.message,

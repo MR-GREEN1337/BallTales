@@ -35,15 +35,17 @@ const ImageAnalysisDialog: React.FC<{
   };
 
   return (
-    <ImageAnalysisComponent
-      isOpen={isOpen}
-      onClose={onClose}
-      imageUrl={imageUrl}
-      analysis={analysis}
-      onAnalyze={handleAnalyze}
-      isAnalyzing={isAnalyzing}
-      error={error}
-    />
+    <div className="relative">
+      <ImageAnalysisComponent
+        isOpen={isOpen}
+        onClose={onClose}
+        imageUrl={imageUrl}
+        analysis={analysis}
+        onAnalyze={handleAnalyze}
+        isAnalyzing={isAnalyzing}
+        error={error}
+      />
+    </div>
   );
 };
 

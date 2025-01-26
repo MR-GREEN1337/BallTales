@@ -1,10 +1,9 @@
-import { Loader2Icon } from 'lucide-react'
 import React from 'react'
 
 function loading() {
   return (
-    <div className='flex h-screen w-full items-center justify-center'>
-        <Loader2Icon size={30} className='animlate-spin stroke-primary'/>
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-spin rounded-full h-14 w-14 border-t-2 border-b-2 border-green-500"></div>
     </div>
   )
 }
