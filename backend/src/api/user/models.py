@@ -1,9 +1,10 @@
 from typing import List, Optional, Literal, Dict, Any
 from pydantic import BaseModel, Field, EmailStr, field_validator
-import google.generativeai as genai
 from fastapi import HTTPException
 from datetime import datetime
 import json
+import google.generativeai as genai
+from src.api.gemini_solid import GeminiSolid
 
 
 class Message(BaseModel):
@@ -150,7 +151,7 @@ class UpdateUserDataRequest(BaseModel):
 
     async def analyze_with_gemini(self) -> BaseballPreferences:
         try:
-            model = genai.GenerativeModel("gemini-pro")
+            model = GeminiSolid()
 
             # Extract relevant messages for analysis
             baseball_context = "\n".join(
@@ -196,7 +197,12 @@ class UpdateUserDataRequest(BaseModel):
             """
 
             # Get Gemini's response
-            response = await model.generate_content_async(prompt)
+            response = await model.generate_with_fallback(
+                prompt,
+                generation_config=genai.GenerationConfig(
+                    response_mime_type="application/json",
+                ),
+            )
 
             # Use the new parse_gemini_response method
             updated_prefs = BaseballPreferences.parse_gemini_response(

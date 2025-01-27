@@ -479,22 +479,15 @@ const OnboardingChat = () => {
   <div className="absolute bottom-0 left-0 right-0 top-0 animate-shimmer bg-[linear-gradient(to_right,#ff000015_1px,transparent_1px),linear-gradient(to_bottom,#ff000015_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_80%_70%_at_50%_-20%,#000_70%,transparent_100%)]">
     <div className="absolute inset-0 bg-[linear-gradient(110deg,transparent_35%,#ff000030_50%,transparent_65%)] animate-shimmer-wave" />
   </div>
-  <div
-        className="min-h-screen relative overflow-hidden"
-        style={{
-          position: 'relative',
-        }}
-      >
+      <div className="min-h-screen relative overflow-x-hidden">
         {/* Header */}
         <motion.div
           className="fixed top-0 left-0 right-0 bg-gradient-to-b from-gray-900 to-transparent p-4 z-30"
           initial={{ opacity: 1, y: 0 }}
-          animate={{
-            opacity: 1 ? 1 : 0,
-            y: 1 ? 0 : -100
-          }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-        >      <div className="max-w-4xl mx-auto flex justify-end">
+        >
+          <div className="max-w-4xl mx-auto flex justify-end px-4">
             <div className="flex items-center gap-2">
               <ClearButton onClear={handleReset} disabled={messages.length === 1} />
               <MLBProfile
@@ -507,6 +500,7 @@ const OnboardingChat = () => {
             </div>
           </div>
         </motion.div>
+  
         {/* Chat Container */}
         <div className="max-w-4xl mx-auto px-4">
           <div className="pt-24 pb-8">
@@ -517,14 +511,15 @@ const OnboardingChat = () => {
               className="text-center"
             >
               <motion.h1
-                className="text-4xl font-bold text-white mb-2"
+                className="text-4xl font-bold text-white mb-2 px-4 break-words"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.2 }}
-              >              {languageContent[userLanguage as keyof typeof languageContent]?.pageTitle || languageContent.en.pageTitle}
+              >
+                {languageContent[userLanguage as keyof typeof languageContent]?.pageTitle || languageContent.en.pageTitle}
               </motion.h1>
               <motion.p
-                className="text-gray-300 mb-3"
+                className="text-gray-300 mb-3 px-4"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.4 }}
@@ -532,7 +527,7 @@ const OnboardingChat = () => {
                 {languageContent[userLanguage as keyof typeof languageContent]?.pageSubtitle || languageContent.en.pageSubtitle}
               </motion.p>
             </motion.div>
-
+  
             {/* Messages */}
             <div className="space-y-8 pb-24">
               <div className="space-y-6">
@@ -555,7 +550,7 @@ const OnboardingChat = () => {
                   {messages.map((message) => (
                     <motion.div
                       key={message.id}
-                      id={`message-${message.id}`}  // Add this line
+                      id={`message-${message.id}`}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
@@ -568,30 +563,35 @@ const OnboardingChat = () => {
                             <UserCircle2 className="w-8 h-8 text-gray-400 mt-1" />
                           )}
                         </div>
-
-                        <div className={`rounded-2xl p-4 backdrop-blur-sm ${message.sender === 'user'
-                          ? 'bg-blue-600/90 text-white'
-                          : 'bg-white/10 text-white'
-                          }`}>
-                          <div className="prose prose-invert">
+  
+                        <div className={`rounded-2xl p-4 backdrop-blur-sm break-words ${
+                          message.sender === 'user'
+                            ? 'bg-blue-600/90 text-white'
+                            : 'bg-white/10 text-white'
+                        }`}>
+                          <div className="prose prose-invert max-w-full">
                             {message.content}
                           </div>
-
+  
                           {message.media && (
-                            <MLBMedia media={message.media} chart={message.chart} />
+                            <div className="max-w-full overflow-hidden">
+                              <MLBMedia media={message.media} chart={message.chart} />
+                            </div>
                           )}
-
+  
                           {message.context && (
-                            <ContextViewer context={message.context} />
+                            <div className="max-w-full overflow-hidden">
+                              <ContextViewer context={message.context} />
+                            </div>
                           )}
-
+  
                           {message.options && (
                             <div className="relative mt-4 flex flex-wrap gap-2">
                               {message.options.map((option) => (
                                 <Button
                                   key={`${message.id}-${option}`}
                                   variant="outline"
-                                  className="bg-white/10 hover:bg-white/20 border-white/20 text-white"
+                                  className="bg-white/10 hover:bg-white/20 border-white/20 text-white text-sm break-words"
                                   onClick={() => handleSuggestionClick(option)}
                                 >
                                   {option}
@@ -603,7 +603,7 @@ const OnboardingChat = () => {
                       </div>
                     </motion.div>
                   ))}
-
+  
                   {/* Thinking indicator with animated text */}
                   {showThinking && (
                     <motion.div
@@ -620,7 +620,7 @@ const OnboardingChat = () => {
                       </div>
                     </motion.div>
                   )}
-
+  
                   {/* Typing indicator */}
                   {isTyping && !showThinking && (
                     <motion.div
@@ -643,20 +643,20 @@ const OnboardingChat = () => {
               <div ref={messagesEndRef} />
             </div>
           </div>
-
+  
           {/* Input */}
           <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-gray-900 to-transparent p-4">
-            <div className="max-w-4xl mx-auto flex gap-2">
+            <div className="max-w-4xl mx-auto flex gap-2 px-4">
               <Input
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                 placeholder={languageContent[userLanguage as keyof typeof languageContent]?.inputPlaceholder || languageContent.en.inputPlaceholder}
-                className="bg-white/5 border-white/20 text-white placeholder:text-gray-400 backdrop-blur-sm"
+                className="bg-white/5 border-white/20 text-white placeholder:text-gray-400 backdrop-blur-sm flex-1 min-w-0"
               />
               <Button
                 onClick={handleSend}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 rounded-lg"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 rounded-lg flex-shrink-0"
               >
                 <Send className="w-5 h-5" />
               </Button>
@@ -665,7 +665,7 @@ const OnboardingChat = () => {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default OnboardingChat

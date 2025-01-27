@@ -321,7 +321,7 @@ const VideoPlayer: React.FC<{ video: MediaItem, onAnalyze?: () => void }> = ({ v
               `}
             />
             
-            <div className="relative z-10 transform md:transition-all md:duration-500 md:ease-in-out">
+            <div className="relative z-2 transform md:transition-all md:duration-500 md:ease-in-out">
               <button
                 onClick={handlePlayClick}
                 className="relative p-4 rounded-full bg-blue-500/90 hover:bg-blue-500 

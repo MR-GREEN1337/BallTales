@@ -259,14 +259,40 @@ class ImageAnalysisRequest(BaseModel):
     generate_variation: bool = True  # Flag to control whether to generate a new image
 
 
+class SuggestionItem(BaseModel):
+    """Defines the structure for a suggestion action."""
+
+    text: str
+    endpoint: str
+    icon: str
+
+
+class ImageAnalysisRequest(BaseModel):
+    """Request model for image analysis."""
+
+    imageUrl: str
+    message: str
+    metadata: Optional[Dict[str, Any]] = None
+
+
+class ImageAnalysisDetails(BaseModel):
+    """Detailed analysis components."""
+
+    technical_analysis: str
+    visual_elements: str
+    strategic_insights: str
+    additional_context: str
+
+
 class ImageAnalysisResponse(BaseModel):
-    """Enhanced response model for image analysis including generated image."""
+    """Enhanced response model including suggestions."""
 
     summary: str
-    details: Dict[str, Any]
+    details: ImageAnalysisDetails
     timestamp: datetime
     request_id: str
-    generated_image: Optional[str] = None  # Base64 encoded generated image
+    suggestions: List[SuggestionItem]
+    metrics: Optional[Dict[str, Any]] = None
 
 
 class AnalysisResponse(BaseModel):
@@ -274,5 +300,13 @@ class AnalysisResponse(BaseModel):
 
     summary: str
     details: Dict[str, Any]
+    timestamp: datetime
+    request_id: str
+
+
+class SuggestionResponse(BaseModel):
+    """Response model for suggestion endpoints."""
+
+    data: Dict[str, Any]
     timestamp: datetime
     request_id: str

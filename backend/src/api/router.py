@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Query, Depends
 import httpx
 from src.core import LANGUAGES_FOR_LABELLING
 from src.api.models import (
@@ -7,12 +7,11 @@ from src.api.models import (
     ImageAnalysisRequest,
     AnalysisResponse,
     ImageAnalysisResponse,
+    SuggestionResponse,
 )
 from src.api.agent import mlb_agent, MLBDeps
-from src.core.settings import settings
-from src.api.analysis import MediaAnalyzer
-import json
-from typing import Dict, Any, Optional
+from src.api.analysis import MediaAnalyzer, get_analyzer, media_analyzer
+from src.api.utils import log_analysis_request, _build_chat_context
 from fastapi_simple_rate_limiter import rate_limiter
 from fastapi.requests import Request
 from loguru import logger
@@ -24,9 +23,6 @@ router = APIRouter(
     tags=["chat"],
     responses={404: {"description": "Not found"}},
 )
-
-# Initialize the media analyzer with API key
-media_analyzer = MediaAnalyzer(api_key=settings.GEMINI_API_KEY)
 
 
 @router.post(
@@ -107,28 +103,53 @@ async def analyze_video(
 @router.post(
     "/analyze-image",
     response_model=ImageAnalysisResponse,
-    description="Analyze baseball images with detailed insights",
+    description="Analyze baseball images with detailed insights and contextual suggestions",
 )
 @rate_limiter(limit=30, seconds=60)
 async def analyze_image(
     request: Request,
     analysis_request: ImageAnalysisRequest,
     background_tasks: BackgroundTasks,
-):
+) -> ImageAnalysisResponse:
     """
-    Analyzes baseball images with AI-powered insights.
+    Analyzes baseball images with AI-powered insights and provides contextual suggestions.
 
-    This endpoint processes baseball images to provide detailed analysis of
-    player positions, techniques, and game situations.
+    This endpoint processes baseball images to provide:
+    - Detailed analysis of players, teams, or game situations
+    - Contextual suggestions based on the image type (team logos, player headshots, or game action)
+    - Relevant data endpoints for additional information
+
+    Args:
+        request: The incoming FastAPI request
+        analysis_request: The analysis request containing image URL and metadata
+        background_tasks: FastAPI background tasks handler
+
+    Returns:
+        ImageAnalysisResponse: Analysis results including suggestions for further actions
+
+    Raises:
+        HTTPException: On analysis failure or invalid input
     """
     try:
-        # Perform image analysis
-        print(analysis_request)
+        # Extract media type details
+        is_svg = media_analyzer.is_svg(analysis_request.imageUrl)
+        content_type = "svg" if is_svg else "jpeg"
+
+        # Log analysis start with content type
+        logger.info(f"Starting image analysis for content type: {content_type}")
+
+        # Perform image analysis with enhanced metadata
+        enhanced_metadata = {
+            **(analysis_request.metadata or {}),
+            "content_type": content_type,
+            "analysis_timestamp": datetime.utcnow().isoformat(),
+        }
+
         result = await media_analyzer.analyze_media(
             media_url=str(analysis_request.imageUrl),
             user_message=analysis_request.message,
             media_type="image",
-            metadata=analysis_request.metadata,
+            metadata=enhanced_metadata,
         )
 
         # Log the analysis request in the background
@@ -136,66 +157,154 @@ async def analyze_image(
             log_analysis_request,
             media_type="image",
             success=True,
-            metadata=analysis_request.metadata,
+            metadata=enhanced_metadata,
         )
 
         return ImageAnalysisResponse(**result)
 
     except Exception as e:
-        # Log failed analysis attempt
+        # Enhanced error logging
+        logger.error(f"Image analysis failed: {str(e)}", exc_info=True)
+
+        # Log failed analysis attempt with more context
         background_tasks.add_task(
-            log_analysis_request, media_type="image", success=False, error=str(e)
+            log_analysis_request,
+            media_type="image",
+            content_type=content_type if "content_type" in locals() else "unknown",
+            success=False,
+            error=str(e),
+            error_type=type(e).__name__,
         )
+
+        # Re-raise the exception for proper error handling
         raise
 
 
-async def log_analysis_request(
-    media_type: str,
-    success: bool,
-    metadata: Optional[Dict[str, Any]] = None,
-    error: Optional[str] = None,
+@router.get(
+    "/chat/{suggestion_type}",
+    response_model=SuggestionResponse,
+    description="Handle various suggestion-based queries for baseball content",
+)
+@rate_limiter(limit=30, seconds=60)
+async def handle_suggestion(
+    suggestion_type: str,
+    mediaUrl: str = Query(..., description="URL of the media being analyzed"),
+    analyzer: MediaAnalyzer = Depends(get_analyzer),
 ):
     """
-    Logs analysis requests for monitoring and analytics purposes.
+    Processes suggestion-based queries by integrating with existing analysis workflows.
 
-    Records details about each analysis request, including success/failure status
-    and any relevant metadata for monitoring and improvement.
+    This endpoint determines the appropriate analysis type based on the suggestion
+    and leverages existing analysis capabilities to generate relevant responses.
     """
     try:
-        log_entry = {
-            "timestamp": datetime.utcnow().isoformat(),
-            "media_type": media_type,
-            "success": success,
-            "metadata": metadata or {},
-            "error": error,
+        # Determine media type from URL
+        is_svg = analyzer.is_svg(mediaUrl)
+        entity_type = "team" if is_svg else "player"
+
+        # Define analysis templates for different suggestion types
+        analysis_templates = {
+            # Team-specific templates
+            "team/championships": {
+                "prompt": "Analyze this team's championship history and major achievements",
+                "analysis_type": "historical",
+                "required_type": "team",
+            },
+            "team/roster/all-time": {
+                "prompt": "Provide analysis of the team's most significant players throughout history",
+                "analysis_type": "roster",
+                "required_type": "team",
+            },
+            "team/stats": {
+                "prompt": "Analyze this team's statistical performance and trends",
+                "analysis_type": "statistics",
+                "required_type": "team",
+            },
+            "team/roster/current": {
+                "prompt": "Analyze the current team roster and its composition",
+                "analysis_type": "roster",
+                "required_type": "team",
+            },
+            "team/games/recent": {
+                "prompt": "Analyze the team's recent game performance and trends",
+                "analysis_type": "performance",
+                "required_type": "team",
+            },
+            # Player-specific templates
+            "player/stats": {
+                "prompt": "Provide comprehensive career statistics analysis",
+                "analysis_type": "statistics",
+                "required_type": "player",
+            },
+            "player/highlights": {
+                "prompt": "Analyze career highlights and significant achievements",
+                "analysis_type": "highlights",
+                "required_type": "player",
+            },
+            "player/games/recent": {
+                "prompt": "Analyze recent game performances and trends",
+                "analysis_type": "performance",
+                "required_type": "player",
+            },
+            "player/homeruns": {
+                "prompt": "Analyze home run statistics and patterns",
+                "analysis_type": "statistics",
+                "required_type": "player",
+            },
+            "player/awards": {
+                "prompt": "Analyze career awards and accolades",
+                "analysis_type": "achievements",
+                "required_type": "player",
+            },
         }
 
-        logger.info(f"Analysis request logged: {json.dumps(log_entry)}")
+        # Validate suggestion type
+        if suggestion_type not in analysis_templates:
+            raise HTTPException(
+                status_code=400, detail=f"Invalid suggestion type: {suggestion_type}"
+            )
+
+        template = analysis_templates[suggestion_type]
+
+        # Validate entity type matches request
+        if template["required_type"] != entity_type:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid request: {suggestion_type} is not valid for {entity_type} analysis",
+            )
+
+        # Enhance the analysis prompt with metadata
+        metadata = {
+            "analysis_type": template["analysis_type"],
+            "entity_type": entity_type,
+            "suggestion_type": suggestion_type,
+            "timestamp": datetime.utcnow().isoformat(),
+        }
+
+        # Perform specialized analysis using existing analyzer
+        result = await analyzer.analyze_media(
+            media_url=mediaUrl,
+            user_message=template["prompt"],
+            media_type="image",
+            metadata=metadata,
+        )
+
+        # Transform the analysis result into appropriate response format
+        response_data = {
+            "data": {
+                "analysis": result["summary"],
+                "details": result["details"],
+                "type": template["analysis_type"],
+                "entityType": entity_type,
+            },
+            "timestamp": datetime.utcnow(),
+            "request_id": str(uuid.uuid4()),
+        }
+
+        return SuggestionResponse(**response_data)
 
     except Exception as e:
-        logger.error(f"Failed to log analysis request: {e}")
-
-
-def _build_chat_context(chat_request: ChatRequest) -> Dict[str, Any]:
-    """
-    Builds the context dictionary for chat processing.
-
-    Creates a structured context object containing message history,
-    user preferences, and other relevant information for chat processing.
-    """
-    return {
-        "message_history": [
-            {"content": msg.content, "sender": msg.sender}
-            for msg in chat_request.history
-        ],
-        "user_preferences": (
-            chat_request.user_data.preferences.model_dump()
-            if chat_request.user_data.preferences
-            else {}
-        ),
-        "user_info": {
-            "name": chat_request.user_data.name,
-            "language": LANGUAGES_FOR_LABELLING[chat_request.user_data.language],
-            "id": chat_request.user_data.id,
-        },
-    }
+        logger.error(f"Suggestion handling failed: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500, detail=f"Failed to process suggestion: {str(e)}"
+        )

@@ -5,7 +5,7 @@ import json
 from typing import Dict, Any, Optional, List, Union
 from loguru import logger
 import asyncio
-from functools import partial
+from functools import partial, lru_cache
 import uuid
 import aiohttp
 from PIL import Image
@@ -14,6 +14,7 @@ from fastapi import HTTPException
 import mimetypes
 import cairosvg
 import os
+from src.core.settings import settings
 
 # Initialize mimetypes database
 mimetypes.init()
@@ -207,6 +208,68 @@ class MediaAnalyzer:
                 status_code=500, detail=f"Image processing failed: {str(e)}"
             )
 
+    def _get_suggestions(self, media_type: str, url: str) -> List[Dict[str, str]]:
+        """
+        Returns contextual suggestions based on media type.
+        """
+        if media_type == "image" and self.is_svg(url):
+            return [
+                {
+                    "text": "Show team's championship history",
+                    "endpoint": "/api/team/championships",
+                    "icon": "Trophy",
+                },
+                {
+                    "text": "View all-time roster",
+                    "endpoint": "/api/team/roster/all-time",
+                    "icon": "Users",
+                },
+                {
+                    "text": "Show team statistics",
+                    "endpoint": "/api/team/stats",
+                    "icon": "BarChart",
+                },
+                {
+                    "text": "View current roster",
+                    "endpoint": "/api/team/roster/current",
+                    "icon": "UserCheck",
+                },
+                {
+                    "text": "Show recent games",
+                    "endpoint": "/api/team/games/recent",
+                    "icon": "Calendar",
+                },
+            ]
+        elif media_type == "image":  # JPEG/player headshot
+            return [
+                {
+                    "text": "Show career statistics",
+                    "endpoint": "/api/player/stats",
+                    "icon": "LineChart",
+                },
+                {
+                    "text": "View career highlights",
+                    "endpoint": "/api/player/highlights",
+                    "icon": "Video",
+                },
+                {
+                    "text": "Show recent games",
+                    "endpoint": "/api/player/games/recent",
+                    "icon": "Calendar",
+                },
+                {
+                    "text": "View home runs",
+                    "endpoint": "/api/player/homeruns",
+                    "icon": "Target",
+                },
+                {
+                    "text": "Show awards and achievements",
+                    "endpoint": "/api/player/awards",
+                    "icon": "Award",
+                },
+            ]
+        return []
+
     async def analyze_media(
         self,
         media_url: str,
@@ -214,13 +277,12 @@ class MediaAnalyzer:
         media_type: str,
         metadata: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-        """
-        Analyzes media content (image or video) and returns structured insights.
-        Provides detailed analysis of baseball-related content using AI.
-        """
         metrics = AnalysisMetrics()
 
         try:
+            # Get suggestions based on media type
+            suggestions = self._get_suggestions(media_type, media_url)
+
             # Create analysis prompt based on media type and context
             prompt = self._create_analysis_prompt(
                 media_type=media_type, user_message=user_message, metadata=metadata
@@ -241,12 +303,13 @@ class MediaAnalyzer:
             analysis_result = self._parse_analysis_response(response.text)
             metrics.add_step("response_parsing", "success")
 
-            # Create the final response with metrics
+            # Create the final response with metrics and suggestions
             final_response = {
                 **analysis_result,
                 "timestamp": datetime.utcnow(),
                 "request_id": str(uuid.uuid4()),
                 "metrics": metrics.to_dict(),
+                "suggestions": suggestions,  # Add suggestions to response
             }
 
             return final_response
@@ -280,33 +343,107 @@ class MediaAnalyzer:
         metadata: Optional[Dict[str, Any]] = None,
     ) -> str:
         """
-        Creates a detailed analysis prompt for the Gemini model.
-        Structures the prompt to get comprehensive baseball-specific analysis.
+        Creates a comprehensive analysis prompt focusing on historical, biographical,
+        and gameplay aspects based on media type.
         """
-        return f"""
-        You are a professional sports analyst specializing in baseball analysis.
-        Analyze this {media_type} and provide detailed insights.
-        
-        Context:
-        - Media Type: {media_type}
-        - User Query: {user_message}
-        {f"- Additional Context: {json.dumps(metadata)}" if metadata else ""}
-        
-        Return a JSON object with this exact structure:
-        {{
-            "summary": "Concise summary of key findings",
-            "details": {{
-                "technical_analysis": "Technical breakdown of player mechanics/positioning",
-                "visual_elements": "Key visual aspects and important details",
-                "strategic_insights": "Strategic implications and analysis",
-                "additional_context": "Historical or statistical context if relevant"
-            }}
-        }}
-        
-        Focus on providing concrete, specific observations and insights.
-        Analyze all visible aspects of the play, player positioning, and game situation.
-        Include relevant historical context or statistical comparisons when appropriate.
-        """
+        base_response_structure = """
+            Return a JSON object with this exact structure:
+            {
+                "summary": "Concise summary of key findings",
+                "details": {
+                    "technical_analysis": "Core facts and historical/statistical data",
+                    "visual_elements": "Current state and recent developments",
+                    "strategic_insights": "Analysis of trends and patterns",
+                    "additional_context": "Broader context and future implications"
+                }
+            }
+            """
+
+        if media_type == "image" and self.is_svg(user_message):
+            # Team historical analysis
+            return f"""
+                You are a baseball historian with deep knowledge of MLB team histories, traditions, and cultural impact.
+                Provide a comprehensive analysis of this team's history and legacy in baseball.
+                
+                Context:
+                - Team Identifier: {user_message}
+                {f"- Additional Context: {json.dumps(metadata)}" if metadata else ""}
+                
+                {base_response_structure}
+                
+                Structure your analysis to cover:
+                - Franchise history: founding, relocations, name changes, and key eras
+                - Championship history and postseason appearances
+                - Hall of Fame players and legendary figures associated with the team
+                - Notable rivalries and significant moments in team history
+                - Team culture, traditions, and impact on baseball
+                - Recent organizational developments and future outlook
+                
+                Base your analysis on verified historical records and emphasize:
+                - Major organizational milestones and achievements
+                - Evolution of team identity through different eras
+                - Impact on baseball culture and local community
+                - Key ownership changes and organizational philosophy
+                - Player development history and team-building approach
+                """
+
+        elif media_type == "image":
+            # Player career and background analysis
+            return f"""
+                You are a baseball biographer and player development expert with access to comprehensive player histories.
+                Provide an in-depth analysis of this player's career, background, and impact on baseball.
+                
+                Context:
+                - Player Image Reference: {user_message}
+                {f"- Additional Context: {json.dumps(metadata)}" if metadata else ""}
+                
+                {base_response_structure}
+                
+                Structure your analysis to cover:
+                - Early life and path to professional baseball
+                - Amateur career and draft/signing history
+                - Professional development and career progression
+                - Playing style, strengths, and notable achievements
+                - Impact on teams and roles throughout career
+                - Off-field influence and personality traits
+                
+                Focus your analysis on:
+                - Key career moments and development milestones
+                - Influences and mentors in their baseball journey
+                - Playing philosophy and approach to the game
+                - Leadership qualities and clubhouse presence
+                - Statistical achievements and career highlights
+                - Legacy and impact on the sport
+                """
+
+        else:
+            # Game highlight/homerun video analysis
+            return f"""
+                You are a baseball performance analyst specializing in game analysis and player achievements.
+                Analyze this gameplay moment and provide comprehensive insights about its significance.
+                
+                Context:
+                - Play Type: Game Highlight Video
+                - User Query: {user_message}
+                {f"- Additional Context: {json.dumps(metadata)}" if metadata else ""}
+                
+                {base_response_structure}
+                
+                Structure your analysis to cover:
+                - Game situation and context
+                - Player's approach and execution
+                - Statistical significance of the moment
+                - Historical comparisons to similar achievements
+                - Impact on game/season/career statistics
+                - Place in baseball history (if applicable)
+                
+                Emphasize:
+                - Situation-specific strategy and execution
+                - Player's historical performance in similar situations
+                - Statistical significance and record implications
+                - Context within the player's career achievements
+                - Comparison to similar historic moments
+                """
 
     def _parse_analysis_response(self, response_text: str) -> Dict[str, Any]:
         """
@@ -327,3 +464,12 @@ class MediaAnalyzer:
 
         except json.JSONDecodeError as e:
             raise ValueError(f"Failed to parse analysis response: {e}")
+
+
+@lru_cache()
+def get_analyzer() -> MediaAnalyzer:
+    return MediaAnalyzer(api_key=settings.GEMINI_API_KEY)
+
+
+# Initialize the media analyzer with API key
+media_analyzer = MediaAnalyzer(api_key=settings.GEMINI_API_KEY)

@@ -1,3 +1,8 @@
+from datetime import datetime
+from typing import Dict, Any, Optional
+from src.api.models import ChatRequest
+
+
 def sanitize_code(code: str) -> str:
     """
     Sanitize Python code by fixing common issues with indentation and structure.
@@ -99,3 +104,55 @@ def fix_try_except_blocks(code: str) -> str:
             indent_level = 0
 
     return "\n".join(final_lines)
+
+
+async def log_analysis_request(
+    media_type: str,
+    success: bool,
+    metadata: Optional[Dict[str, Any]] = None,
+    error: Optional[str] = None,
+):
+    """
+    Logs analysis requests for monitoring and analytics purposes.
+
+    Records details about each analysis request, including success/failure status
+    and any relevant metadata for monitoring and improvement.
+    """
+    try:
+        log_entry = {
+            "timestamp": datetime.utcnow().isoformat(),
+            "media_type": media_type,
+            "success": success,
+            "metadata": metadata or {},
+            "error": error,
+        }
+
+        logger.info(f"Analysis request logged: {json.dumps(log_entry)}")
+
+    except Exception as e:
+        logger.error(f"Failed to log analysis request: {e}")
+
+
+def _build_chat_context(chat_request: ChatRequest) -> Dict[str, Any]:
+    """
+    Builds the context dictionary for chat processing.
+
+    Creates a structured context object containing message history,
+    user preferences, and other relevant information for chat processing.
+    """
+    return {
+        "message_history": [
+            {"content": msg.content, "sender": msg.sender}
+            for msg in chat_request.history
+        ],
+        "user_preferences": (
+            chat_request.user_data.preferences.model_dump()
+            if chat_request.user_data.preferences
+            else {}
+        ),
+        "user_info": {
+            "name": chat_request.user_data.name,
+            "language": LANGUAGES_FOR_LABELLING[chat_request.user_data.language],
+            "id": chat_request.user_data.id,
+        },
+    }

@@ -781,6 +781,7 @@ Return the complete plan as a single valid JSON object strictly following this s
                     response_mime_type="application/json",
                     response_schema=response_schema,
                 ),
+                model_name="gemini-2.0-flash-exp",
             )
             parsed_result = json.loads(result.text)
             print(parsed_result)
@@ -955,82 +956,50 @@ Return the complete plan as a single valid JSON object strictly following this s
         function_info: Dict[str, Any],
         parameters: Dict[str, Any],
     ) -> str:
-        """Generate Python code to execute the MLB stats function based on parameter analysis"""
+        """Generate Python code to execute MLB stats API calls"""
 
-        prompt = f"""Analyze these MLB Stats API function parameters and generate appropriate Python execution code.
-
-    Function Information:
-    {json.dumps(function_info, indent=2)}
-
-    Resolved Parameters:
-    {json.dumps(parameters, indent=2)}
+        prompt = f"""Generate code that calls statsapi.{function_name} with these parameters:
+    {json.dumps(parameters.get("value", parameters), indent=2)}
+    Make sure to comply with the function signature (types, number of parameters, etc.).
+    Function documentation: {json.dumps(function_info, indent=2)}
 
     Requirements:
-    1. Return Python code that executes statsapi.{function_name} with the given parameters
-    2. If any parameter contains multiple values that should be processed separately:
-    - Generate code that handles each value appropriately
-    - Include logic to aggregate the results
-    3. Include proper error handling for both single and multiple executions
-    4. Return results in JSON format via print(json.dumps(result))
-    5. Handle any parameter patterns found in the input
-    6. Structure the code to work with the analysis tool environment
+    1. Import only statsapi and json
+    2. Use explicit parameter values (no variables)
+    3. No try-catch blocks
+    4. For multiple values, use list comprehension to aggregate results
+    5. Return results with print(json.dumps())
 
-    Return only the Python code without any explanation or markdown.
-    The code must be complete and runnable as is.
+    Example for single value:
+    import statsapi
+    import json
+    result = statsapi.standings(leagueId="103")
+    print(json.dumps(result))
 
-    Example of basic single-value execution:
-        import statsapi
-        import json
-
-        try:
-            result = statsapi.{function_name}(param1="value1")
-            if result:
-                print(json.dumps(result))
-        except Exception as e:
-            print(json.dumps({{"error": str(e)}}))
-
-    Example of multi-value execution:
-        import statsapi
-        import json
-        from concurrent.futures import ThreadPoolExecutor, as_completed
-
-        def process_param(value):
-            try:
-                result = statsapi.{function_name}(param1=value)
-                return {{"success": True, "value": value, "result": result}}
-            except Exception as e:
-                return {{"success": False, "value": value, "error": str(e)}}
-
-    values = ["value1", "value2", "value3"]
+    Example for multiple values:
+    import statsapi
+    import json
     results = []
+    for category in ["homeRuns", "battingAverage"]:
+        result = statsapi.league_leader_data(leaderCategories=category, season=2024)
+        if result:
+            results.extend(result if isinstance(result, list) else [result])
+    print(json.dumps(results))"""
 
-    with ThreadPoolExecutor(max_workers=3) as executor:
-        futures = [executor.submit(process_param, v) for v in values]
-        for future in as_completed(futures):
-            results.append(future.result())
-
-    print(json.dumps(results))
-    
-    I want the returned code to be all indented one tab to the right
-    """
-
-        result = await self.gemini.generate_with_fallback(
+        generated_code = await self.gemini.generate_with_fallback(
             prompt,
             generation_config=genai.GenerationConfig(
-                temperature=0.2, response_mime_type="text/plain"
+                temperature=0.1, response_mime_type="text/plain"
             ),
             model_name="gemini-1.5-pro",
         )
 
-        # Clean and validate the generated code
-        generated_code = result.text
-        generated_code = generated_code.replace("```python", "").replace("```", "")
-        # print("generated code:", generated_code)
-        # Ensure the code has proper imports
-        if "import statsapi" not in generated_code:
-            generated_code = "import statsapi\nimport json\n" + generated_code
-
-        return generated_code
+        return (
+            generated_code.text.strip()
+            .replace("```python", "")
+            .replace("```", "")
+            .strip()
+        )
 
     async def _execute_endpoint_step(
         self, deps: MLBDeps, step: Dict[str, Any], prior_results: Dict[str, Any]
@@ -1458,6 +1427,7 @@ print(json.dumps(result))
                 generation_config=genai.GenerationConfig(
                     response_mime_type="text/plain"
                 ),
+                model_name="gemini-2.0-flash-exp",
             )
             return result.text.strip()
         except Exception as e:
@@ -1530,8 +1500,8 @@ print(json.dumps(result))
                         "message": response_data["summary"],
                         "conversation": conversation,
                         "data_type": self.intent["intent"],
-                        "data": response_data["details"],
                         "context": {
+                            "data": response_data["details"],
                             "intent": self.intent,
                             "steps": plan.get("steps", []),
                         },
