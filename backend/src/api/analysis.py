@@ -466,7 +466,7 @@ class MediaAnalyzer:
             raise ValueError(f"Failed to parse analysis response: {e}")
 
 
-@lru_cache()
+@lru_cache(maxsize=2)
 def get_analyzer() -> MediaAnalyzer:
     return MediaAnalyzer(api_key=settings.GEMINI_API_KEY)
 
