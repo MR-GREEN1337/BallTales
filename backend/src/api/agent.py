@@ -10,9 +10,6 @@ import json
 import google.generativeai as genai
 import pandas as pd
 from src.api.models import (
-    MediaType,
-    SearchIdentifiers,
-    SearchParameters,
     Specificity,
     MLBResponse,
     MLBDeps,
@@ -28,7 +25,7 @@ from src.api.models import (
 from src.api.repl import MLBPythonREPL
 from src.core.settings import settings
 from src.api.utils import sanitize_code
-
+from src.api.gemini_solid import GeminiSolid
 
 class MLBAgent:
     def __init__(
@@ -42,10 +39,7 @@ class MLBAgent:
         genai.configure(api_key=api_key)
 
         # Models
-        self.model = genai.GenerativeModel("gemini-1.5-flash")
-        self.gemini_2_model = genai.GenerativeModel("gemini-2.0-flash-exp")
-        self.model_8b = genai.GenerativeModel("gemini-1.5-flash-8b")
-        self.code_model = genai.GenerativeModel("gemini-1.5-pro")
+        self.gemini = GeminiSolid()
 
         # Data
         self.endpoints = json.loads(endpoints_json)["endpoints"]
@@ -603,8 +597,7 @@ Return the complete plan as a single valid JSON object strictly following this s
     async def analyze_intent(self, query: str) -> IntentAnalysis:
         """Enhanced intent analysis with structured schema"""
         try:
-            result = await asyncio.to_thread(
-                self.model.generate_content,
+            result = await self.gemini.generate_with_fallback(
                 f"{self.intent_prompt}\n{query}",
                 generation_config=genai.GenerationConfig(
                     response_mime_type="application/json",
@@ -800,8 +793,7 @@ Return the complete plan as a single valid JSON object strictly following this s
                 "required": ["steps", "dependencies"],
             }
             # Generate plan using LLM
-            result = await asyncio.to_thread(
-                self.model.generate_content,
+            result = await self.gemini.generate_with_fallback(
                 f"""{self.plan_prompt}\nCurrent Intent:\n{json.dumps(self.intent, indent=2)}""",
                 generation_config=genai.GenerationConfig(
                     temperature=0.2,
@@ -880,7 +872,7 @@ Return the complete plan as a single valid JSON object strictly following this s
             if not raw_result:
                 continue
 
-            # Apply extraction and filtering if specified
+            # Apply extraction if specified
             if "extract" in step:
                 filtered_result = await self._process_extraction(
                     raw_result, step["extract"]
@@ -909,8 +901,7 @@ Return the complete plan as a single valid JSON object strictly following this s
         Include error handling and return a dictionary with processed data.
         """
 
-        result = await asyncio.to_thread(
-            self.code_model.generate_content,
+        result = await self.gemini.generate_with_fallback(
             prompt,
             generation_config=genai.GenerationConfig(
                 response_mime_type="text/plain", candidate_count=1
@@ -965,6 +956,7 @@ Return the complete plan as a single valid JSON object strictly following this s
             # Resolve basic parameters
             method_type = step.get("type", "")
             params = step.get("parameters", {})
+            print(params)
             print(method_type)
             print(prior_results)
             # Execute based on method type
@@ -1107,8 +1099,7 @@ Return the complete plan as a single valid JSON object strictly following this s
     I want the returned code to be all indented one tab to the right
     """
 
-        result = await asyncio.to_thread(
-            self.code_model.generate_content,
+        result = await self.gemini.generate_with_fallback(
             prompt,
             generation_config=genai.GenerationConfig(
                 temperature=0.2, response_mime_type="text/plain"
@@ -1131,7 +1122,8 @@ Return the complete plan as a single valid JSON object strictly following this s
         """Execute MLB API endpoint"""
         try:
             # Get endpoint from parameters
-            endpoint_name = step["parameters"].get("value")
+            endpoint_name = step["name"] #["parameters"].get("value")
+            endpoint_url = (await self._resolve_parameters(step, prior_results))["url"]
             if not endpoint_name:
                 raise ValueError("No endpoint specified")
 
@@ -1154,8 +1146,8 @@ Return the complete plan as a single valid JSON object strictly following this s
                 raise ValueError("Failed to format URL")
             """
             # Make request
-            print(endpoint_name)
-            response = await deps.client.get(endpoint_name)  # request_info["url"]
+            print(endpoint_url)
+            response = await deps.client.get(endpoint_url)  # request_info["url"]
             response.raise_for_status()
             result = response.json()
 
@@ -1245,9 +1237,7 @@ Return the complete plan as a single valid JSON object strictly following this s
                 Return only the extracted data as valid JSON without any explanation."""
 
                         try:
-                            extraction_result = await asyncio.to_thread(
-                                self.code_model.generate_content,
-                                prompt,
+                            extraction_result = await self.gemini.generate_with_fallback(
                                 generation_config=genai.GenerationConfig(
                                     temperature=0.1,  # Low temperature for precise extraction
                                     response_mime_type="application/json",
@@ -1309,8 +1299,7 @@ Return the complete plan as a single valid JSON object strictly following this s
             """
 
             try:
-                result = await asyncio.to_thread(
-                    self.code_model.generate_content,
+                result = await self.gemini.generate_with_fallback(
                     prompt,
                     generation_config=genai.GenerationConfig(
                         response_mime_type="text/plain",
@@ -1343,8 +1332,7 @@ Return the complete plan as a single valid JSON object strictly following this s
             """
 
             try:
-                result = await asyncio.to_thread(
-                    self.code_model.generate_content,
+                result = await self.gemini.generate_with_fallback(
                     prompt,
                     generation_config=genai.GenerationConfig(
                         response_mime_type="text/plain"
@@ -1422,8 +1410,7 @@ Return the complete plan as a single valid JSON object strictly following this s
             Return only the filtered data in valid JSON format."""
 
             try:
-                result = await asyncio.to_thread(
-                    self.code_model.generate_content,
+                result = await self.gemini.generate_with_fallback(
                     prompt,
                     generation_config=genai.GenerationConfig(
                         response_mime_type="text/plain"
@@ -1447,8 +1434,7 @@ Return the complete plan as a single valid JSON object strictly following this s
             """
 
             try:
-                result = await asyncio.to_thread(
-                    self.code_model.generate_content,
+                result = await self.gemini.generate_with_fallback(
                     prompt,
                     generation_config=genai.GenerationConfig(
                         response_mime_type="text/plain"
@@ -1529,8 +1515,7 @@ Return the complete plan as a single valid JSON object strictly following this s
         }}
         """
 
-        result = await asyncio.to_thread(
-            self.model.generate_content,
+        result = await self.gemini.generate_with_fallback(
             prompt,
             generation_config=genai.GenerationConfig(
                 response_mime_type="application/json"
@@ -1611,7 +1596,7 @@ print(json.dumps(result))
     async def _resolve_parameters(
         self, step: Dict[str, Any], prior_results: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Resolve API parameters using Gemini for intelligent parameter formatting"""
+        """Resolve API parameters and return complete URL for endpoints"""
         try:
             # Get function/endpoint info
             step_type = step.get("type")
@@ -1639,9 +1624,6 @@ print(json.dumps(result))
     Step Description:
     {step_description}
 
-    Step:
-    {json.dumps(step, indent=2)}
-
     Requirements:
     1. Return ONLY the parameter string to go between parentheses in: statsapi.{step_name}()
     2. Replace any $referenced values with actual values from prior results
@@ -1653,24 +1635,23 @@ print(json.dumps(result))
     "teamId=143, season=2025"
     "personId=12345, group='[hitting,pitching]'"
     "gamePk=123456"
-    
-    Current date: {datetime.now().isoformat()}
 
-    Dont forget to wrap string variables in parentheses
-    Never return None or empty string
-    If a param requires date format, return it as 'MM/DD/YYYY'
-
-    Return only the parameter string, no explanations or json formatting."""
+    Current date: {datetime.now().isoformat()}"""
 
             else:  # endpoint
                 endpoint_info = self.endpoints.get(step_name)
                 if not endpoint_info:
                     raise ValueError(f"Invalid endpoint: {step_name}")
 
-                prompt = f"""Format MLB Stats API endpoint parameters.
+                base_url = endpoint_info["url"]
+                
+                prompt = f"""Format MLB Stats API endpoint URL.
 
     Endpoint Info:
     {json.dumps(endpoint_info, indent=2)}
+
+    Base URL:
+    {base_url}
 
     Step Parameters:
     {json.dumps(step["parameters"], indent=2)}
@@ -1684,26 +1665,26 @@ print(json.dumps(result))
     Current date: {datetime.now().isoformat()}
 
     Requirements:
-    1. Return a dictionary with a single 'parameters' key containing the query parameters
-    2. Replace any $referenced values with actual values from prior results
-    3. Include all required parameters from endpoint info
-    4. Format values according to API expectations
-    5. Handle missing optional parameters appropriately
+    1. Return a complete, properly formatted URL with all parameters
+    2. Replace any path parameters in URL (e.g. {{gamePk}})
+    3. Add query parameters with proper encoding
+    4. Replace any $referenced values with actual values from prior results
+    5. Include all required parameters
+    6. Format values according to API expectations
+    7. Handle optional parameters appropriately
 
-    Example good output:
-    {{"parameters": {{"teamId": "143", "season": "2025"}}}}
+    Example good outputs:
+    "https://statsapi.mlb.com/api/v1/teams/147/stats?stats=statSplits&statGroup=hitting&season=2024"
+    "https://statsapi.mlb.com/api/v1/game/531060/feed/live?timecode=20240401_182458"
 
-    Return only the parameters dictionary as valid JSON."""
+    Return only the complete URL as a string, no JSON formatting or explanations."""
 
-            # Get parameter resolution from Gemini
-            result = await asyncio.to_thread(
-                self.model.generate_content,
+            # Get resolution from Gemini
+            result = await self.gemini.generate_with_fallback(
                 prompt,
                 generation_config=genai.GenerationConfig(
                     temperature=0.1,  # Low temperature for precise formatting
-                    response_mime_type="text/plain"
-                    if step_type == "function"
-                    else "application/json",
+                    response_mime_type="text/plain",
                 ),
             )
 
@@ -1711,22 +1692,31 @@ print(json.dumps(result))
                 # For functions, return the raw parameter string
                 return {"value": result.text.strip()}
             else:
-                # For endpoints, parse the JSON response
-                try:
-                    parsed = json.loads(result.text)
-                    return parsed.get("parameters", {})
-                except json.JSONDecodeError:
-                    print(f"Failed to parse endpoint parameters: {result.text}")
-                    # Fall back to basic parameter resolution
-                    return self._basic_parameter_resolution(
-                        step["parameters"], prior_results
-                    )
+                # For endpoints, return the complete URL
+                return {"url": result.text.strip()}
 
         except Exception as e:
-            print(f"Parameter resolution error: {str(e)}")
-            # Fall back to basic parameter resolution
-            return self._basic_parameter_resolution(step["parameters"], prior_results)
-
+            print(f"Resolution error: {str(e)}")
+            # Fall back to basic resolution
+            if step_type == "function":
+                return self._basic_parameter_resolution(step["parameters"], prior_results)
+            else:
+                # Basic URL construction for endpoints
+                params = self._basic_parameter_resolution(step["parameters"], prior_results)
+                endpoint_info = self.endpoints.get(step_name, {})
+                base_url = endpoint_info.get("url", "")
+                
+                # Replace path parameters
+                for key, value in params.items():
+                    if f"{{{key}}}" in base_url:
+                        base_url = base_url.replace(f"{{{key}}}", str(value))
+                        del params[key]
+                
+                # Add remaining params as query parameters
+                if params:
+                    query_string = "&".join(f"{k}={v}" for k, v in params.items())
+                    return {"url": f"{base_url}?{query_string}"}
+                return {"url": base_url}
     def _basic_parameter_resolution(
         self, parameters: Dict[str, Any], prior_results: Dict[str, Any]
     ) -> Dict[str, Any]:
@@ -1773,8 +1763,7 @@ print(json.dumps(result))
             - media: Optional media content (if applicable)"""
 
             try:
-                model_response = await asyncio.to_thread(
-                    self.gemini_2_model.generate_content,
+                model_response = await self.gemini.generate_with_fallback(
                     prompt,
                     generation_config=genai.GenerationConfig(
                         response_mime_type="application/json"
@@ -1827,8 +1816,7 @@ print(json.dumps(result))
                     Data response: {json.dumps(sanitized_response, indent=2)}
                     """
 
-            result = await asyncio.to_thread(
-                self.gemini_2_model.generate_content,
+            result = await self.gemini.generate_with_fallback(
                 f"""{self.conversation_prompt}
                     
                     User query: "{message}"
@@ -1857,8 +1845,7 @@ print(json.dumps(result))
 
     async def _generate_suggestions(self, response: Any) -> List[str]:
         """Generate contextual suggestions using LLM"""
-        result = await asyncio.to_thread(
-            self.model.generate_content,
+        result = await self.gemini.generate_with_fallback(
             f"""{self.suggestion_prompt}
             
             Current intent:
@@ -1912,7 +1899,7 @@ print(json.dumps(result))
                         "conversation": conversation,
                         "data_type": self.intent["intent"],
                         "data": response_data["details"],
-                        "context": {"intent": self.intent},
+                        "context": {"intent": self.intent, "steps": plan.get("steps", [])},
                         "suggestions": suggestions,
                         "media": response_data.get("media"),
                         "chart": chart,
@@ -2022,8 +2009,7 @@ print(json.dumps(result))
             )
 
             # Get media plan from LLM with enhanced schema
-            result = await asyncio.to_thread(
-                self.model.generate_content,
+            result = await self.gemini.generate_with_fallback(
                 formatted_prompt,
                 generation_config=genai.GenerationConfig(
                     temperature=0.1,
@@ -2193,8 +2179,7 @@ print(json.dumps(result))
             - Return null for chart-specific fields if requires_chart is false"""
 
             # Get chart recommendation from LLM
-            result = await asyncio.to_thread(
-                self.gemini_2_model.generate_content,
+            result = await self.gemini.generate_with_fallback(
                 chart_prompt,
                 generation_config=genai.GenerationConfig(
                     temperature=0.2,
@@ -2365,8 +2350,7 @@ print(json.dumps(result))
 
         try:
             # Get code from LLM
-            result = await asyncio.to_thread(
-                self.code_model.generate_content,
+            result = await self.gemini.generate_with_fallback(
                 prompt,
                 generation_config=genai.GenerationConfig(
                     response_mime_type="text/plain",
@@ -2505,8 +2489,7 @@ print(json.dumps(result))
             Return the translated JSON with identical structure."""
 
         try:
-            result = await asyncio.to_thread(
-                self.gemini_2_model.generate_content,
+            result = await self.gemini.generate_with_fallback(
                 prompt,
                 generation_config=genai.GenerationConfig(
                     temperature=0.1, response_mime_type="application/json"
