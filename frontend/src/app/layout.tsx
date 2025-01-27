@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AppProviders from "@/components/providers/AppProviders";
-import { Toaster } from "@/components/ui/sonner";
+import { CustomToaster } from "@/components/global/CustomTosater";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,7 +32,7 @@ export default function RootLayout({
         <AppProviders>
         {children}
         </AppProviders>
-        <Toaster />   
+        <CustomToaster />  
       </body>
     </html>
   );

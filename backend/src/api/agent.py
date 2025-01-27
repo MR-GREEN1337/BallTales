@@ -1,5 +1,3 @@
-import asyncio
-import base64
 from datetime import datetime
 import difflib
 import os
@@ -26,6 +24,7 @@ from src.api.repl import MLBPythonREPL
 from src.core.settings import settings
 from src.api.utils import sanitize_code
 from src.api.gemini_solid import GeminiSolid
+
 
 class MLBAgent:
     def __init__(
@@ -689,24 +688,6 @@ Return the complete plan as a single valid JSON object strictly following this s
             "media": None,
         }
 
-    def _create_fallback_response(
-        self, message: str, intent: IntentAnalysis
-    ) -> MLBResponse:
-        """Create a response when MLB data processing fails"""
-        return {
-            "message": "I couldn't retrieve the specific baseball data you requested.",
-            "conversation": "I understand you're asking about baseball, but I'm having trouble getting that specific information. Could you try asking in a different way?",
-            "data_type": intent.get("intent", {}).get("type", "general").value,
-            "data": {},
-            "context": {"intent": intent},
-            "suggestions": [
-                "Try a simpler query",
-                "Ask about basic stats",
-                "Look up general team info",
-            ],
-            "media": None,
-        }
-
     async def create_data_plan(self, intent: IntentAnalysis) -> DataRetrievalPlan:
         """Generate structured data retrieval plan with improved schema validation"""
         try:
@@ -882,72 +863,6 @@ Return the complete plan as a single valid JSON object strictly following this s
                 results[step["id"]] = raw_result
         return results
 
-    async def generate_processing_code(
-        self, endpoint_name: str, schema: Dict[str, Any], plan
-    ) -> str:
-        """Generate Python code to process endpoint data based on schema and intent"""
-        current_step = [
-            step for step in plan["steps"] if step["endpoint"] == endpoint_name
-        ]
-
-        prompt = f"""Write a Python function named process_data that processes MLB API data.
-        The function should handle null/empty data gracefully.
-        
-        Process this endpoint: {endpoint_name}
-        Schema: {json.dumps(schema, indent=2)}
-        Step: {json.dumps(current_step, indent=2)}
-        
-        Return properly indented Python code that handles the data processing.
-        Include error handling and return a dictionary with processed data.
-        """
-
-        result = await self.gemini.generate_with_fallback(
-            prompt,
-            generation_config=genai.GenerationConfig(
-                response_mime_type="text/plain", candidate_count=1
-            ),
-        )
-
-        # Default processing code with proper indentation
-        default_code = """def process_data(data):
-    if not data:
-        return {}
-        
-    try:
-        # Basic data validation
-        if isinstance(data, dict):
-            return data
-        elif isinstance(data, list) and data:
-            return data[0] if len(data) == 1 else data
-        else:
-            return {}
-            
-    except Exception as e:
-        print(f"Error processing data: {str(e)}")
-        return {}
-"""
-
-        try:
-            generated_code = result.text.strip()
-            generated_code = generated_code.replace("```python", "").replace("```", "")
-
-            # Validate the generated code has proper function definition and indentation
-            if not generated_code.startswith("def process_data(data):"):
-                return default_code
-
-            # Basic validation of code structure
-            lines = generated_code.split("\n")
-            if len(lines) < 2 or not any(
-                line.strip().startswith("return") for line in lines
-            ):
-                return default_code
-
-            return generated_code
-
-        except Exception as e:
-            print(f"Error in code generation: {str(e)}")
-            return default_code
-
     async def _execute_step(
         self, deps: MLBDeps, step: Dict[str, Any], prior_results: Dict[str, Any]
     ) -> Optional[Dict[str, Any]]:
@@ -1104,12 +1019,13 @@ Return the complete plan as a single valid JSON object strictly following this s
             generation_config=genai.GenerationConfig(
                 temperature=0.2, response_mime_type="text/plain"
             ),
+            model_name="gemini-1.5-pro",
         )
 
         # Clean and validate the generated code
         generated_code = result.text
         generated_code = generated_code.replace("```python", "").replace("```", "")
-        #print("generated code:", generated_code)
+        # print("generated code:", generated_code)
         # Ensure the code has proper imports
         if "import statsapi" not in generated_code:
             generated_code = "import statsapi\nimport json\n" + generated_code
@@ -1122,7 +1038,7 @@ Return the complete plan as a single valid JSON object strictly following this s
         """Execute MLB API endpoint"""
         try:
             # Get endpoint from parameters
-            endpoint_name = step["name"] #["parameters"].get("value")
+            endpoint_name = step["name"]  # ["parameters"].get("value")
             endpoint_url = (await self._resolve_parameters(step, prior_results))["url"]
             if not endpoint_name:
                 raise ValueError("No endpoint specified")
@@ -1164,117 +1080,6 @@ Return the complete plan as a single valid JSON object strictly following this s
         except Exception as e:
             print(f"Endpoint execution error: {str(e)}")
             return None
-
-    async def _execute_custom_processing(
-        self, step: Dict[str, Any], prior_results: Dict[str, Any]
-    ) -> Optional[Dict[str, Any]]:
-        """Execute custom data processing step"""
-        try:
-            # Generate processing code based on step description and parameters
-            processing_code = await self._generate_processing_code(
-                step["description"], step["parameters"], prior_results
-            )
-
-            # Prepare data for processing
-            process_data = {
-                "prior_results": prior_results,
-                "parameters": step["parameters"],
-            }
-
-            # Execute processing
-            with tempfile.TemporaryDirectory() as temp_dir:
-                data_file = os.path.join(temp_dir, "process_data.json")
-                with open(data_file, "w") as f:
-                    json.dump(process_data, f)
-
-                execution_code = f"""
-    import json
-
-    {processing_code}
-
-    try:
-        with open('{data_file}', 'r') as f:
-            data = json.load(f)
-        
-        result = process_data(data['prior_results'], data['parameters'])
-        print(json.dumps(result))
-    except Exception as e:
-        print(json.dumps({{"error": str(e)}}))
-    """
-
-                repl_result = await self.repl(code=execution_code)
-
-                if repl_result.get("status") == "error":
-                    raise RuntimeError(f"Processing failed: {repl_result.get('error')}")
-
-                try:
-                    output = repl_result.get("output")
-                    if not output:
-                        raise ValueError("No output from function execution")
-
-                    result = json.loads(output)
-                    if isinstance(result, dict) and "error" in result:
-                        raise RuntimeError(f"Function error: {result['error']}")
-
-                    # Calculate result size
-                    result_size = len(json.dumps(result))
-                    size_threshold = 10000  # Threshold in characters for routing to LLM
-
-                    if result_size <= size_threshold:
-                        # For smaller results, use Gemini for intelligent extraction
-                        prompt = f"""Extract specific data from this MLB API response based on requirements.
-
-                Input data:
-                {json.dumps(result, indent=2)}
-
-                Requirements:
-                - Extract fields specified in: {json.dumps(step.get("extract", {}), indent=2)}
-                - Handle missing or null values gracefully
-                - Return only the requested fields
-                - Maintain original data types (numbers, strings, etc.)
-                - Follow specified extraction paths exactly
-
-                Return only the extracted data as valid JSON without any explanation."""
-
-                        try:
-                            extraction_result = await self.gemini.generate_with_fallback(
-                                generation_config=genai.GenerationConfig(
-                                    temperature=0.1,  # Low temperature for precise extraction
-                                    response_mime_type="application/json",
-                                ),
-                            )
-
-                            # Parse and validate LLM response
-                            extracted_data = json.loads(extraction_result.text)
-
-                            # Apply any specified filters
-                            if step.get("extract", {}).get("filter"):
-                                extracted_data = await self._apply_filtering(
-                                    extracted_data, step["extract"]["filter"]
-                                )
-
-                            return extracted_data
-
-                        except Exception as llm_error:
-                            print(
-                                f"LLM extraction failed: {str(llm_error)}, falling back to standard processing"
-                            )
-                            # Fall back to standard processing on LLM failure
-
-                    # For larger results or LLM failure, use standard processing
-                    if step.get("extract", {}).get("filter"):
-                        result = await self._apply_filtering(result, step["extract"])
-
-                    if step.get("extract"):
-                        result = await self._process_extraction(result, step["extract"])
-
-                    return result
-
-                except json.JSONDecodeError as e:
-                    raise ValueError(f"Failed to parse function result: {repl_result}")
-        except Exception as e:
-            print(f"Error in result processing: {str(e)}")
-            raise
 
     async def _process_extraction(
         self,
@@ -1385,184 +1190,6 @@ Return the complete plan as a single valid JSON object strictly following this s
                 print(f"Extraction error: {str(e)}")
                 return data
 
-    async def _apply_filtering(
-        self,
-        data: Any,
-        filtering_info: str,
-        size_threshold: int = 100_000,  # Default threshold in characters
-    ) -> Any:
-        """Apply filtering based on filtering info and data size"""
-        if not filtering_info or filtering_info.lower() == "none":
-            return data
-
-        data_size = (
-            len(json.dumps(data)) if isinstance(data, (dict, list)) else len(str(data))
-        )
-
-        if data_size <= size_threshold:
-            # For small data, use LLM directly
-            prompt = f"""Given this data:
-            {json.dumps(data) if isinstance(data, (dict, list)) else str(data)}
-            
-            Apply this filtering:
-            {filtering_info}
-            
-            Return only the filtered data in valid JSON format."""
-
-            try:
-                result = await self.gemini.generate_with_fallback(
-                    prompt,
-                    generation_config=genai.GenerationConfig(
-                        response_mime_type="text/plain"
-                    ),
-                )
-                return json.loads(result.text.strip())
-            except (json.JSONDecodeError, Exception) as e:
-                print(f"Direct filtering error: {str(e)}")
-                return data
-        else:
-            # For large data, use REPL approach
-            prompt = f"""Generate Python code to filter data according to this specification:
-            
-            Data structure:
-            {json.dumps(data)[:1000] if isinstance(data, (dict, list)) else str(data)[:1000]}
-            
-            Filtering needed:
-            {filtering_info}
-            
-            Return a Python function named filter_data that takes the data as input and returns the filtered result.
-            """
-
-            try:
-                result = await self.gemini.generate_with_fallback(
-                    prompt,
-                    generation_config=genai.GenerationConfig(
-                        response_mime_type="text/plain"
-                    ),
-                )
-
-                filtering_code = (
-                    result.text.strip().replace("```python", "").replace("```", "")
-                )
-
-                with tempfile.TemporaryDirectory() as temp_dir:
-                    data_file = os.path.join(temp_dir, "data.json")
-                    with open(data_file, "w") as f:
-                        json.dump(data, f)
-
-                    execution_code = f"""
-    import json
-
-    {filtering_code}
-
-    try:
-        with open('{data_file}', 'r') as f:
-            data = json.load(f)
-            
-        result = filter_data(data)
-        print(json.dumps(result))
-    except Exception as e:
-        print(json.dumps({{"error": str(e)}}))
-    """
-
-                    repl_result = await self.repl(code=execution_code)
-
-                    if repl_result.get("status") == "error":
-                        raise RuntimeError(
-                            f"Filtering failed: {repl_result.get('error')}"
-                        )
-
-                    try:
-                        output = repl_result.get("output")
-                        if not output:
-                            raise ValueError("No output from filtering")
-
-                        result = json.loads(output)
-                        if isinstance(result, dict) and "error" in result:
-                            raise RuntimeError(f"Filtering error: {result['error']}")
-
-                        return result
-
-                    except json.JSONDecodeError:
-                        return data
-
-            except Exception as e:
-                print(f"Filtering error: {str(e)}")
-                return data
-
-    async def get_formatted_url(
-        self,
-        endpoint_name: str,
-        endpoint_info: Dict[str, Any],
-        parameters: Dict[str, Any],
-        prior_results: Dict[str, Any],
-    ) -> Dict[str, Any]:
-        print(endpoint_info)
-        """Get formatted URL and parameters directly from LLM"""
-        prompt = f"""Given this MLB API endpoint and data, return the formatted URL and parameters.
-
-        Endpoint: {endpoint_name}
-        Base URL: {endpoint_info["endpoint"]["url"]}
-        Paramteres: {parameters}
-        Prior Results: {json.dumps(prior_results)}
-
-        Return ONLY a JSON object with exactly one field:
-        1. 'url': the complete formatted URL with path parameters filled in
-
-        Example:
-        {{
-            "url": "https://url",
-        }}
-        """
-
-        result = await self.gemini.generate_with_fallback(
-            prompt,
-            generation_config=genai.GenerationConfig(
-                response_mime_type="application/json"
-            ),
-        )
-        # print(result.text)
-        return json.loads(result.text)
-
-    def _analyze_response_schema(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Analyze and extract schema from API response with improved type handling"""
-        schema = {}
-
-        def get_type(value: Any) -> str:
-            if isinstance(value, bool):
-                return "boolean"
-            elif isinstance(value, int):
-                return "integer"
-            elif isinstance(value, float):
-                return "number"
-            elif isinstance(value, str):
-                return "string"
-            elif isinstance(value, (list, tuple)):
-                return "array"
-            elif isinstance(value, dict):
-                return "object"
-            elif value is None:
-                return "null"
-            else:
-                return "unknown"
-
-        def extract_schema(obj: Any, current_schema: Dict[str, Any]):
-            current_schema["type"] = get_type(obj)
-
-            if isinstance(obj, dict):
-                current_schema["properties"] = {}
-                for key, value in obj.items():
-                    current_schema["properties"][key] = {}
-                    extract_schema(value, current_schema["properties"][key])
-
-            elif isinstance(obj, (list, tuple)) and obj:
-                current_schema["items"] = {}
-                # Get schema of first item as sample
-                extract_schema(obj[0], current_schema["items"])
-
-        extract_schema(data, schema)
-        return schema
-
     async def _execute_processing_code(
         self, processing_code: str, data: Dict[str, Any]
     ) -> Dict[str, Any]:
@@ -1644,7 +1271,7 @@ print(json.dumps(result))
                     raise ValueError(f"Invalid endpoint: {step_name}")
 
                 base_url = endpoint_info["url"]
-                
+
                 prompt = f"""Format MLB Stats API endpoint URL.
 
     Endpoint Info:
@@ -1699,24 +1326,29 @@ print(json.dumps(result))
             print(f"Resolution error: {str(e)}")
             # Fall back to basic resolution
             if step_type == "function":
-                return self._basic_parameter_resolution(step["parameters"], prior_results)
+                return self._basic_parameter_resolution(
+                    step["parameters"], prior_results
+                )
             else:
                 # Basic URL construction for endpoints
-                params = self._basic_parameter_resolution(step["parameters"], prior_results)
+                params = self._basic_parameter_resolution(
+                    step["parameters"], prior_results
+                )
                 endpoint_info = self.endpoints.get(step_name, {})
                 base_url = endpoint_info.get("url", "")
-                
+
                 # Replace path parameters
                 for key, value in params.items():
                     if f"{{{key}}}" in base_url:
                         base_url = base_url.replace(f"{{{key}}}", str(value))
                         del params[key]
-                
+
                 # Add remaining params as query parameters
                 if params:
                     query_string = "&".join(f"{k}={v}" for k, v in params.items())
                     return {"url": f"{base_url}?{query_string}"}
                 return {"url": base_url}
+
     def _basic_parameter_resolution(
         self, parameters: Dict[str, Any], prior_results: Dict[str, Any]
     ) -> Dict[str, Any]:
@@ -1899,7 +1531,10 @@ print(json.dumps(result))
                         "conversation": conversation,
                         "data_type": self.intent["intent"],
                         "data": response_data["details"],
-                        "context": {"intent": self.intent, "steps": plan.get("steps", [])},
+                        "context": {
+                            "intent": self.intent,
+                            "steps": plan.get("steps", []),
+                        },
                         "suggestions": suggestions,
                         "media": response_data.get("media"),
                         "chart": chart,
@@ -1947,7 +1582,7 @@ print(json.dumps(result))
         """
         Get ready-to-use media URLs and relevant homerun keywords, with enhanced search capabilities
         that consider multiple fields beyond just the title.
-        
+
         The function now considers:
         - Title text
         - Exit velocity ranges
@@ -2022,7 +1657,10 @@ print(json.dumps(result))
                                 "items": {
                                     "type": "object",
                                     "properties": {
-                                        "type": {"type": "string", "enum": ["image", "video"]},
+                                        "type": {
+                                            "type": "string",
+                                            "enum": ["image", "video"],
+                                        },
                                         "url": {"type": "string"},
                                         "description": {"type": "string"},
                                         "metadata": {
@@ -2044,7 +1682,10 @@ print(json.dumps(result))
                             "homerun_search": {
                                 "type": "object",
                                 "properties": {
-                                    "keywords": {"type": "array", "items": {"type": "string"}},
+                                    "keywords": {
+                                        "type": "array",
+                                        "items": {"type": "string"},
+                                    },
                                     "stats_criteria": {
                                         "type": "object",
                                         "properties": {
@@ -2056,9 +1697,16 @@ print(json.dumps(result))
                                             "max_distance": {"type": "number"},
                                         },
                                     },
-                                    "player_names": {"type": "array", "items": {"type": "string"}},
+                                    "player_names": {
+                                        "type": "array",
+                                        "items": {"type": "string"},
+                                    },
                                 },
-                                "required": ["keywords", "stats_criteria", "player_names"],
+                                "required": [
+                                    "keywords",
+                                    "stats_criteria",
+                                    "player_names",
+                                ],
                             },
                         },
                         "required": ["direct_media", "homerun_search"],
@@ -2072,23 +1720,41 @@ print(json.dumps(result))
             if media_plan["homerun_search"]:
                 homerun_matches = []
                 search_criteria = media_plan["homerun_search"]["stats_criteria"]
-                
+
                 for _, row in self.homeruns.iterrows():
                     # Check if the homerun meets all statistical criteria
                     if search_criteria:
                         if (
-                            ("min_exit_velocity" in search_criteria and 
-                            float(row["ExitVelocity"]) < search_criteria["min_exit_velocity"]) or
-                            ("max_exit_velocity" in search_criteria and 
-                            float(row["ExitVelocity"]) > search_criteria["max_exit_velocity"]) or
-                            ("min_launch_angle" in search_criteria and 
-                            float(row["LaunchAngle"]) < search_criteria["min_launch_angle"]) or
-                            ("max_launch_angle" in search_criteria and 
-                            float(row["LaunchAngle"]) > search_criteria["max_launch_angle"]) or
-                            ("min_distance" in search_criteria and 
-                            float(row["HitDistance"]) < search_criteria["min_distance"]) or
-                            ("max_distance" in search_criteria and 
-                            float(row["HitDistance"]) > search_criteria["max_distance"])
+                            (
+                                "min_exit_velocity" in search_criteria
+                                and float(row["ExitVelocity"])
+                                < search_criteria["min_exit_velocity"]
+                            )
+                            or (
+                                "max_exit_velocity" in search_criteria
+                                and float(row["ExitVelocity"])
+                                > search_criteria["max_exit_velocity"]
+                            )
+                            or (
+                                "min_launch_angle" in search_criteria
+                                and float(row["LaunchAngle"])
+                                < search_criteria["min_launch_angle"]
+                            )
+                            or (
+                                "max_launch_angle" in search_criteria
+                                and float(row["LaunchAngle"])
+                                > search_criteria["max_launch_angle"]
+                            )
+                            or (
+                                "min_distance" in search_criteria
+                                and float(row["HitDistance"])
+                                < search_criteria["min_distance"]
+                            )
+                            or (
+                                "max_distance" in search_criteria
+                                and float(row["HitDistance"])
+                                > search_criteria["max_distance"]
+                            )
                         ):
                             continue
 
@@ -2099,7 +1765,7 @@ print(json.dumps(result))
                         ).ratio()
                         for keyword in media_plan["homerun_search"]["keywords"]
                     ]
-                    
+
                     player_scores = [
                         difflib.SequenceMatcher(
                             None, str(row["title"]).lower(), player.lower()
@@ -2108,36 +1774,42 @@ print(json.dumps(result))
                     ]
 
                     # Use the best match from either keywords or player names
-                    best_score = max(title_scores + player_scores) if player_scores else max(title_scores)
+                    best_score = (
+                        max(title_scores + player_scores)
+                        if player_scores
+                        else max(title_scores)
+                    )
 
                     if best_score >= 0.55:  # Threshold for good matches
-                        homerun_matches.append({
-                            "type": "video",
-                            "url": row["video"],
-                            "title": row["title"],
-                            "description": (
-                                f"Incredible home run by {row['title'].split(' homers')[0]} with "
-                                f"{row['ExitVelocity']} mph exit velocity, {row['LaunchAngle']}° "
-                                f"launch angle, traveling {row['HitDistance']} feet!"
-                            ),
-                            "metadata": {
-                                "exit_velocity": float(row["ExitVelocity"]),
-                                "launch_angle": float(row["LaunchAngle"]),
-                                "distance": float(row["HitDistance"]),
-                                "year": int(row["season"]),
-                            },
-                        })
+                        homerun_matches.append(
+                            {
+                                "type": "video",
+                                "url": row["video"],
+                                "title": row["title"],
+                                "description": (
+                                    f"Incredible home run by {row['title'].split(' homers')[0]} with "
+                                    f"{row['ExitVelocity']} mph exit velocity, {row['LaunchAngle']}° "
+                                    f"launch angle, traveling {row['HitDistance']} feet!"
+                                ),
+                                "metadata": {
+                                    "exit_velocity": float(row["ExitVelocity"]),
+                                    "launch_angle": float(row["LaunchAngle"]),
+                                    "distance": float(row["HitDistance"]),
+                                    "year": int(row["season"]),
+                                },
+                            }
+                        )
 
                 # Sort matches by relevance and statistical impressiveness
                 homerun_matches.sort(
                     key=lambda x: (
-                        x["metadata"]["exit_velocity"] * 0.4 +  # Weight exit velocity
-                        x["metadata"]["distance"] * 0.4 +      # Weight distance
-                        x["metadata"]["launch_angle"] * 0.2    # Weight launch angle
+                        x["metadata"]["exit_velocity"] * 0.4  # Weight exit velocity
+                        + x["metadata"]["distance"] * 0.4  # Weight distance
+                        + x["metadata"]["launch_angle"] * 0.2  # Weight launch angle
                     ),
-                    reverse=True
+                    reverse=True,
                 )
-                
+
                 # Add top matches to media plan
                 media_plan["direct_media"].extend(homerun_matches[:80])
 
@@ -2312,156 +1984,6 @@ print(json.dumps(result))
             print(f"Media resolution error: {str(e)}")
             traceback.print_exc()
             return []
-
-    async def _generate_processing_code(
-        self,
-        description: str,
-        parameters: Dict[str, Any],
-        prior_results: Dict[str, Any],
-    ) -> str:
-        """Generate Python code for custom data processing steps"""
-
-        # Create prompt for code generation
-        prompt = f"""Generate a Python function that processes MLB data according to this specification:
-        
-        Task Description: {description}
-        
-        Parameters: {json.dumps(parameters, indent=2)}
-        
-        Available Prior Results Keys: {list(prior_results.keys())}
-        
-        Requirements:
-        1. Function name must be 'process_data'
-        2. Takes two parameters: prior_results (dict) and parameters (dict)
-        3. Must handle missing or invalid data gracefully
-        4. Return processed data in JSON-serializable format
-        5. Include error handling and logging
-        
-        Example structure:
-        def process_data(prior_results: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any]:
-            try:
-                # Processing logic here
-                return processed_data
-            except Exception as e:
-                print(f"Processing error: {{str(e)}}")
-                return {{"error": str(e)}}
-        
-        Generate ONLY the Python function code, no explanations or markdown."""
-
-        try:
-            # Get code from LLM
-            result = await self.gemini.generate_with_fallback(
-                prompt,
-                generation_config=genai.GenerationConfig(
-                    response_mime_type="text/plain",
-                    temperature=0.2,  # Lower temperature for more focused code generation
-                    candidate_count=1,
-                ),
-            )
-
-            # Clean up generated code
-            generated_code = result.text.strip()
-            generated_code = generated_code.replace("```python", "").replace("```", "")
-
-            # Validate basic structure
-            if not generated_code.startswith("def process_data("):
-                # Fall back to default processing function if generation fails
-                return self._get_default_processing_code(description)
-
-            # Add necessary imports
-            imports = """
-    import json
-    from typing import Dict, Any, List, Union
-    import statistics
-    from datetime import datetime
-    """
-
-            return f"{imports}\n\n{generated_code}"
-
-        except Exception as e:
-            print(f"Error generating processing code: {str(e)}")
-            return self._get_default_processing_code(description)
-
-    def _get_default_processing_code(self, description: str) -> str:
-        """Get default processing code template"""
-        return """
-    import json
-    from typing import Dict, Any, List, Union
-
-    def process_data(prior_results: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any]:
-        try:
-            # Basic validation
-            if not prior_results or not parameters:
-                return {"error": "Missing required data"}
-                
-            processed_data = {}
-            
-            # Extract relevant data from prior results
-            for key, value in prior_results.items():
-                if isinstance(value, (dict, list)):
-                    processed_data[key] = value
-                    
-            # Apply any specified transformations
-            if parameters.get('transformations'):
-                for transform in parameters['transformations']:
-                    if transform == 'aggregate':
-                        processed_data = self._aggregate_data(processed_data)
-                    elif transform == 'sort':
-                        processed_data = self._sort_data(processed_data, parameters.get('sort_key'))
-                    elif transform == 'filter':
-                        processed_data = self._filter_data(processed_data, parameters.get('filter_condition'))
-                        
-            return processed_data
-            
-        except Exception as e:
-            print(f"Error in default processing: {str(e)}")
-            return {"error": str(e)}
-            
-    def _aggregate_data(data: Dict[str, Any]) -> Dict[str, Any]:
-        '''Basic data aggregation'''
-        aggregated = {}
-        for key, value in data.items():
-            if isinstance(value, list):
-                # Calculate basic statistics for numeric values
-                numeric_values = [v for v in value if isinstance(v, (int, float))]
-                if numeric_values:
-                    aggregated[f"{key}_stats"] = {
-                        "count": len(numeric_values),
-                        "sum": sum(numeric_values),
-                        "mean": statistics.mean(numeric_values),
-                        "median": statistics.median(numeric_values)
-                    }
-        return aggregated
-        
-    def _sort_data(data: Dict[str, Any], sort_key: str = None) -> Dict[str, Any]:
-        '''Basic data sorting'''
-        sorted_data = {}
-        for key, value in data.items():
-            if isinstance(value, list):
-                if sort_key and all(isinstance(item, dict) and sort_key in item for item in value):
-                    sorted_data[key] = sorted(value, key=lambda x: x[sort_key])
-                else:
-                    sorted_data[key] = sorted(value)
-            else:
-                sorted_data[key] = value
-        return sorted_data
-        
-    def _filter_data(data: Dict[str, Any], condition: str = None) -> Dict[str, Any]:
-        '''Basic data filtering'''
-        filtered_data = {}
-        for key, value in data.items():
-            if isinstance(value, list):
-                if condition and all(isinstance(item, dict) for item in value):
-                    filtered_data[key] = [
-                        item for item in value 
-                        if all(k in item for k in condition.split('=')[0].strip())
-                    ]
-                else:
-                    filtered_data[key] = value
-            else:
-                filtered_data[key] = value
-        return filtered_data
-    """
 
     async def translate_response(
         self, response: Any, target_language: str

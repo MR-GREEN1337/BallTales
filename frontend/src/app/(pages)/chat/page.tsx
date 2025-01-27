@@ -16,6 +16,7 @@ import { ClearButton, MessageDust } from './_components/ResetButton'
 import { languageContent, typingPhrases } from '@/lib/constants'
 import AnimatedBotIcon from './_components/AnimatedBotIcon'
 import { updateUserPreferences } from '@/actions/user/update-preferences'
+import ContextViewer from './_components/ContextViewer'
 
 
 interface PreferencesState {
@@ -36,6 +37,7 @@ interface Message {
   suggestions?: string[]
   media?: any
   chart: any
+  context: any
 }
 
 interface MLBResponse {
@@ -184,9 +186,9 @@ const OnboardingChat = () => {
         console.error('No auth token found');
         return;
       }
-  
+
       const recentMessages = messages.slice(-5);
-      
+
       const payload = {
         messages: recentMessages.map(msg => ({
           content: msg.content,
@@ -201,7 +203,7 @@ const OnboardingChat = () => {
           avatar: userData.user.avatar
         }
       };
-  
+
       const backendResponse = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/user/update-preferences`,
         payload,
@@ -211,11 +213,11 @@ const OnboardingChat = () => {
           }
         }
       );
-  
+
       if (!backendResponse.data || !backendResponse.data.preferences) {
         throw new Error('Invalid response from preferences update API');
       }
-  
+
       // Update user data without triggering a full re-render
       setUserData((prev: any) => ({
         ...prev,
@@ -224,22 +226,22 @@ const OnboardingChat = () => {
           ...backendResponse.data.preferences
         }
       }));
-  
+
       // Trigger the success animation in the profile component
       const profileElement = document.querySelector('.mlb-profile-trigger');
       if (profileElement) {
         setShowProfileAnimation(true);
-        
+
         // Reset the animation state after it completes
         setTimeout(() => {
           setShowProfileAnimation(false);
         }, 2000);
       }
-  
+
     } catch (error) {
       console.error('Failed to update preferences:', error);
       toast.error('Failed to update preferences');
-      
+
       // Reset counter to 2 so next bot message will trigger update
       setPreferencesState(prev => ({
         ...prev,
@@ -259,15 +261,16 @@ const OnboardingChat = () => {
     if (!initialMessageSet && userData?.preferences?.preferences?.language) {
       const lang = userData.preferences.preferences.language.toLowerCase();
       setUserLanguage(lang);
-      
+
       setMessages([{
         id: 'welcome-message',
         content: languageContent[lang as keyof typeof languageContent]?.welcomeMessage || languageContent.en.welcomeMessage,
         sender: 'bot',
         type: 'text',
-        chart: undefined
+        chart: undefined,
+        context: undefined
       }]);
-      
+
       setInitialMessageSet(true);
     }
   }, [userData, initialMessageSet]);
@@ -279,20 +282,20 @@ const OnboardingChat = () => {
         const newCount = prev.botMessageCount + 1;
 
         //console.log('Bot message counter:', newCount);
-        
+
         // Only trigger update exactly every 3 messages
         if (newCount === 3) {
           // Schedule the update asynchronously to avoid state conflicts
           setTimeout(() => {
             handlePreferencesUpdate();
           }, 0);
-          
+
           return {
             botMessageCount: 0,
             lastPreferencesUpdate: Date.now()
           };
         }
-        
+
         return {
           ...prev,
           botMessageCount: newCount
@@ -391,6 +394,7 @@ const OnboardingChat = () => {
       const botMessage: Message = {
         id: `bot-${Date.now()}`,
         content: response.data.conversation || response.data.message,
+        context: response.data.context,
         sender: 'bot',
         type: 'text',
         suggestions: response.data.suggestions,
@@ -408,7 +412,8 @@ const OnboardingChat = () => {
           sender: 'bot',
           type: 'options',
           options: response.data.suggestions,
-          chart: undefined
+          chart: undefined,
+          context: undefined
         })
       }
 
@@ -436,7 +441,8 @@ const OnboardingChat = () => {
       content: "I'm having trouble connecting to the baseball data. Can you try asking that again?",
       sender: 'bot',
       type: 'text',
-      chart: undefined
+      chart: undefined,
+      context: undefined
     })
 
     toast.error('Failed to get response from MLB chat')
@@ -456,7 +462,8 @@ const OnboardingChat = () => {
       content: languageContent[userLanguage as keyof typeof languageContent]?.welcomeMessage || languageContent.en.welcomeMessage,
       sender: 'bot',
       type: 'text',
-      chart: undefined
+      chart: undefined,
+      context: undefined
     }]);
 
     // Clean up after animation
@@ -468,193 +475,192 @@ const OnboardingChat = () => {
 
 
   return (
-    <div 
-  className="min-h-screen relative overflow-hidden"
-  style={{
-    position: 'relative',
-  }}
->
-  {/* Add a pseudo-element for the background image and overlay */}
-  <div 
-    className="absolute inset-0 -z-10"
-    style={{
-      backgroundImage: 'url(/chat.jpg)',
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundAttachment: 'fixed',
-      filter: 'brightness(0.35  )',
-    }}
-  />
-      <motion.div 
-        className="fixed top-0 left-0 right-0 bg-gradient-to-b from-gray-900 to-transparent p-4 z-30"
-        initial={{ opacity: 1, y: 0 }}
-        animate={{ 
-          opacity: 1 ? 1 : 0,
-          y: 1 ? 0 : -100
+<div className="relative h-full w-full bg-slate-950">
+  <div className="absolute bottom-0 left-0 right-0 top-0 animate-shimmer bg-[linear-gradient(to_right,#ff000015_1px,transparent_1px),linear-gradient(to_bottom,#ff000015_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_80%_70%_at_50%_-20%,#000_70%,transparent_100%)]">
+    <div className="absolute inset-0 bg-[linear-gradient(110deg,transparent_35%,#ff000030_50%,transparent_65%)] animate-shimmer-wave" />
+  </div>
+  <div
+        className="min-h-screen relative overflow-hidden"
+        style={{
+          position: 'relative',
         }}
-        transition={{ duration: 0.3 }}
-      >      <div className="max-w-4xl mx-auto flex justify-end">
-        <div className="flex items-center gap-2">
-          <ClearButton onClear={handleReset} disabled={messages.length === 1} />
-          <MLBProfile
-            user={userData.user}
-            preferences={userData.preferences}
-            onLogout={handleLogout}
-            showSuccessAnimation={showProfileAnimation}
-            onAnimationComplete={() => setShowProfileAnimation(false)}
-          />
-        </div>
-      </div>
-    </motion.div>
-      {/* Chat Container */}
-      <div className="max-w-4xl mx-auto px-4">
-      <div className="pt-24 pb-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="text-center"
-          >
-<motion.h1 
-            className="text-4xl font-bold text-white mb-2"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >              {languageContent[userLanguage as keyof typeof languageContent]?.pageTitle || languageContent.en.pageTitle}
-            </motion.h1>
-            <motion.p 
-            className="text-gray-300 mb-3"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.4 }}
-          >
-              {languageContent[userLanguage as keyof typeof languageContent]?.pageSubtitle || languageContent.en.pageSubtitle}
-            </motion.p>
-          </motion.div>
-
-          {/* Messages */}
-          <div className="space-y-8 pb-24">
-        <div className="space-y-6">
-            <AnimatePresence>
-              {clearingMessages && (
-                <div className="fixed inset-0 pointer-events-none">
-                  {messagesToClear.map((message) => (
-                    <MessageDust
-                      key={`dust-${message.id}`}
-                      message={message}
-                      onComplete={() => {
-                        setMessagesToClear(prev =>
-                          prev.filter(m => m.id !== message.id)
-                        );
-                      }}
-                    />
-                  ))}
-                </div>
-              )}
-              {messages.map((message) => (
-                <motion.div
-                  key={message.id}
-                  id={`message-${message.id}`}  // Add this line
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div className={`flex items-start gap-3 max-w-[80%] ${message.sender === 'user' ? 'flex-row-reverse' : ''}`}>
-                  <div className="flex-shrink-0 w-8 h-8">
-                    {message.sender === 'bot' ? (
-                      <AnimatedBotIcon uniqueId={`bot-${message.id}`} state="default" />
-                    ) : (
-                      <UserCircle2 className="w-8 h-8 text-gray-400 mt-1" />
-                    )}
-                    </div>
-
-                    <div className={`rounded-2xl p-4 backdrop-blur-sm ${message.sender === 'user'
-                      ? 'bg-blue-600/90 text-white'
-                      : 'bg-white/10 text-white'
-                      }`}>
-                      <div className="prose prose-invert">
-                        {message.content}
-                      </div>
-
-                      {message.media && (
-                        <MLBMedia media={message.media} chart={message.chart} />
-                      )}
-
-                      {message.options && (
-                        <div className="relative mt-4 flex flex-wrap gap-2">
-                          {message.options.map((option) => (
-                            <Button
-                              key={`${message.id}-${option}`}
-                              variant="outline"
-                              className="bg-white/10 hover:bg-white/20 border-white/20 text-white"
-                              onClick={() => handleSuggestionClick(option)}
-                            >
-                              {option}
-                            </Button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-
-              {/* Thinking indicator with animated text */}
-              {showThinking && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="flex items-start gap-3"
-                >
-                  <AnimatedBotIcon uniqueId="thinking" state="thinking"/>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
-                    <div className="text-white">
-                      <TypingText text="Thinking..." language={userLanguage} />
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Typing indicator */}
-              {isTyping && !showThinking && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex items-start gap-3"
-                >
-                  <AnimatedBotIcon uniqueId="processing" state="processing" />
-                  <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
-                    <div className="flex space-x-2">
-                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" />
-                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce delay-100" />
-                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce delay-200" />
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+      >
+        {/* Header */}
+        <motion.div
+          className="fixed top-0 left-0 right-0 bg-gradient-to-b from-gray-900 to-transparent p-4 z-30"
+          initial={{ opacity: 1, y: 0 }}
+          animate={{
+            opacity: 1 ? 1 : 0,
+            y: 1 ? 0 : -100
+          }}
+          transition={{ duration: 0.3 }}
+        >      <div className="max-w-4xl mx-auto flex justify-end">
+            <div className="flex items-center gap-2">
+              <ClearButton onClear={handleReset} disabled={messages.length === 1} />
+              <MLBProfile
+                user={userData.user}
+                preferences={userData.preferences}
+                onLogout={handleLogout}
+                showSuccessAnimation={showProfileAnimation}
+                onAnimationComplete={() => setShowProfileAnimation(false)}
+              />
+            </div>
           </div>
-          <div ref={messagesEndRef} />
-        </div>
-        </div>
-
-        {/* Input */}
-        <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-gray-900 to-transparent p-4">
-          <div className="max-w-4xl mx-auto flex gap-2">
-            <Input
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-              placeholder={languageContent[userLanguage as keyof typeof languageContent]?.inputPlaceholder || languageContent.en.inputPlaceholder}
-              className="bg-white/5 border-white/20 text-white placeholder:text-gray-400 backdrop-blur-sm"
-            />
-            <Button
-              onClick={handleSend}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6"
+        </motion.div>
+        {/* Chat Container */}
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="pt-24 pb-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="text-center"
             >
-              <Send className="w-5 h-5" />
-            </Button>
+              <motion.h1
+                className="text-4xl font-bold text-white mb-2"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+              >              {languageContent[userLanguage as keyof typeof languageContent]?.pageTitle || languageContent.en.pageTitle}
+              </motion.h1>
+              <motion.p
+                className="text-gray-300 mb-3"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.4 }}
+              >
+                {languageContent[userLanguage as keyof typeof languageContent]?.pageSubtitle || languageContent.en.pageSubtitle}
+              </motion.p>
+            </motion.div>
+
+            {/* Messages */}
+            <div className="space-y-8 pb-24">
+              <div className="space-y-6">
+                <AnimatePresence>
+                  {clearingMessages && (
+                    <div className="fixed inset-0 pointer-events-none">
+                      {messagesToClear.map((message) => (
+                        <MessageDust
+                          key={`dust-${message.id}`}
+                          message={message}
+                          onComplete={() => {
+                            setMessagesToClear(prev =>
+                              prev.filter(m => m.id !== message.id)
+                            );
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  {messages.map((message) => (
+                    <motion.div
+                      key={message.id}
+                      id={`message-${message.id}`}  // Add this line
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div className={`flex items-start gap-3 max-w-[80%] ${message.sender === 'user' ? 'flex-row-reverse' : ''}`}>
+                        <div className="flex-shrink-0 w-8 h-8">
+                          {message.sender === 'bot' ? (
+                            <AnimatedBotIcon uniqueId={`bot-${message.id}`} state="default" />
+                          ) : (
+                            <UserCircle2 className="w-8 h-8 text-gray-400 mt-1" />
+                          )}
+                        </div>
+
+                        <div className={`rounded-2xl p-4 backdrop-blur-sm ${message.sender === 'user'
+                          ? 'bg-blue-600/90 text-white'
+                          : 'bg-white/10 text-white'
+                          }`}>
+                          <div className="prose prose-invert">
+                            {message.content}
+                          </div>
+
+                          {message.media && (
+                            <MLBMedia media={message.media} chart={message.chart} />
+                          )}
+
+                          {message.context && (
+                            <ContextViewer context={message.context} />
+                          )}
+
+                          {message.options && (
+                            <div className="relative mt-4 flex flex-wrap gap-2">
+                              {message.options.map((option) => (
+                                <Button
+                                  key={`${message.id}-${option}`}
+                                  variant="outline"
+                                  className="bg-white/10 hover:bg-white/20 border-white/20 text-white"
+                                  onClick={() => handleSuggestionClick(option)}
+                                >
+                                  {option}
+                                </Button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+
+                  {/* Thinking indicator with animated text */}
+                  {showThinking && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      className="flex items-start gap-3"
+                    >
+                      <AnimatedBotIcon uniqueId="thinking" state="thinking" />
+                      <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+                        <div className="text-white">
+                          <TypingText text="Thinking..." language={userLanguage} />
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* Typing indicator */}
+                  {isTyping && !showThinking && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-start gap-3"
+                    >
+                      <AnimatedBotIcon uniqueId="processing" state="processing" />
+                      <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+                        <div className="flex space-x-2">
+                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" />
+                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce delay-100" />
+                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce delay-200" />
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+              <div ref={messagesEndRef} />
+            </div>
+          </div>
+
+          {/* Input */}
+          <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-gray-900 to-transparent p-4">
+            <div className="max-w-4xl mx-auto flex gap-2">
+              <Input
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                placeholder={languageContent[userLanguage as keyof typeof languageContent]?.inputPlaceholder || languageContent.en.inputPlaceholder}
+                className="bg-white/5 border-white/20 text-white placeholder:text-gray-400 backdrop-blur-sm"
+              />
+              <Button
+                onClick={handleSend}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 rounded-lg"
+              >
+                <Send className="w-5 h-5" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>

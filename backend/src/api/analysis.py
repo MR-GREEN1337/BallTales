@@ -18,6 +18,7 @@ import os
 # Initialize mimetypes database
 mimetypes.init()
 
+
 class AnalysisMetrics:
     """
     Tracks and manages analysis metrics for monitoring purposes.
@@ -71,36 +72,40 @@ class MediaAnalyzer:
         self.api_key = api_key
         genai.configure(api_key=api_key)
         self.analysis_model = genai.GenerativeModel(model_name="gemini-2.0-flash-exp")
-        
+
         # Define supported image formats
         self.supported_formats = {
-            'image/jpeg', 'image/png', 'image/gif', 'image/svg+xml',
-            'image/webp', 'image/tiff'
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/svg+xml",
+            "image/webp",
+            "image/tiff",
         }
 
     def is_svg(self, url: str) -> bool:
         """
         Determines if a URL points to an SVG file by checking the file extension.
-        
+
         Args:
             url: The URL to check
-            
+
         Returns:
             bool: True if the URL ends with .svg, False otherwise
         """
-        return url.lower().endswith('.svg')
+        return url.lower().endswith(".svg")
 
-    def _detect_mime_type(self, file_data: bytes, filename: str = '') -> str:
+    def _detect_mime_type(self, file_data: bytes, filename: str = "") -> str:
         """
         Detects the MIME type of a file using a hierarchical approach:
         1. First checks file extension if provided
         2. Then examines file signatures
         3. Finally attempts content-based detection
-        
+
         Args:
             file_data: The binary content of the file
             filename: Optional filename to help with type detection
-            
+
         Returns:
             str: The detected MIME type
         """
@@ -112,37 +117,37 @@ class MediaAnalyzer:
 
         # Check common file signatures
         signatures = {
-            b'\x89PNG\r\n\x1a\n': 'image/png',
-            b'\xff\xd8\xff': 'image/jpeg',
-            b'GIF87a': 'image/gif',
-            b'GIF89a': 'image/gif',
-            b'RIFF': 'image/webp'  # WEBP starts with 'RIFF'
+            b"\x89PNG\r\n\x1a\n": "image/png",
+            b"\xff\xd8\xff": "image/jpeg",
+            b"GIF87a": "image/gif",
+            b"GIF89a": "image/gif",
+            b"RIFF": "image/webp",  # WEBP starts with 'RIFF'
         }
-        
+
         for signature, mime_type in signatures.items():
             if file_data.startswith(signature):
                 return mime_type
-                
+
         # Check for SVG content
         try:
-            content_start = file_data[:1000].decode('utf-8').lower()
-            if '<?xml' in content_start and '<svg' in content_start:
-                return 'image/svg+xml'
+            content_start = file_data[:1000].decode("utf-8").lower()
+            if "<?xml" in content_start and "<svg" in content_start:
+                return "image/svg+xml"
         except UnicodeDecodeError:
             pass
-            
-        return 'application/octet-stream'
+
+        return "application/octet-stream"
 
     async def download_image(self, url: str) -> Image.Image:
         """
         Downloads and processes an image from a URL, with enhanced support for various formats.
-        
+
         Args:
             url: The URL of the image to download
-            
+
         Returns:
             PIL.Image: The processed image ready for analysis
-            
+
         Raises:
             HTTPException: If image download or processing fails
         """
@@ -152,58 +157,54 @@ class MediaAnalyzer:
                     if response.status != 200:
                         raise HTTPException(
                             status_code=400,
-                            detail=f"Failed to download image: HTTP {response.status}"
+                            detail=f"Failed to download image: HTTP {response.status}",
                         )
-                    
+
                     image_data = await response.read()
-                    
+
                     # Get filename from URL and detect MIME type
                     filename = os.path.basename(url)
                     mime_type = self._detect_mime_type(image_data, filename)
-                    
+
                     if mime_type not in self.supported_formats:
                         raise HTTPException(
                             status_code=400,
-                            detail=f"Unsupported image format: {mime_type}"
+                            detail=f"Unsupported image format: {mime_type}",
                         )
-                    
+
                     # Handle SVG conversion
-                    if mime_type == 'image/svg+xml' or self.is_svg(url):
+                    if mime_type == "image/svg+xml" or self.is_svg(url):
                         try:
                             png_data = cairosvg.svg2png(bytestring=image_data)
                             return Image.open(BytesIO(png_data))
                         except Exception as svg_error:
                             logger.error(f"SVG conversion failed: {svg_error}")
                             raise HTTPException(
-                                status_code=400,
-                                detail="Failed to convert SVG image"
+                                status_code=400, detail="Failed to convert SVG image"
                             )
-                    
+
                     # Process other image formats
                     try:
                         image = Image.open(BytesIO(image_data))
                         # Convert to RGB if necessary (handles RGBA, CMYK, etc.)
-                        if image.mode not in ('RGB', 'L'):
-                            image = image.convert('RGB')
+                        if image.mode not in ("RGB", "L"):
+                            image = image.convert("RGB")
                         return image
                     except Exception as img_error:
                         logger.error(f"Image processing failed: {img_error}")
                         raise HTTPException(
-                            status_code=400,
-                            detail="Failed to process image"
+                            status_code=400, detail="Failed to process image"
                         )
-                        
+
         except aiohttp.ClientError as e:
             logger.error(f"Network error during image download: {e}")
             raise HTTPException(
-                status_code=500,
-                detail="Failed to download image: Network error"
+                status_code=500, detail="Failed to download image: Network error"
             )
         except Exception as e:
             logger.error(f"Unexpected error in image processing: {e}")
             raise HTTPException(
-                status_code=500,
-                detail=f"Image processing failed: {str(e)}"
+                status_code=500, detail=f"Image processing failed: {str(e)}"
             )
 
     async def analyze_media(
