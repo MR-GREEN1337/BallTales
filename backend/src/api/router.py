@@ -12,10 +12,12 @@ from src.api.models import (
 from src.api.agent import mlb_agent, MLBDeps
 from src.api.analysis import MediaAnalyzer, get_analyzer, media_analyzer
 from src.api.utils import log_analysis_request, _build_chat_context
+from src.api.mlb_workflow_handler import MLBWorkflowHandler
 from fastapi_simple_rate_limiter import rate_limiter
 from fastapi.requests import Request
 from loguru import logger
 from datetime import datetime
+import re
 
 # Configure router with proper prefixes and tags
 router = APIRouter(
@@ -180,13 +182,14 @@ async def analyze_image(
         raise
 
 
-@router.get(
-    "/chat/{suggestion_type}",
-    response_model=SuggestionResponse,
+@router.post(
+    "/{suggestion_type}",
+    # response_model=SuggestionResponse,
     description="Handle various suggestion-based queries for baseball content",
 )
 @rate_limiter(limit=30, seconds=60)
 async def handle_suggestion(
+    request: Request,
     suggestion_type: str,
     mediaUrl: str = Query(..., description="URL of the media being analyzed"),
     analyzer: MediaAnalyzer = Depends(get_analyzer),
@@ -202,109 +205,28 @@ async def handle_suggestion(
         is_svg = analyzer.is_svg(mediaUrl)
         entity_type = "team" if is_svg else "player"
 
-        # Define analysis templates for different suggestion types
-        analysis_templates = {
-            # Team-specific templates
-            "team/championships": {
-                "prompt": "Analyze this team's championship history and major achievements",
-                "analysis_type": "historical",
-                "required_type": "team",
-            },
-            "team/roster/all-time": {
-                "prompt": "Provide analysis of the team's most significant players throughout history",
-                "analysis_type": "roster",
-                "required_type": "team",
-            },
-            "team/stats": {
-                "prompt": "Analyze this team's statistical performance and trends",
-                "analysis_type": "statistics",
-                "required_type": "team",
-            },
-            "team/roster/current": {
-                "prompt": "Analyze the current team roster and its composition",
-                "analysis_type": "roster",
-                "required_type": "team",
-            },
-            "team/games/recent": {
-                "prompt": "Analyze the team's recent game performance and trends",
-                "analysis_type": "performance",
-                "required_type": "team",
-            },
-            # Player-specific templates
-            "player/stats": {
-                "prompt": "Provide comprehensive career statistics analysis",
-                "analysis_type": "statistics",
-                "required_type": "player",
-            },
-            "player/highlights": {
-                "prompt": "Analyze career highlights and significant achievements",
-                "analysis_type": "highlights",
-                "required_type": "player",
-            },
-            "player/games/recent": {
-                "prompt": "Analyze recent game performances and trends",
-                "analysis_type": "performance",
-                "required_type": "player",
-            },
-            "player/homeruns": {
-                "prompt": "Analyze home run statistics and patterns",
-                "analysis_type": "statistics",
-                "required_type": "player",
-            },
-            "player/awards": {
-                "prompt": "Analyze career awards and accolades",
-                "analysis_type": "achievements",
-                "required_type": "player",
-            },
-        }
+        team_pattern = r"team-logos/(\d+)\.svg$"
+        player_pattern = r"people/(\d+)/headshot"
 
-        # Validate suggestion type
-        if suggestion_type not in analysis_templates:
-            raise HTTPException(
-                status_code=400, detail=f"Invalid suggestion type: {suggestion_type}"
-            )
+        # Try team logo pattern first
+        team_match = re.search(team_pattern, mediaUrl)
+        if team_match:
+            mlb_id = team_match.group(1)
 
-        template = analysis_templates[suggestion_type]
+        # Try player headshot pattern
+        player_match = re.search(player_pattern, mediaUrl)
+        if player_match:
+            mlb_id = player_match.group(1)
+        print(f"id: {mlb_id}, entity_type: {entity_type}, endpoint: {suggestion_type}")
 
-        # Validate entity type matches request
-        if template["required_type"] != entity_type:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Invalid request: {suggestion_type} is not valid for {entity_type} analysis",
-            )
+        handler = MLBWorkflowHandler(mlb_id, entity_type)
+        result = handler.process_workflow(suggestion_type)
 
-        # Enhance the analysis prompt with metadata
-        metadata = {
-            "analysis_type": template["analysis_type"],
-            "entity_type": entity_type,
-            "suggestion_type": suggestion_type,
-            "timestamp": datetime.utcnow().isoformat(),
-        }
+        return SuggestionResponse(status="success", data=result)
 
-        # Perform specialized analysis using existing analyzer
-        result = await analyzer.analyze_media(
-            media_url=mediaUrl,
-            user_message=template["prompt"],
-            media_type="image",
-            metadata=metadata,
-        )
-
-        # Transform the analysis result into appropriate response format
-        response_data = {
-            "data": {
-                "analysis": result["summary"],
-                "details": result["details"],
-                "type": template["analysis_type"],
-                "entityType": entity_type,
-            },
-            "timestamp": datetime.utcnow(),
-            "request_id": str(uuid.uuid4()),
-        }
-
-        return SuggestionResponse(**response_data)
-
+    except ValueError as ve:
+        logger.error(f"Invalid request: {str(ve)}")
+        raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
-        logger.error(f"Suggestion handling failed: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500, detail=f"Failed to process suggestion: {str(e)}"
-        )
+        logger.error(f"Suggestion handling failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")

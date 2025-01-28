@@ -1471,7 +1471,9 @@ print(json.dumps(result))
         """Enhanced message processing with media resolution"""
         try:
             # Get intent analysis
-            self.intent = await self.analyze_intent(message)
+            self.intent = await self.analyze_intent(
+                f"{message} \n History of messages: {json.dumps(context, indent=2)}"
+            )
             self.user_query = message
             # MLB-related query path
             if self.intent["is_mlb_related"] and self.intent["context"].get(

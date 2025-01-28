@@ -193,7 +193,7 @@ const ImageAnalysisComponent: React.FC<ImageAnalysisProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 flex items-center justify-center px-2 md:px-6">
+      <div className="fixed inset-0 z-[150] flex items-center justify-center px-2 md:px-6"> {/* Increased z-index */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -206,12 +206,12 @@ const ImageAnalysisComponent: React.FC<ImageAnalysisProps> = ({
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-[95vw] md:w-full max-w-6xl p-4 md:p-6 bg-black/95 border border-white/10 rounded-xl h-[90vh] overflow-hidden z-[999]"
+          className="relative w-[95vw] md:w-full max-w-6xl p-4 md:p-6 bg-black/95 border border-white/10 rounded-xl h-[90vh] overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-1 rounded-full hover:bg-white/10 z-10"
+            className="absolute top-4 right-4 p-1 rounded-full hover:bg-white/10"
           >
             <X className="w-5 h-5 text-gray-400" />
           </button>

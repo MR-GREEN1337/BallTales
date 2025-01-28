@@ -4,6 +4,13 @@ import { useState } from "react";
 import axios from "axios";
 import ImageAnalysisComponent from './ImageAnalysisDialogComponent';
 
+// Shared interfaces to ensure type consistency
+interface SuggestionItem {
+  text: string;
+  endpoint: string;
+  icon: string;
+}
+
 interface ImageAnalysisResponse {
   summary: string;
   details: {
@@ -14,18 +21,20 @@ interface ImageAnalysisResponse {
   };
   timestamp: string;
   request_id: string;
-  suggestions: Array<{
-    text: string;
-    endpoint: string;
-    icon: string;
-  }>;
+  suggestions: SuggestionItem[];
 }
 
-const ImageAnalysisDialog: React.FC<{ 
+interface ImageAnalysisDialogProps {
   isOpen: boolean;
   onClose: () => void;
   imageUrl: string;
-}> = ({ isOpen, onClose, imageUrl }) => {
+}
+
+const ImageAnalysisDialog: React.FC<ImageAnalysisDialogProps> = ({ 
+  isOpen, 
+  onClose, 
+  imageUrl 
+}) => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<ImageAnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -33,59 +42,77 @@ const ImageAnalysisDialog: React.FC<{
   const [isLoadingSuggestion, setIsLoadingSuggestion] = useState(false);
 
   const handleAnalyze = async (query: string) => {
+    if (!query.trim()) return;
+    
     setError(null);
     setIsAnalyzing(true);
+    setSuggestionData(null);
 
     try {
-      const response = await axios.post(
+      const response = await axios.post<ImageAnalysisResponse>(
         `${process.env.NEXT_PUBLIC_API_URL}/chat/analyze-image`,
         {
           imageUrl,
           message: query.trim()
         }
       );
-      console.log('Analysis response:', response.data);
+
+      if (!response.data || typeof response.data !== 'object') {
+        throw new Error('Invalid response format');
+      }
+
       setAnalysis(response.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to analyze image');
+      setAnalysis(null);
     } finally {
       setIsAnalyzing(false);
     }
   };
 
   const handleSuggestionClick = async (endpoint: string) => {
+    if (!endpoint) return;
+    
     setIsLoadingSuggestion(true);
     setSuggestionData(null);
+    setError(null);
+
     try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/chat/${endpoint}`,
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/chat/${endpoint.replaceAll('/', '_')}`,
+        null,  // empty body since we're using query params
         {
-          params: { mediaUrl: imageUrl }
+          params: {
+            mediaUrl: imageUrl
+          }
         }
       );
+      if (!response.data) {
+        throw new Error('No data received from suggestion endpoint');
+      }
+
       setSuggestionData(response.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load suggestion data');
+      setSuggestionData(null);
     } finally {
       setIsLoadingSuggestion(false);
     }
   };
 
   return (
-    <div className="relative">
-      <ImageAnalysisComponent
-        isOpen={isOpen}
-        onClose={onClose}
-        imageUrl={imageUrl}
-        analysis={analysis as any}
-        onAnalyze={handleAnalyze}
-        isAnalyzing={isAnalyzing}
-        error={error}
-        suggestionData={suggestionData}
-        isLoadingSuggestion={isLoadingSuggestion}
-        onSuggestionClick={handleSuggestionClick}
-      />
-    </div>
+    <ImageAnalysisComponent
+      isOpen={isOpen}
+      onClose={onClose}
+      imageUrl={imageUrl}
+      analysis={analysis}
+      onAnalyze={handleAnalyze}
+      isAnalyzing={isAnalyzing}
+      error={error}
+      suggestionData={suggestionData}
+      isLoadingSuggestion={isLoadingSuggestion}
+      onSuggestionClick={handleSuggestionClick}
+    />
   );
 };
 

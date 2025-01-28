@@ -411,61 +411,64 @@ const SingleVideo: React.FC<{ video: MediaItem }> = ({ video }) => (
 const VideoGrid: React.FC<{ videos: MediaItem[] }> = ({ videos }) => {
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Filter videos based on search query
   const filteredVideos = videos.filter(video => 
     video.title?.toLowerCase().includes(searchQuery.toLowerCase()) || !searchQuery
   );
 
   return (
-<Dialog>
+    <Dialog>
       <DialogTrigger asChild>
         <button className="w-full flex items-center justify-center gap-2 p-1 bg-blue-500/20 hover:bg-blue-500/30 rounded-lg transition-all">
           <Grid2X2 className="w-5 h-5" />
           <span className='text-muted-foreground text-sm'>View All Videos ({videos.length})</span>
         </button>
       </DialogTrigger>
-      <DialogContent className="max-w-6xl w-full h-full max-h-[90vh] overflow-y-auto bg-black/90 border border-white/10">
-        <DialogHeader>
-          <DialogTitle className="text-white">Home Run Gallery</DialogTitle>
-        </DialogHeader>
-        
-        <div className="px-4 pt-2">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              type="text"
-              placeholder="Search home runs..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-black/20 border-white/10 focus:border-blue-500/50 transition-colors text-white"
-            />
-          </div>
-          <div className="mt-2 text-sm text-gray-400">
-            Showing {filteredVideos.length} of {videos.length} videos
-          </div>
-        </div>
+      <DialogContent className="fixed inset-0 z-[100] flex items-center justify-center">
+        <div className="bg-black/90 border border-white/10 w-full max-w-6xl h-[90vh] rounded-lg overflow-hidden flex flex-col">
+          <DialogHeader className="p-4 border-b border-white/10">
+            <DialogTitle className="text-white">Home Run Gallery</DialogTitle>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-y-auto">
+            <div className="sticky top-0 z-10 bg-black/95 px-4 pt-2 pb-2 border-b border-white/10">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder="Search home runs..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 bg-black/20 border-white/10 focus:border-blue-500/50 transition-colors text-white"
+                />
+              </div>
+              <div className="mt-2 text-sm text-gray-400">
+                Showing {filteredVideos.length} of {videos.length} videos
+              </div>
+            </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-          {filteredVideos.map((video, index) => (
-            <Card 
-              key={index} 
-              className="overflow-hidden bg-black/50 hover:bg-black/60 transition-colors border-white/10 hover:border-white/20"
-            >
-              <CardHeader className="space-y-2">
-                <CardTitle className="text-sm font-medium line-clamp-2 text-white">
-                  {video.title}
-                </CardTitle>
-                {video.metadata && (
-                  <CardDescription>
-                    <MediaStats metadata={video.metadata} />
-                  </CardDescription>
-                )}
-              </CardHeader>
-              <CardContent className="p-0">
-                <VideoPlayer video={video} />
-              </CardContent>
-            </Card>
-          ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+              {filteredVideos.map((video, index) => (
+                <Card 
+                  key={index} 
+                  className="overflow-hidden bg-black/50 hover:bg-black/60 transition-colors border-white/10 hover:border-white/20"
+                >
+                  <CardHeader className="space-y-2">
+                    <CardTitle className="text-sm font-medium line-clamp-2 text-white">
+                      {video.title}
+                    </CardTitle>
+                    {video.metadata && (
+                      <CardDescription>
+                        <MediaStats metadata={video.metadata} />
+                      </CardDescription>
+                    )}
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <VideoPlayer video={video} />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
@@ -569,63 +572,6 @@ const MLBMedia: React.FC<MLBMediaProps> = ({ media, chart }) => {
             />
           )}
           
-          {chart && chart.requires_chart && (
-            <div className="mt-8">
-              <MLBStatistics chart={chart} />
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-  
-  return (
-    <div className="mt-4 space-y-4">
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center justify-between w-full p-3 rounded-lg bg-gradient-to-r from-blue-500/20 to-blue-400/5 hover:from-blue-500/30 hover:to-blue-400/10 transition-all group"
-      >
-        <span className="text-sm font-medium text-gray-200 group-hover:text-white transition-colors">
-          Baseball Media ({mediaContent.length})
-        </span>
-        <div className="flex items-center gap-2">
-          <div className="text-xs text-gray-400">
-            {isExpanded ? 'Click to collapse' : 'Click to expand'}
-          </div>
-          {isExpanded ? (
-            <ChevronUp className="w-4 h-4 text-gray-300" />
-          ) : (
-            <ChevronDown className="w-4 h-4 text-gray-300" />
-          )}
-        </div>
-      </button>
-
-      {isExpanded && (
-        <div className="space-y-4">
-          {videos.length > 0 && (
-            <div className="space-y-4">
-              {videos.length >= VIDEO_GALLERY_THRESHOLD ? (
-                <VideoGrid videos={videos} />
-              ) : (
-                videos.map((video, index) => (
-                  <SingleVideo key={index} video={video} />
-                ))
-              )}
-            </div>
-          )}
-          
-          {images.length > 0 && (
-            <div className="space-y-2">
-              {images.map((item, index) => (
-                <div 
-                  key={index}
-                  className="first:rounded-t-lg last:rounded-b-lg border border-white/10 hover:border-white/20 transition-colors"
-                >
-                  {renderMediaItem(item)}
-                </div>
-              ))}
-            </div>
-          )}
           {chart && chart.requires_chart && (
             <div className="mt-8">
               <MLBStatistics chart={chart} />
