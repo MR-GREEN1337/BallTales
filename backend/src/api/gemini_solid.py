@@ -1,4 +1,6 @@
+"""Gemini With retry and fallback, got sick of 429 Errors"""
 import asyncio
+from functools import partial
 from typing import Any, Optional, Tuple
 import google.generativeai as genai
 from tenacity import retry, stop_after_attempt, wait_exponential

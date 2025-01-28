@@ -153,92 +153,94 @@ const AnalysisDialog: React.FC<AnalysisDialogProps> = ({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm"
-        />
-        
-        <div className="relative w-full max-w-4xl px-4">
-          <span className="inline-block h-screen align-middle" aria-hidden="true">
-            &#8203;
-          </span>
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+          />
           
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ type: "spring", duration: 0.5 }}
-            className="inline-block w-full max-w-4xl p-6 my-8 text-left align-middle bg-black/95 
-              border border-white/10 rounded-xl shadow-2xl transform transition-all relative"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 p-1 rounded-full hover:bg-white/10 
-                transition-colors duration-200"
+          <div className="relative w-full max-w-4xl px-4 h-[90vh] flex items-center">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: "spring", duration: 0.5 }}
+              className="w-full h-full bg-black/95 border border-white/10 rounded-xl shadow-2xl 
+                transform transition-all relative flex flex-col max-h-full overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
             >
-              <X className="w-5 h-5 text-gray-400 hover:text-white" />
-            </button>
-
-            <div className="mb-6">
-              <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-green-500" />
-                Video Analysis
-              </h3>
-            </div>
-
-            <div className="mb-6">
-              <VideoPlayer video={{ type: 'video', url: videoUrl }} />
-            </div>
+              {/* Header */}
+              <div className="flex-none p-6 border-b border-white/10">
+                <button
+                  onClick={onClose}
+                  className="absolute top-4 right-4 p-1 rounded-full hover:bg-white/10 
+                    transition-colors duration-200"
+                >
+                  <X className="w-5 h-5 text-gray-400 hover:text-white" />
+                </button>
     
-            <div className="space-y-6">
-              {/* Message Input Section */}
-              <div className="space-y-2">
-                <div className="relative">
-                  <textarea
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Ask about specific aspects of this play..."
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white 
-                      placeholder-gray-500 focus:border-green-500/50 focus:ring-0 focus:outline-none
-                      transition-colors resize-none h-24"
-                  />
-                  <button
-                    onClick={handleAnalyze}
-                    disabled={isAnalyzing || !message.trim()}
-                    className={`absolute bottom-3 right-3 p-2 rounded-full transition-all duration-200
-                      ${message.trim() ? 
-                        'bg-green-500 hover:bg-green-600 text-white' : 
-                        'bg-white/5 text-gray-500 cursor-not-allowed'
-                      }`}
-                  >
-                    <Send className="w-4 h-4" />
-                  </button>
+                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-green-500" />
+                  Video Analysis
+                </h3>
+              </div>
+    
+              {/* Scrollable Content */}
+              <div className="flex-1 overflow-y-auto">
+                <div className="p-6">
+                  <div className="mb-6">
+                    <VideoPlayer video={{ type: 'video', url: videoUrl }} />
+                  </div>
+            
+                  <div className="space-y-6">
+                    {/* Message Input Section */}
+                    <div className="space-y-2">
+                      <div className="relative">
+                        <textarea
+                          value={message}
+                          onChange={(e) => setMessage(e.target.value)}
+                          placeholder="Ask about specific aspects of this play..."
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white 
+                            placeholder-gray-500 focus:border-green-500/50 focus:ring-0 focus:outline-none
+                            transition-colors resize-none h-24"
+                        />
+                        <button
+                          onClick={handleAnalyze}
+                          disabled={isAnalyzing || !message.trim()}
+                          className={`absolute bottom-3 right-3 p-2 rounded-full transition-all duration-200
+                            ${message.trim() ? 
+                              'bg-green-500 hover:bg-green-600 text-white' : 
+                              'bg-white/5 text-gray-500 cursor-not-allowed'
+                            }`}
+                        >
+                          <Send className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+    
+                    {/* Error Message */}
+                    {error && (
+                      <div className="text-red-400 bg-red-500/10 px-4 py-3 rounded-lg text-sm">
+                        {error}
+                      </div>
+                    )}
+    
+                    {/* Loading State */}
+                    {isAnalyzing && (
+                      <div className="flex items-center justify-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-green-500"></div>
+                      </div>
+                    )}
+    
+                    {/* Analysis Result */}
+                    {analysisResult && (
+                      <VideoAnalysis analysis={analysisResult} />
+                    )}
+                  </div>
                 </div>
               </div>
-
-              {/* Error Message */}
-              {error && (
-                <div className="text-red-400 bg-red-500/10 px-4 py-3 rounded-lg text-sm">
-                  {error}
-                </div>
-              )}
-
-              {/* Loading State */}
-              {isAnalyzing && (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-green-500"></div>
-                </div>
-              )}
-
-              {/* Analysis Result */}
-              {analysisResult && (
-                <VideoAnalysis analysis={analysisResult} />
-              )}
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
         </div>
-      </div>
-    </AnimatePresence>
-  );
+      </AnimatePresence>
+    );
 };
 
 // Enhanced VideoPlayer component with mobile-friendly analysis button
@@ -423,8 +425,8 @@ const VideoGrid: React.FC<{ videos: MediaItem[] }> = ({ videos }) => {
           <span className='text-muted-foreground text-sm'>View All Videos ({videos.length})</span>
         </button>
       </DialogTrigger>
-      <DialogContent className="fixed inset-0 z-[100] flex items-center justify-center">
-        <div className="bg-black/90 border border-white/10 w-full max-w-6xl h-[90vh] rounded-lg overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-[90%] lg:max-w-6xl h-[90vh] fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] bg-black/90 border border-white/10 rounded-lg overflow-hidden">
+      <div className="bg-black/90 border border-white/10 w-full max-w-6xl h-[90vh] rounded-lg overflow-hidden flex flex-col">
           <DialogHeader className="p-4 border-b border-white/10">
             <DialogTitle className="text-white">Home Run Gallery</DialogTitle>
           </DialogHeader>

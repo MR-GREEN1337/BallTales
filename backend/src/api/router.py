@@ -184,7 +184,7 @@ async def analyze_image(
 
 @router.post(
     "/{suggestion_type}",
-    # response_model=SuggestionResponse,
+    response_model=SuggestionResponse,
     description="Handle various suggestion-based queries for baseball content",
 )
 @rate_limiter(limit=30, seconds=60)
@@ -217,11 +217,12 @@ async def handle_suggestion(
         player_match = re.search(player_pattern, mediaUrl)
         if player_match:
             mlb_id = player_match.group(1)
-        print(f"id: {mlb_id}, entity_type: {entity_type}, endpoint: {suggestion_type}")
+        logger.info(f"id: {mlb_id}, entity_type: {entity_type}, endpoint: {suggestion_type}")
 
         handler = MLBWorkflowHandler(mlb_id, entity_type)
-        result = handler.process_workflow(suggestion_type)
-
+        logger.info(f"Handler: {handler}")
+        result = await handler.process_workflow(suggestion_type)
+        logger.info(f"Result: {result}")
         return SuggestionResponse(status="success", data=result)
 
     except ValueError as ve:

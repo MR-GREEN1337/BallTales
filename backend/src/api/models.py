@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import NotRequired, TypedDict, List, Optional, Dict, Any, Literal
 from datetime import datetime
 from src.core import LANGUAGES_FOR_LABELLING
-
+from uuid import uuid4
 
 @dataclass
 class MLBDeps:
@@ -307,6 +307,7 @@ class AnalysisResponse(BaseModel):
 class SuggestionResponse(BaseModel):
     """Response model for suggestion endpoints."""
 
+    status: Literal["success", "error"] = "success"
     data: Dict[str, Any]
-    timestamp: datetime
-    request_id: str
+    timestamp: datetime = datetime.utcnow()
+    request_id: str = uuid4().hex

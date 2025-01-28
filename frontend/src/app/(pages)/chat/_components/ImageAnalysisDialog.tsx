@@ -3,8 +3,8 @@
 import { useState } from "react";
 import axios from "axios";
 import ImageAnalysisComponent from './ImageAnalysisDialogComponent';
+import EndpointResultDialog from './EndpointResultDialog';
 
-// Shared interfaces to ensure type consistency
 interface SuggestionItem {
   text: string;
   endpoint: string;
@@ -40,6 +40,8 @@ const ImageAnalysisDialog: React.FC<ImageAnalysisDialogProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [suggestionData, setSuggestionData] = useState<any | null>(null);
   const [isLoadingSuggestion, setIsLoadingSuggestion] = useState(false);
+  const [activeEndpoint, setActiveEndpoint] = useState<string>('');
+  const [showEndpointDialog, setShowEndpointDialog] = useState(false);
 
   const handleAnalyze = async (query: string) => {
     if (!query.trim()) return;
@@ -76,22 +78,25 @@ const ImageAnalysisDialog: React.FC<ImageAnalysisDialogProps> = ({
     setIsLoadingSuggestion(true);
     setSuggestionData(null);
     setError(null);
+    setActiveEndpoint(endpoint);
 
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/chat/${endpoint.replaceAll('/', '_')}`,
-        null,  // empty body since we're using query params
+        null,
         {
           params: {
             mediaUrl: imageUrl
           }
         }
       );
+      
       if (!response.data) {
         throw new Error('No data received from suggestion endpoint');
       }
 
       setSuggestionData(response.data);
+      setShowEndpointDialog(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load suggestion data');
       setSuggestionData(null);
@@ -100,19 +105,37 @@ const ImageAnalysisDialog: React.FC<ImageAnalysisDialogProps> = ({
     }
   };
 
+  const handleEndpointDialogClose = () => {
+    setShowEndpointDialog(false);
+    setSuggestionData(null);
+    setActiveEndpoint('');
+  };
+
   return (
-    <ImageAnalysisComponent
-      isOpen={isOpen}
-      onClose={onClose}
-      imageUrl={imageUrl}
-      analysis={analysis}
-      onAnalyze={handleAnalyze}
-      isAnalyzing={isAnalyzing}
-      error={error}
-      suggestionData={suggestionData}
-      isLoadingSuggestion={isLoadingSuggestion}
-      onSuggestionClick={handleSuggestionClick}
-    />
+    <>
+      <ImageAnalysisComponent
+        isOpen={isOpen}
+        onClose={onClose}
+        imageUrl={imageUrl}
+        analysis={analysis}
+        onAnalyze={handleAnalyze}
+        isAnalyzing={isAnalyzing}
+        error={error}
+        suggestionData={suggestionData}
+        isLoadingSuggestion={isLoadingSuggestion}
+        onSuggestionClick={handleSuggestionClick}
+      />
+      
+      {suggestionData && showEndpointDialog && (
+        <EndpointResultDialog
+          isOpen={showEndpointDialog}
+          onClose={handleEndpointDialogClose}
+          endpoint={activeEndpoint}
+          data={suggestionData}
+          onImageAnalysis={handleAnalyze}
+        />
+      )}
+    </>
   );
 };
 
