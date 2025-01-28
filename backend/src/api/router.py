@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Query, Depends
 import httpx
+from numpy import char
 from src.core import LANGUAGES_FOR_LABELLING
 from src.api.models import (
     ChatRequest,
@@ -18,6 +19,7 @@ from fastapi.requests import Request
 from loguru import logger
 from datetime import datetime
 import re
+import json
 
 # Configure router with proper prefixes and tags
 router = APIRouter(
@@ -181,6 +183,7 @@ async def analyze_image(
         # Re-raise the exception for proper error handling
         raise
 
+chart_docs = open("src/core/constants/charts_docs.json", "r").read()
 
 @router.post(
     "/{suggestion_type}",
@@ -200,6 +203,7 @@ async def handle_suggestion(
     This endpoint determines the appropriate analysis type based on the suggestion
     and leverages existing analysis capabilities to generate relevant responses.
     """
+    global chart_docs
     try:
         # Determine media type from URL
         is_svg = analyzer.is_svg(mediaUrl)
@@ -219,7 +223,7 @@ async def handle_suggestion(
             mlb_id = player_match.group(1)
         logger.info(f"id: {mlb_id}, entity_type: {entity_type}, endpoint: {suggestion_type}")
 
-        handler = MLBWorkflowHandler(mlb_id, entity_type)
+        handler = MLBWorkflowHandler(mlb_id, entity_type, chart_docs=chart_docs)
         logger.info(f"Handler: {handler}")
         result = await handler.process_workflow(suggestion_type)
         logger.info(f"Result: {result}")

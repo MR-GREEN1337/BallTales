@@ -9,6 +9,8 @@ import json
 from src.api.gemini_solid import GeminiSolid
 import asyncio
 import google.generativeai as genai
+import pandas as pd
+from difflib import SequenceMatcher
 
 PLAYER_HEADSHOT_URL = "https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/{player_id}/headshot/67/current.png"
 TEAM_LOGO_URL = "https://www.mlbstatic.com/team-logos/{team_id}.svg"
@@ -29,7 +31,9 @@ def get_player_stats_cached(player_id: int):
         type="career"
     )
 class MLBWorkflowHandler:
-    def __init__(self, entity_id: str, entity_type: EntityType):
+    def __init__(self, entity_id: str, entity_type: EntityType, chart_docs: str):
+        self.chart_docs = json.loads(chart_docs)
+        self.homeruns = pd.read_csv("src/core/constants/mlb_homeruns.csv")
         self.entity_id = int(entity_id)
         self.entity_type = entity_type
         self.gemini = GeminiSolid()
@@ -106,34 +110,85 @@ class MLBWorkflowHandler:
             logger.error(f"Error fetching historical roster: {str(e)}")
             raise
 
-    def _get_team_stats(self) -> Dict[str, Any]:
+    async def _get_team_stats(self) -> Dict[str, Any]:
         """Get comprehensive team statistics."""
         try:
             current_season = datetime.now().year
             team_stats = statsapi.team_stats(self.entity_id, season=current_season)
             
-            return {
+            # Format stats data for Gemini analysis
+            stats_data = {
                 "team_id": self.entity_id,
                 "season": current_season,
                 "stats": {
                     "batting": {
-                        "avg": team_stats["batting"]["avg"],
+                        "avg": float(team_stats["batting"]["avg"]),
                         "runs": team_stats["batting"]["runs"],
                         "home_runs": team_stats["batting"]["homeRuns"],
-                        "ops": team_stats["batting"]["ops"],
+                        "ops": float(team_stats["batting"]["ops"]),
                     },
                     "pitching": {
-                        "era": team_stats["pitching"]["era"],
-                        "whip": team_stats["pitching"]["whip"],
+                        "era": float(team_stats["pitching"]["era"]),
+                        "whip": float(team_stats["pitching"]["whip"]),
                         "strikeouts": team_stats["pitching"]["strikeOuts"],
                         "saves": team_stats["pitching"]["saves"],
                     },
                     "fielding": {
-                        "fielding_percentage": team_stats["fielding"]["fielding_percentage"],
+                        "fielding_percentage": float(team_stats["fielding"]["fielding_percentage"]),
                         "errors": team_stats["fielding"]["errors"],
                     }
                 }
             }
+
+            # Create prompt for Gemini
+            formatted_prompt = f"""Analyze this MLB team statistics data and determine how to best visualize it.
+
+            Data:
+            {json.dumps(stats_data, indent=2)}
+
+            Create a chart configuration that effectively visualizes these baseball statistics.
+            Return a JSON structure with these fields:
+
+            1. requires_chart: true
+            2. chart_type: "bar" (for column charts) or "radar" (for multi-stat comparison)
+            3. variant: "basic" or "grouped"
+            4. formatted_data: Array of objects with these fields:
+            - category: The stat category (e.g. "Batting - Home Runs")
+            - value: The numerical value
+            - label: Display label
+            5. title: Clear descriptive title
+            6. description: Brief explanation of what the chart shows
+
+            Consider:
+            - Choose between bar chart (for absolute values) or radar chart (for relative performance)
+            - Group related statistics together
+            - Ensure data is properly formatted for visualization
+            - Include clear labels and descriptions
+            """
+
+            # Generate chart configuration using Gemini
+            result = await self.gemini.generate_with_fallback(
+                formatted_prompt,
+                generation_config=genai.GenerationConfig(
+                    temperature=0.1,
+                    response_mime_type="application/json",
+                )
+            )
+            
+            # Parse Gemini response
+            chart_config = json.loads(result.text)
+            
+            # Add styling information
+            chart_config["styles"] = self.charts_docs["common"]["styling"]
+            
+            # Add component configurations
+            chart_config["components"] = {
+                "tooltip": {"variant": "default"},
+                "legend": {"position": "bottom", "alignment": "center"},
+            }
+
+            return chart_config
+                
         except Exception as e:
             logger.error(f"Error fetching team stats: {str(e)}")
             raise
@@ -394,93 +449,63 @@ class MLBWorkflowHandler:
         except Exception as e:
             logger.error(f"Error fetching player recent games: {str(e)}")
             raise
+
     def _get_player_homeruns(self) -> Dict[str, Any]:
         """Get comprehensive home run statistics for a player."""
         try:
-            career_data = statsapi.player_stat_data(
-                self.entity_id,
-                group="hitting",
-                type="career"
-            )
-            season_data = statsapi.player_stat_data(
-                self.entity_id,
-                group="hitting",
-                type="season"
-            )
-            yearly_data = statsapi.player_stat_data(
-                self.entity_id,
-                group="hitting",
-                type="yearByYear"
-            )
-
-            # Extract hitting data with safe defaults
-            career_hitting = career_data.get("hitting", {})
-            season_hitting = season_data.get("hitting", {})
-
-            # Process year-by-year data
-            hr_by_year = []
-            if "hitting" in yearly_data:
-                for year, stats in yearly_data["hitting"].items():
-                    abs = stats.get("atBats", 0)
-                    hrs = stats.get("homeRuns", 0)
-                    
-                    hr_by_year.append({
-                        "year": year,
-                        "home_runs": hrs,
-                        "games": stats.get("gamesPlayed", 0),
-                        "ab_per_hr": round(abs / hrs, 2) if hrs > 0 else 0,
-                        "rbi": stats.get("rbi", 0),
-                        "slg": stats.get("slg", ".000")
-                    })
-
-            # Sort years by home runs for records
-            sorted_hrs = sorted(hr_by_year, key=lambda x: x["home_runs"], reverse=True)
-            best_hr_season = sorted_hrs[0] if sorted_hrs else {"year": None, "home_runs": 0}
-
-            return {
-                "player_id": self.entity_id,
-                "career_stats": {
-                    "total_home_runs": career_hitting.get("homeRuns", 0),
-                    "games_played": career_hitting.get("gamesPlayed", 0),
-                    "ab_per_hr": round(
-                        career_hitting.get("atBats", 0) / career_hitting.get("homeRuns", 1), 2
-                    ) if career_hitting.get("homeRuns", 0) > 0 else 0,
-                    "total_rbi": career_hitting.get("rbi", 0),
-                    "career_slg": career_hitting.get("slg", ".000")
-                },
-                "season_stats": {
-                    "home_runs": season_hitting.get("homeRuns", 0),
-                    "games": season_hitting.get("gamesPlayed", 0),
-                    "ab_per_hr": round(
-                        season_hitting.get("atBats", 0) / season_hitting.get("homeRuns", 1), 2
-                    ) if season_hitting.get("homeRuns", 0) > 0 else 0,
-                    "rbi": season_hitting.get("rbi", 0),
-                    "slg": season_hitting.get("slg", ".000")
-                },
-                "records": {
-                    "best_season": {
-                        "year": best_hr_season["year"],
-                        "home_runs": best_hr_season["home_runs"]
+            # Get player info
+            player = statsapi.lookup_player(self.entity_id)[0]
+            player_name = player['fullName']
+            
+            # Use difflib to find matching home runs
+            def calculate_similarity(row):
+                hr_name = str(row['title']).split(' homers')[0]  # Using 'title' instead of 'description'
+                return SequenceMatcher(None, hr_name.lower(), player_name.lower()).ratio()
+            
+            # Add similarity scores and filter matches
+            self.homeruns['similarity'] = self.homeruns.apply(calculate_similarity, axis=1)
+            matching_hrs = self.homeruns[self.homeruns['similarity'] > 0.8]
+            
+            # Convert matching rows to list of dictionaries
+            homeruns_list = []
+            for _, hr in matching_hrs.iterrows():
+                homeruns_list.append({
+                    "year": int(hr['season']),  # Changed from 'year' to 'season'
+                    "description": hr['title'],  # Changed from 'description' to 'title'
+                    "metadata": {
+                        "exit_velocity": float(hr['ExitVelocity']),  # Changed to match CSV column name
+                        "launch_angle": float(hr['LaunchAngle']),    # Changed to match CSV column name
+                        "distance": float(hr['HitDistance'])         # Changed to match CSV column name
                     },
-                    "30_plus_hr_seasons": len([
-                        season for season in hr_by_year 
-                        if season["home_runs"] >= 30
-                    ]),
-                    "40_plus_hr_seasons": len([
-                        season for season in hr_by_year 
-                        if season["home_runs"] >= 40
-                    ]),
-                    "50_plus_hr_seasons": len([
-                        season for season in hr_by_year 
-                        if season["home_runs"] >= 50
-                    ])
-                },
-                "yearly_stats": sorted(hr_by_year, key=lambda x: x["year"], reverse=True)
+                    "video": {
+                        "type": "video",
+                        "url": hr['video'],  # Changed from 'video_url' to 'video'
+                        "title": hr['title']
+                    }
+                })
+            
+            # Calculate metrics using pandas with updated column names
+            metrics = {
+                "avg_distance": float(matching_hrs['HitDistance'].mean()) if not matching_hrs.empty else 0,
+                "avg_exit_velocity": float(matching_hrs['ExitVelocity'].mean()) if not matching_hrs.empty else 0,
+                "avg_launch_angle": float(matching_hrs['LaunchAngle'].mean()) if not matching_hrs.empty else 0,
+                "longest_homerun": float(matching_hrs['HitDistance'].max()) if not matching_hrs.empty else 0,
+                "highest_exit_velocity": float(matching_hrs['ExitVelocity'].max()) if not matching_hrs.empty else 0
             }
+            
+            result = {
+                "player_id": self.entity_id,
+                "player_name": player_name,
+                "total_homeruns": len(matching_hrs),
+                "homeruns": sorted(homeruns_list, key=lambda x: x["metadata"]["distance"], reverse=True),
+                "metrics": metrics
+            }
+            logger.info(result)
+            return result
+            
         except Exception as e:
             logger.error(f"Error fetching player home runs: {str(e)}")
             raise
-
 
     async def _get_player_awards(self) -> Dict[str, Any]:
         """Get player's statistical achievements and milestones."""

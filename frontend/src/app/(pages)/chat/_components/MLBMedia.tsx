@@ -410,7 +410,7 @@ const SingleVideo: React.FC<{ video: MediaItem }> = ({ video }) => (
 );
 
 // Updated VideoGrid component with search functionality
-const VideoGrid: React.FC<{ videos: MediaItem[] }> = ({ videos }) => {
+export const VideoGrid: React.FC<{ videos: MediaItem[] }> = ({ videos }) => {
   const [searchQuery, setSearchQuery] = useState('');
   
   const filteredVideos = videos.filter(video => 

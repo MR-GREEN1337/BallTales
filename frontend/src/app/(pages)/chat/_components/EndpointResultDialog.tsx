@@ -20,6 +20,7 @@ import { useState } from "react";
 import RosterGallery from "./RosterGallery";
 import renderPlayerAwards from "./renderPlayerAwards";
 import { motion } from "framer-motion";
+import renderHomerunsData from "./renderHomeruns";
 
 interface EndpointResultDialogProps {
   isOpen: boolean;
@@ -258,6 +259,8 @@ const renderRecentGames = (oldData: any) => {
         return renderRosterData(data);
       case '/api/player/stats':
         return renderStatsData(data);
+      case '/api/player/homeruns':
+        return renderHomerunsData(data);
       default:
         return (
           <Card className="bg-gradient-to-br from-gray-500/10 to-gray-600/10 border-gray-500/20">
