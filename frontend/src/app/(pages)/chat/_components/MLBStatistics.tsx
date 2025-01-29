@@ -70,6 +70,7 @@ interface MLBStatisticsProps {
 }
 
 const MLBStatistics: React.FC<MLBStatisticsProps> = ({ chart }) => {
+  console.log("aza", chart);
   // Helper function to format dates for display
   const formatDate = (dateString: string) => {
     // First, handle special case where dateString might be already in Month Day format

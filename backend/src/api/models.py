@@ -8,6 +8,7 @@ from datetime import datetime
 from src.core import LANGUAGES_FOR_LABELLING
 from uuid import uuid4
 
+
 @dataclass
 class MLBDeps:
     client: AsyncClient

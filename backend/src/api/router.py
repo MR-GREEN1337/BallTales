@@ -183,7 +183,9 @@ async def analyze_image(
         # Re-raise the exception for proper error handling
         raise
 
+
 chart_docs = open("src/core/constants/charts_docs.json", "r").read()
+
 
 @router.post(
     "/{suggestion_type}",
@@ -221,7 +223,9 @@ async def handle_suggestion(
         player_match = re.search(player_pattern, mediaUrl)
         if player_match:
             mlb_id = player_match.group(1)
-        logger.info(f"id: {mlb_id}, entity_type: {entity_type}, endpoint: {suggestion_type}")
+        logger.info(
+            f"id: {mlb_id}, entity_type: {entity_type}, endpoint: {suggestion_type}"
+        )
 
         handler = MLBWorkflowHandler(mlb_id, entity_type, chart_docs=chart_docs)
         logger.info(f"Handler: {handler}")

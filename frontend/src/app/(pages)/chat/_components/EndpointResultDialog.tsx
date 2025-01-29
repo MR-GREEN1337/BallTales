@@ -21,6 +21,8 @@ import RosterGallery from "./RosterGallery";
 import renderPlayerAwards from "./renderPlayerAwards";
 import { motion } from "framer-motion";
 import renderHomerunsData from "./renderHomeruns";
+import { getEndpointTitle } from "@/lib/constants";
+import MLBStatistics from "./MLBStatistics";
 
 interface EndpointResultDialogProps {
   isOpen: boolean;
@@ -36,6 +38,7 @@ const formatNumber = (num: number): string => {
 };
 
 const EndpointResultDialog = ({ isOpen, onClose, endpoint, data, onImageAnalysis }: EndpointResultDialogProps) => {
+  console.log("EndpointResultDialog", endpoint, data.data.data);
   // Extract endpoint name without path
   const endpointName = endpoint;
 
@@ -245,6 +248,7 @@ const renderRecentGames = (oldData: any) => {
 };
 
   const renderContent = () => {
+    console.log("EndpointResultDialog", endpointName, data);
    alert(endpointName)
     switch (endpointName) {
       case '/api/team/games/recent':
@@ -258,7 +262,10 @@ const renderRecentGames = (oldData: any) => {
       case '/api/team/roster/all-time':
         return renderRosterData(data);
       case '/api/player/stats':
-        return renderStatsData(data);
+        return <MLBStatistics chart={data.data.data} />
+      case '/api/team/stats':
+        return <MLBStatistics chart={data.data} />
+        //return renderStatsData(data);
       case '/api/player/homeruns':
         return renderHomerunsData(data);
       default:
@@ -283,7 +290,7 @@ const renderRecentGames = (oldData: any) => {
         <DialogHeader>
           <DialogTitle className="text-xl font-bold flex items-center gap-2">
             <ChevronRight className="w-5 h-5" />
-            {endpointName.charAt(0).toUpperCase() + endpointName.slice(1)} Results
+            {getEndpointTitle(endpointName)} Results
           </DialogTitle>
         </DialogHeader>
         {renderContent()}

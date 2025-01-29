@@ -193,7 +193,7 @@ const ImageAnalysisComponent: React.FC<ImageAnalysisProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[150] flex items-center justify-center px-2 md:px-6"> {/* Increased z-index */}
+      <div className="fixed inset-0 z-[1500] flex items-center justify-center px-2 md:px-6"> {/* Increased z-index */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

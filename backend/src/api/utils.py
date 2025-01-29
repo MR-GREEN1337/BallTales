@@ -1,9 +1,12 @@
 from datetime import datetime
 from typing import Dict, Any, Optional
-from src.api.models import ChatRequest
+from src.api.gemini_solid import GeminiSolid
+import google.generativeai as genai
+from src.api.models import ChatRequest, MLBResponse
 from src.core import LANGUAGES_FOR_LABELLING
 from loguru import logger
 import json
+
 
 def sanitize_code(code: str) -> str:
     """
@@ -158,3 +161,41 @@ def _build_chat_context(chat_request: ChatRequest) -> Dict[str, Any]:
             "id": chat_request.user_data.id,
         },
     }
+
+
+async def translate_response(response: Any, target_language: str) -> MLBResponse:
+    """Translate human-readable fields in the MLB response while preserving structure and technical data."""
+    if not target_language or target_language.lower() == "english":
+        return response
+
+    prompt = f"""Translate this MLB baseball response from English to {target_language}.
+        The response is provided as JSON. Return the exact same JSON structure.
+        
+        Rules:
+        1. Translate ONLY human-readable text like descriptions, messages, and titles
+        2. DO NOT translate or modify:
+        - Technical fields (ids, urls, types, flags)
+        - Player names and team names
+        - Statistics and numbers
+        - Data structure or field names
+        - Boolean flags or status indicators
+        3. Preserve all JSON structure and formatting exactly
+        
+        Input Response:
+        {json.dumps(response, indent=2)}
+        
+        Return the translated JSON with identical structure."""
+
+    try:
+        result = await GeminiSolid().generate_with_fallback(
+            prompt,
+            generation_config=genai.GenerationConfig(
+                temperature=0.1, response_mime_type="application/json"
+            ),
+        )
+
+        return json.loads(result.text)
+
+    except Exception as e:
+        print(f"Translation error: {str(e)}")
+        return response

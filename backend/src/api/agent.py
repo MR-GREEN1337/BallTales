@@ -22,7 +22,7 @@ from src.api.models import (
 )
 from src.api.repl import MLBPythonREPL
 from src.core.settings import settings
-from src.api.utils import sanitize_code
+from src.api.utils import sanitize_code, translate_response
 from src.api.gemini_solid import GeminiSolid
 
 
@@ -66,6 +66,7 @@ class MLBAgent:
 
             Current Date: {datetime.now().isoformat()}
 
+            History of messages: {{context}}
             Please analyze the baseball query and return a structured JSON response with detailed intent analysis, and if mlb related.
 
             COMMON MLB QUERIES AND HOW TO UNDERSTAND THEM:
@@ -1471,10 +1472,11 @@ print(json.dumps(result))
         """Enhanced message processing with media resolution"""
         try:
             # Get intent analysis
-            self.intent = await self.analyze_intent(
-                f"{message} \n History of messages: {json.dumps(context, indent=2)}"
-            )
+            self.intent = await self.analyze_intent(f"{message}")
             self.user_query = message
+            self.intent_prompt = self.intent_prompt.replace(
+                "{{context}}", json.dumps(context, indent=2)
+            )
             # MLB-related query path
             if self.intent["is_mlb_related"] and self.intent["context"].get(
                 "requires_data", True
@@ -1511,7 +1513,7 @@ print(json.dumps(result))
                         "media": response_data.get("media"),
                         "chart": chart,
                     }
-                    translated_result = await self.translate_response(
+                    translated_result = await translate_response(
                         response=result,
                         target_language=context["user_info"]["language"],
                     )
@@ -1536,9 +1538,10 @@ print(json.dumps(result))
                     "context": {"intent": self.intent},
                     "suggestions": suggestions,
                     "media": None,
+                    "chart": None,
                 }
 
-                translated_result = await self.translate_response(
+                translated_result = await translate_response(
                     response=result, target_language=context["user_info"]["language"]
                 )
 
@@ -1554,13 +1557,6 @@ print(json.dumps(result))
         """
         Get ready-to-use media URLs and relevant homerun keywords, with enhanced search capabilities
         that consider multiple fields beyond just the title.
-
-        The function now considers:
-        - Title text
-        - Exit velocity ranges
-        - Launch angle ranges
-        - Distance thresholds
-        - Player names extracted from titles
         """
         try:
             # Get a small sample of homerun data for context
@@ -1569,42 +1565,33 @@ print(json.dumps(result))
             # Enhanced prompt focusing on specific, meaningful search parameters
             media_prompt = """Based on this MLB context, generate a complete media plan with ready-to-use URLs and detailed, specific search parameters that capture the distinctive aspects of each home run.
 
-            User query: {user_query}
-            Intent: {intent}
-            Data: {data}
-            Sample Homerun Data: {homerun_sample}
-            Available Media Sources: {media_sources}
+    Intent: {intent}
+    Data: {data}
+    Sample Homerun Data: {homerun_sample}
+    Available Media Sources: {media_sources}
+    User Query: {user_query}
 
-            Return a JSON object with:
-            1. direct_media: Array of ready-to-use media items with:
-            - type: "image" or "video"
-            - url: Complete URL (use templates below)
-            - description: Natural description
-            - metadata: Additional info (esp. for homeruns)
+    Return a JSON object with:
+    1. direct_media: Array of ready-to-use media items with:
+    - type: "image" or "video"
+    - url: Complete URL (use templates below)
+    - description: Natural description
+    - metadata: Additional info (esp. for homeruns)
 
-            2. homerun_search: Object containing:
-            - keywords: Array of specific, distinctive search terms such as:
-                * Situational context (e.g., "walk-off", "grand slam", "leadoff", "pinch-hit")
-                * Game situation (e.g., "ties game", "takes lead", "extends lead")
-                * Hit description (e.g., "line drive", "deep drive", "crushed", "monster shot")
-                * Field location (e.g., "center field", "upper deck", "opposite field")
-                * Notable achievements (e.g., "milestone", "career first", "record breaking")
-                Do NOT include generic terms like "homerun", "homer", "hits", as these are implied
-            - stats_criteria: Object with:
-                - min_exit_velocity: Optional minimum exit velocity
-                - max_exit_velocity: Optional maximum exit velocity
-                - min_launch_angle: Optional minimum launch angle
-                - max_launch_angle: Optional maximum launch angle
-                - min_distance: Optional minimum distance
-                - max_distance: Optional maximum distance
-            - player_names: Array containing:
-                * Batter's full name
-                * Batter's common nicknames
-                * Any other players mentioned in the context (e.g., runners who scored)
+    2. homerun_search: Object containing:
+    - keywords: Array of specific, distinctive search terms
+    - stats_criteria: Object with:
+        - min_exit_velocity: Optional minimum exit velocity
+        - max_exit_velocity: Optional maximum exit velocity
+        - min_launch_angle: Optional minimum launch angle
+        - max_launch_angle: Optional maximum launch angle
+        - min_distance: Optional minimum distance
+        - max_distance: Optional maximum distance
+    - player_names: Array containing batter names and mentioned players
 
-            URL Templates:
-            - Player headshots: https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/[player_id]/headshot/67/current
-            - Team logos: https://www.mlbstatic.com/team-logos/[team_id].svg"""
+    URL Templates:
+    - Player headshots: https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/[player_id]/headshot/67/current
+    - Team logos: https://www.mlbstatic.com/team-logos/[team_id].svg"""
 
             # Format prompt with actual data
             formatted_prompt = media_prompt.format(
@@ -1789,7 +1776,14 @@ print(json.dumps(result))
 
         except Exception as e:
             print(f"Error in media resolution: {str(e)}")
-            return {"direct_media": [], "homerun_search": []}
+            return {
+                "direct_media": [],
+                "homerun_search": {
+                    "keywords": [],
+                    "stats_criteria": {},
+                    "player_names": [],
+                },
+            }
 
     async def _resolve_chart(
         self, deps: MLBDeps, data: Dict[str, Any], steps: List[Dict[str, Any]]
@@ -1956,45 +1950,6 @@ print(json.dumps(result))
             print(f"Media resolution error: {str(e)}")
             traceback.print_exc()
             return []
-
-    async def translate_response(
-        self, response: Any, target_language: str
-    ) -> MLBResponse:
-        """Translate human-readable fields in the MLB response while preserving structure and technical data."""
-        if not target_language or target_language.lower() == "english":
-            return response
-
-        prompt = f"""Translate this MLB baseball response from English to {target_language}.
-            The response is provided as JSON. Return the exact same JSON structure.
-            
-            Rules:
-            1. Translate ONLY human-readable text like descriptions, messages, and titles
-            2. DO NOT translate or modify:
-            - Technical fields (ids, urls, types, flags)
-            - Player names and team names
-            - Statistics and numbers
-            - Data structure or field names
-            - Boolean flags or status indicators
-            3. Preserve all JSON structure and formatting exactly
-            
-            Input Response:
-            {json.dumps(response, indent=2)}
-            
-            Return the translated JSON with identical structure."""
-
-        try:
-            result = await self.gemini.generate_with_fallback(
-                prompt,
-                generation_config=genai.GenerationConfig(
-                    temperature=0.1, response_mime_type="application/json"
-                ),
-            )
-
-            return json.loads(result.text)
-
-        except Exception as e:
-            print(f"Translation error: {str(e)}")
-            return response
 
 
 with open("src/core/constants/endpoints.json", "r") as f:
