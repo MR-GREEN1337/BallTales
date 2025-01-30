@@ -90,7 +90,7 @@ This architecture enables:
    - Fallback strategies
 
 4. **Media Analysis**
-   - Smart video content matching
+   - Smart media content matching
    - Home run highlight analysis
    - Statistical context extraction
    - Dynamic media recommendations
