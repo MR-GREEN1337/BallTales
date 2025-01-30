@@ -10,7 +10,7 @@ from src.api.models import (
     ImageAnalysisResponse,
     SuggestionResponse,
 )
-from src.api.agent import mlb_agent, MLBDeps
+from src.api.agent import MLBDeps
 from src.api.analysis import MediaAnalyzer, get_analyzer, media_analyzer
 from src.api.utils import log_analysis_request, _build_chat_context
 from src.api.mlb_workflow_handler import MLBWorkflowHandler
@@ -40,6 +40,8 @@ async def chat(request: Request, chat_request: ChatRequest):
 
     This endpoint handles general chat interactions, maintaining context and user preferences.
     """
+    from src.main import get_mlb_agent
+    mlb_agent = get_mlb_agent()
     async with httpx.AsyncClient() as client:
         try:
             # Set up dependencies and context

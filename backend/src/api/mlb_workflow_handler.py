@@ -560,98 +560,144 @@ class MLBWorkflowHandler:
             raise
 
     async def _get_player_awards(self) -> Dict[str, Any]:
-        """Get player's statistical achievements and milestones."""
-        try:
-            # Get career and yearly stats
-            career_data = statsapi.player_stat_data(
-                self.entity_id, group="[hitting,pitching]", type="career"
-            )
-            yearly_data = statsapi.player_stat_data(
-                self.entity_id, group="[hitting,pitching]", type="yearByYear"
-            )
+            """Get player's statistical achievements and milestones."""
+            try:
+                # Get career and yearly stats
+                career_data = statsapi.player_stat_data(
+                    self.entity_id, group="[hitting,pitching]", type="career"
+                )
+                yearly_data = statsapi.player_stat_data(
+                    self.entity_id, group="[hitting,pitching]", type="yearByYear"
+                )
 
-            # Extract relevant stats
-            player_stats = {
-                "player_info": {
-                    "name": f"{career_data['first_name']} {career_data['last_name']}",
-                    "position": career_data["position"],
-                    "mlb_debut": career_data["mlb_debut"],
-                },
-                "career_stats": career_data["stats"][0][
-                    "stats"
-                ],  # Career hitting stats
-                "yearly_stats": {
-                    stat["season"]: stat["stats"]
-                    for stat in yearly_data["stats"]
-                    if stat["type"] == "yearByYear"
-                },
-            }
+                # Safely get player info with defaults
+                first_name = career_data.get('first_name', '')
+                last_name = career_data.get('last_name', '')
+                position = career_data.get('position', 'Unknown')
+                mlb_debut = career_data.get('mlb_debut', '')
 
-            # Create prompt for Gemini
-            formatted_prompt = f"""Analyze these MLB player statistics and generate a structured achievement summary as JSON.
-    Focus on career milestones, exceptional seasons, and notable records.
-    Return the data in this exact JSON structure:
+                # Safely get stats with proper null checks
+                stats = career_data.get('stats', [])
+                career_stats = {}
+                if stats and len(stats) > 0:
+                    career_stats = stats[0].get('stats', {})
 
-    {{
-    "player_info": {{
-        "name": "full_name",
-        "position": "position",
-        "mlb_debut": "date"
-    }},
-    "career_achievements": [
+                # Safely get yearly stats
+                yearly_stats = {}
+                for stat in yearly_data.get('stats', []):
+                    if stat.get('type') == 'yearByYear':
+                        season = stat.get('season')
+                        if season:
+                            yearly_stats[season] = stat.get('stats', {})
+
+                # Construct player stats dictionary with safe values
+                player_stats = {
+                    "player_info": {
+                        "name": f"{first_name} {last_name}".strip(),
+                        "position": position,
+                        "mlb_debut": mlb_debut,
+                    },
+                    "career_stats": career_stats,
+                    "yearly_stats": yearly_stats
+                }
+
+                # Create prompt for Gemini
+                formatted_prompt = f"""Analyze these MLB player statistics and generate a structured achievement summary as JSON.
+        Focus on career milestones, exceptional seasons, and notable records.
+        Return the data in this exact JSON structure:
+
         {{
-        "type": "milestone",
-        "description": "achievement description",
-        "value": "numerical_value",
-        "year": "year_achieved (if applicable)"
-        }}
-    ],
-    "notable_seasons": [
-        {{
-        "year": "season_year",
-        "achievements": [
+        "player_info": {{
+            "name": "full_name",
+            "position": "position",
+            "mlb_debut": "date"
+        }},
+        "career_achievements": [
             {{
-            "type": "record/achievement type",
-            "description": "specific achievement",
-            "value": "numerical_value"
+            "type": "milestone",
+            "description": "achievement description",
+            "value": "numerical_value",
+            "year": "year_achieved (if applicable)"
+            }}
+        ],
+        "notable_seasons": [
+            {{
+            "year": "season_year",
+            "achievements": [
+                {{
+                "type": "record/achievement type",
+                "description": "specific achievement",
+                "value": "numerical_value"
+                }}
+            ]
+            }}
+        ],
+        "records": [
+            {{
+            "type": "record_type",
+            "description": "record description",
+            "value": "record_value",
+            "year": "year_set"
             }}
         ]
         }}
-    ],
-    "records": [
-        {{
-        "type": "record_type",
-        "description": "record description",
-        "value": "record_value",
-        "year": "year_set"
-        }}
-    ]
-    }}
 
-    Consider these thresholds for achievements:
-    - Career milestones: 300+ HR, 700+ RBI, .400+ OBP, 1.000+ OPS
-    - Season highlights: 40+ HR, .300+ AVG, 1.000+ OPS, 100+ RBI
-    - Records: AL/MLB records, franchise records, season bests
+        Consider these thresholds for achievements:
+        - Career milestones: 300+ HR, 700+ RBI, .400+ OBP, 1.000+ OPS
+        - Season highlights: 40+ HR, .300+ AVG, 1.000+ OPS, 100+ RBI
+        - Records: AL/MLB records, franchise records, season bests
 
-    Parse this player data and return only verified achievements:
-    {json.dumps(player_stats, indent=2)}"""
+        Parse this player data and return only verified achievements:
+        {json.dumps(player_stats, indent=2)}"""
 
-            # Generate response using Gemini
-            result = await self.gemini.generate_with_fallback(
-                formatted_prompt,
-                generation_config=genai.GenerationConfig(
-                    temperature=0.1,
-                    response_mime_type="application/json",
-                ),
-            )
+                # Generate response using Gemini with error handling
+                try:
+                    result = await self.gemini.generate_with_fallback(
+                        formatted_prompt,
+                        generation_config=genai.GenerationConfig(
+                            temperature=0.1,
+                            response_mime_type="application/json",
+                        ),
+                    )
+                    
+                    # Parse and validate the response
+                    parsed_result = json.loads(result.text)
+                    
+                    # Ensure minimum required structure
+                    required_fields = ["player_info", "career_achievements", "notable_seasons", "records"]
+                    if not all(field in parsed_result for field in required_fields):
+                        return {
+                            "player_info": player_stats["player_info"],
+                            "career_achievements": [],
+                            "notable_seasons": [],
+                            "records": []
+                        }
+                    
+                    return parsed_result
 
-            # Parse and return JSON response
-            return json.loads(result.text)
+                except Exception as gemini_error:
+                    logger.error(f"Gemini processing error: {str(gemini_error)}")
+                    # Return a valid but empty structure on Gemini error
+                    return {
+                        "player_info": player_stats["player_info"],
+                        "career_achievements": [],
+                        "notable_seasons": [],
+                        "records": []
+                    }
 
-        except Exception as e:
-            logger.error(f"Error fetching player achievements: {str(e)}")
-            raise
-
+            except Exception as e:
+                logger.error(f"Error fetching player achievements: {str(e)}")
+                # Return a valid but empty structure on any error
+                return {
+                    "player_info": {
+                        "name": "",
+                        "position": "Unknown",
+                        "mlb_debut": ""
+                    },
+                    "career_achievements": [],
+                    "notable_seasons": [],
+                    "records": []
+                }
     async def process_workflow(self, endpoint: str) -> Dict[str, Any]:
         """Process the workflow based on the endpoint."""
         try:

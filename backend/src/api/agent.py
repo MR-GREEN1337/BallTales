@@ -1935,26 +1935,3 @@ print(json.dumps(result))
             print(f"Media resolution error: {str(e)}")
             traceback.print_exc()
             return []
-
-
-with open("src/core/constants/endpoints.json", "r") as f:
-    endpoints_json = f.read()
-
-with open("src/core/constants/mlb_functions.json", "r") as f:
-    functions_json = f.read()
-
-with open("src/core/constants/media_sources.json", "r") as f:
-    media_json = f.read()
-
-# Useful to return valid charts data
-with open("src/core/constants/charts_docs.json", "r") as f:
-    charts_json = f.read()
-
-# Create agent instance
-mlb_agent = MLBAgent(
-    api_key=settings.GEMINI_API_KEY,
-    endpoints_json=endpoints_json,
-    functions_json=functions_json,
-    media_json=media_json,
-    charts_json=charts_json,
-)
