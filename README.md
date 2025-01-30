@@ -5,6 +5,7 @@
 An intelligent baseball analytics platform that leverages Google's Gemini API to deliver personalized MLB insights, multilingual support, and interactive media experiences.
 
 ![Landing Page](./assets/LandingPage.png)
+![Inside the App](./assets/Aaron_Judge.png)
 
 ## 🏆 Project Highlights
 
@@ -220,9 +221,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Google Cloud & MLB™ for the Hackathon opportunity
 - MLB Stats API for data access
-- shadcn/ui for components
-- Lucide Icons
-- Framer Motion
 
 ## 👨‍💻 Author
 
