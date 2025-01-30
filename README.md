@@ -14,9 +14,10 @@ An intelligent baseball analytics platform that leverages Google's Gemini API to
 - **Dynamic Code Generation**: Uses Gemini to generate and execute Python code in real-time for data retrieval, processing, and extraction, enabling flexible and powerful data operations
 - **Robust Error Handling**: Multi-model fallback system with retry mechanism and exponential backoff to handle rate limits and ensure reliable performance
 - **Multilingual Support**: Full support for English, Spanish, and Japanese baseball content
-- **Personalized Experience**: Custom fan preferences and tailored baseball insights
+- **Personalized Experience**: Custom fan preferences and tailored baseball insights with intelligent updates
 - **Interactive Media**: Rich video integration with home run highlights and analysis
 - **Real-time Analytics**: Live statistics and dynamic visualizations
+- **Adaptive User Profiling**: Automatic preference updates based on conversation analysis and user interactions
 
 ## 🧠 Advanced AI Architecture
 
@@ -66,6 +67,7 @@ This architecture enables:
 - Dynamic code generation and execution
 - Secure sandboxed environment
 - Automatic retry on rate limits
+- Continuous user preference adaptation
 
 ### Advanced AI Capabilities
 
@@ -81,23 +83,29 @@ This architecture enables:
    - Real-time code generation
    - Secure timeout handling
 
-2. **Data Planning**
+3. **Data Planning**
    - Gemini-based structured data retrieval
    - Dynamic plan generation
    - Dependency optimization
    - Fallback strategies
 
-3. **Media Analysis**
+4. **Media Analysis**
    - Smart video content matching
    - Home run highlight analysis
    - Statistical context extraction
    - Dynamic media recommendations
 
-4. **Response Generation**
+5. **Response Generation**
    - Natural language generation in multiple languages
    - Context-aware suggestions
    - Personalized insights
    - Engaging conversation flow
+
+6. **Intelligent User Profiling**
+   - Automatic preference updates every 3 interactions
+   - Background analysis of conversation context
+   - Dynamic adaptation to user interests
+   - Multi-dimensional preference tracking
 
 ## 🛠️ Technical Stack
 
@@ -113,6 +121,7 @@ This architecture enables:
 - **AI**: Google Gemini API
 - **Data Processing**: Python with MLB Stats API
 - **Media Handling**: Custom video/image analysis
+- **User Profiling**: Intelligent background updates
 
 ## 🚀 Getting Started
 
@@ -131,6 +140,7 @@ JWT_SECRET=secret
 
 # Backend (.env)
 GEMINI_API_KEY=your_api_key
+UPDATE_INTERVAL=3  # Number of interactions before preference update
 ```
 
 ### Installation
@@ -155,21 +165,25 @@ python src/main.py
    - Real-time baseball discussions in 3 languages
    - Natural language processing
    - Context-aware responses
+   - Adaptive language preference detection
 
 2. **Video Analysis**
    - Home run highlight detection
    - Statistical overlay
    - Player performance tracking
+   - Personalized highlight selection
 
 3. **Data Visualization**
    - Dynamic chart generation
    - Interactive statistics
    - Real-time updates
+   - User-specific data views
 
 4. **User Personalization**
-   - Fan preferences
+   - Intelligent fan preference updates
    - Team/player following
    - Custom alerts
+   - Conversation-based interest tracking
 
 ## 💻 Technical Implementation
 
@@ -206,6 +220,12 @@ python src/main.py
        intent=self.intent,
        data=data
    )
+   ```
+
+4. **User Preference Analysis**
+   ```python
+   # Intelligent preference updates
+    updated_prefs = await analyze_user_preferences(user_req)
    ```
 
 ## 📝 License
