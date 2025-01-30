@@ -1,4 +1,4 @@
-# MLB Chat - AI-Powered Baseball Analytics
+# BallTales - AI-Powered Baseball Analytics
 
 > Built for the Google Cloud x MLB™ Hackathon 2025 - Challenge 2: Personalized Fan Highlights
 
@@ -9,7 +9,9 @@ An intelligent baseball analytics platform that leverages Google's Gemini API to
 
 ## 🏆 Project Highlights
 
-- **Gemini-Powered Intelligence**: Uses Gemini API for advanced natural language understanding and generation
+- **Intelligent Planning**: Leverages Gemini's advanced planning capabilities to orchestrate complex data retrieval and analysis strategies, automatically determining optimal execution paths
+- **Dynamic Code Generation**: Uses Gemini to generate and execute Python code in real-time for data retrieval, processing, and extraction, enabling flexible and powerful data operations
+- **Robust Error Handling**: Multi-model fallback system with retry mechanism and exponential backoff to handle rate limits and ensure reliable performance
 - **Multilingual Support**: Full support for English, Spanish, and Japanese baseball content
 - **Personalized Experience**: Custom fan preferences and tailored baseball insights
 - **Interactive Media**: Rich video integration with home run highlights and analysis
@@ -215,7 +217,7 @@ python src/main.py
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache-2.0 License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
