@@ -6,6 +6,7 @@ An intelligent baseball analytics platform that leverages Google's Gemini API to
 
 ![Landing Page](./assets/LandingPage.png)
 ![Inside the App](./assets/Aaron_Judge.png)
+![Inside the App](./assets/App_Inside.png)
 
 ## 🏆 Project Highlights
 
