@@ -285,15 +285,25 @@ const renderRecentGames = (oldData: any) => {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto bg-black/95 border-white/10">
+    <Dialog open={isOpen} onOpenChange={onClose} modal={true}>
+      <DialogContent 
+        className="max-w-4xl max-h-[90vh] overflow-auto bg-black/95 border-white/10 z-[3000]
+          fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%]"
+        style={{
+          position: 'fixed',
+          zIndex: 3000,
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
         <DialogHeader>
           <DialogTitle className="text-xl font-bold flex items-center gap-2">
             <ChevronRight className="w-5 h-5" />
             {getEndpointTitle(endpointName)} Results
           </DialogTitle>
         </DialogHeader>
-        {renderContent()}
+        <div className="relative z-[3001]">
+          {renderContent()}
+        </div>
       </DialogContent>
     </Dialog>
   );

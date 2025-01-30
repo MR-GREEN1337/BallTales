@@ -23,6 +23,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import axios from 'axios';
 import ImageAnalysisDialog from './ImageAnalysisDialog';
 import VideoAnalysis, { AnalysisResponse } from './VideoAnalysis';
+import { createPortal } from 'react-dom';
 
 // TypeScript interfaces remain the same
 interface MediaMetadata {
@@ -94,8 +95,8 @@ interface AnalysisDialogProps {
   onClose: () => void;
   videoUrl: string;
 }
-const AnalysisDialog: React.FC<AnalysisDialogProps> = ({ 
-  isOpen, 
+const AnalysisDialog: React.FC<AnalysisDialogProps> = ({
+  isOpen,
   onClose,
   videoUrl
 }) => {
@@ -108,12 +109,12 @@ const AnalysisDialog: React.FC<AnalysisDialogProps> = ({
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
-    
+
     if (isOpen) {
       document.addEventListener('keydown', handleEscape);
       document.body.style.overflow = 'hidden';
     }
-    
+
     return () => {
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = 'unset';
@@ -133,7 +134,7 @@ const AnalysisDialog: React.FC<AnalysisDialogProps> = ({
           message: message.trim()
         }
       );
-      
+
       // response.data is already parsed by axios
       setAnalysisResult(response.data);
     } catch (err) {
@@ -153,94 +154,94 @@ const AnalysisDialog: React.FC<AnalysisDialogProps> = ({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm"
-          />
-          
-          <div className="relative w-full max-w-4xl px-4 h-[90vh] flex items-center">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ type: "spring", duration: 0.5 }}
-              className="w-full h-full bg-black/95 border border-white/10 rounded-xl shadow-2xl 
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+        />
+
+        <div className="relative w-full max-w-4xl px-4 h-[90vh] flex items-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ type: "spring", duration: 0.5 }}
+            className="w-full h-full bg-black/95 border border-white/10 rounded-xl shadow-2xl 
                 transform transition-all relative flex flex-col max-h-full overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Header */}
-              <div className="flex-none p-6 border-b border-white/10">
-                <button
-                  onClick={onClose}
-                  className="absolute top-4 right-4 p-1 rounded-full hover:bg-white/10 
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex-none p-6 border-b border-white/10">
+              <button
+                onClick={onClose}
+                className="absolute top-4 right-4 p-1 rounded-full hover:bg-white/10 
                     transition-colors duration-200"
-                >
-                  <X className="w-5 h-5 text-gray-400 hover:text-white" />
-                </button>
-    
-                <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-green-500" />
-                  Video Analysis
-                </h3>
-              </div>
-    
-              {/* Scrollable Content */}
-              <div className="flex-1 overflow-y-auto">
-                <div className="p-6">
-                  <div className="mb-6">
-                    <VideoPlayer video={{ type: 'video', url: videoUrl }} />
-                  </div>
-            
-                  <div className="space-y-6">
-                    {/* Message Input Section */}
-                    <div className="space-y-2">
-                      <div className="relative">
-                        <textarea
-                          value={message}
-                          onChange={(e) => setMessage(e.target.value)}
-                          placeholder="Ask about specific aspects of this play..."
-                          className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white 
+              >
+                <X className="w-5 h-5 text-gray-400 hover:text-white" />
+              </button>
+
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-green-500" />
+                Video Analysis
+              </h3>
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-6">
+                <div className="mb-6">
+                  <VideoPlayer video={{ type: 'video', url: videoUrl }} />
+                </div>
+
+                <div className="space-y-6">
+                  {/* Message Input Section */}
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <textarea
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        placeholder="Ask about specific aspects of this play..."
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white 
                             placeholder-gray-500 focus:border-green-500/50 focus:ring-0 focus:outline-none
                             transition-colors resize-none h-24"
-                        />
-                        <button
-                          onClick={handleAnalyze}
-                          disabled={isAnalyzing || !message.trim()}
-                          className={`absolute bottom-3 right-3 p-2 rounded-full transition-all duration-200
-                            ${message.trim() ? 
-                              'bg-green-500 hover:bg-green-600 text-white' : 
-                              'bg-white/5 text-gray-500 cursor-not-allowed'
-                            }`}
-                        >
-                          <Send className="w-4 h-4" />
-                        </button>
-                      </div>
+                      />
+                      <button
+                        onClick={handleAnalyze}
+                        disabled={isAnalyzing || !message.trim()}
+                        className={`absolute bottom-3 right-3 p-2 rounded-full transition-all duration-200
+                            ${message.trim() ?
+                            'bg-green-500 hover:bg-green-600 text-white' :
+                            'bg-white/5 text-gray-500 cursor-not-allowed'
+                          }`}
+                      >
+                        <Send className="w-4 h-4" />
+                      </button>
                     </div>
-    
-                    {/* Error Message */}
-                    {error && (
-                      <div className="text-red-400 bg-red-500/10 px-4 py-3 rounded-lg text-sm">
-                        {error}
-                      </div>
-                    )}
-    
-                    {/* Loading State */}
-                    {isAnalyzing && (
-                      <div className="flex items-center justify-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-green-500"></div>
-                      </div>
-                    )}
-    
-                    {/* Analysis Result */}
-                    {analysisResult && (
-                      <VideoAnalysis analysis={analysisResult} />
-                    )}
                   </div>
+
+                  {/* Error Message */}
+                  {error && (
+                    <div className="text-red-400 bg-red-500/10 px-4 py-3 rounded-lg text-sm">
+                      {error}
+                    </div>
+                  )}
+
+                  {/* Loading State */}
+                  {isAnalyzing && (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-green-500"></div>
+                    </div>
+                  )}
+
+                  {/* Analysis Result */}
+                  {analysisResult && (
+                    <VideoAnalysis analysis={analysisResult} />
+                  )}
                 </div>
               </div>
-            </motion.div>
-          </div>
+            </div>
+          </motion.div>
         </div>
-      </AnimatePresence>
-    );
+      </div>
+    </AnimatePresence>
+  );
 };
 
 // Enhanced VideoPlayer component with mobile-friendly analysis button
@@ -295,16 +296,16 @@ const VideoPlayer: React.FC<{ video: MediaItem, onAnalyze?: () => void }> = ({ v
   const getRandomImageNum = () => {
     return Math.floor(Math.random() * 30) + 1;
   };
-  
+
   const formatImageNum = (num: number) => {
     return num.toString().padStart(6, '0');
   };
-  
+
   const thumbnailUrl = `/homeruns/${formatImageNum(getRandomImageNum())}.jpg`;
 
   return (
     <>
-      <div 
+      <div
         className="relative aspect-video w-full bg-black/30 rounded-lg overflow-hidden group"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -312,9 +313,9 @@ const VideoPlayer: React.FC<{ video: MediaItem, onAnalyze?: () => void }> = ({ v
         {!isPlaying ? (
           <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent 
-              opacity-0 group-hover:opacity-100 md:transition-opacity md:duration-500 md:ease-in-out" 
+              opacity-0 group-hover:opacity-100 md:transition-opacity md:duration-500 md:ease-in-out"
             />
-            
+
             <img
               src={thumbnailUrl}
               alt={video.title || "Video thumbnail"}
@@ -322,7 +323,7 @@ const VideoPlayer: React.FC<{ video: MediaItem, onAnalyze?: () => void }> = ({ v
                 ${isHovered ? 'scale-110 blur-sm brightness-75' : 'scale-100 blur-none brightness-100'}
               `}
             />
-            
+
             <div className="relative z-2 transform md:transition-all md:duration-500 md:ease-in-out">
               <button
                 onClick={handlePlayClick}
@@ -345,25 +346,25 @@ const VideoPlayer: React.FC<{ video: MediaItem, onAnalyze?: () => void }> = ({ v
                 ${isTouchDevice ? 'gap-2' : 'group-hover:gap-2'}`}
             >
               <BarChart3 className={`w-4 h-4 transition-transform duration-500 ease-out
-                ${isTouchDevice ? 'rotate-0' : 'group-hover:rotate-0 rotate-12'}`} 
+                ${isTouchDevice ? 'rotate-0' : 'group-hover:rotate-0 rotate-12'}`}
               />
               <span className={`overflow-hidden transition-all duration-500 ease-out
-                ${isTouchDevice ? 
-                  'w-auto opacity-100' : 
+                ${isTouchDevice ?
+                  'w-auto opacity-100' :
                   'w-0 group-hover:w-14 opacity-0 group-hover:opacity-100'
                 }`}>
                 Analyze
               </span>
-              
+
               {/* Subtle background pulse effect */}
               <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100">
                 <div className="absolute inset-0 bg-white/20 rounded-full animate-ping-slow" />
               </div>
-              
+
               {/* Elegant border animation */}
               <div className={`absolute inset-0 rounded-full border border-white/20
                 transition-all duration-500 ease-out scale-50 opacity-0
-                group-hover:scale-100 group-hover:opacity-100`} 
+                group-hover:scale-100 group-hover:opacity-100`}
               />
             </motion.button>
 
@@ -409,79 +410,62 @@ const SingleVideo: React.FC<{ video: MediaItem }> = ({ video }) => (
   </div>
 );
 
-// Updated VideoGrid component with search functionality
-export const VideoGrid: React.FC<{ videos: MediaItem[] }> = ({ videos }) => {
+// Updated VideoGrid component with search functionality and type safety
+export const VideoGrid: React.FC<any> = ({ videos: allMedia }) => {
   const [searchQuery, setSearchQuery] = useState('');
   
-  const filteredVideos = videos.filter(video => 
+  // Filter to only include video items
+  const videos = allMedia.filter((item: any): item is MediaItem & { type: "video" } => item.type === 'video');
+
+  const filteredVideos = videos.filter((video: any) =>
     video.title?.toLowerCase().includes(searchQuery.toLowerCase()) || !searchQuery
   );
 
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <button className="w-full flex items-center justify-center gap-2 p-1 bg-blue-500/20 hover:bg-blue-500/30 rounded-lg transition-all">
-          <Grid2X2 className="w-5 h-5" />
-          <span className='text-muted-foreground text-sm'>View All Videos ({videos.length})</span>
-        </button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[90%] lg:max-w-6xl h-[90vh] fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] bg-black/90 border border-white/10 rounded-lg overflow-hidden">
-      <div className="bg-black/90 border border-white/10 w-full max-w-6xl h-[90vh] rounded-lg overflow-hidden flex flex-col">
-          <DialogHeader className="p-4 border-b border-white/10">
-            <DialogTitle className="text-white">Home Run Gallery</DialogTitle>
-          </DialogHeader>
-          
-          <div className="flex-1 overflow-y-auto">
-            <div className="sticky top-0 z-10 bg-black/95 px-4 pt-2 pb-2 border-b border-white/10">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  type="text"
-                  placeholder="Search home runs..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-black/20 border-white/10 focus:border-blue-500/50 transition-colors text-white"
-                />
-              </div>
-              <div className="mt-2 text-sm text-gray-400">
-                Showing {filteredVideos.length} of {videos.length} videos
-              </div>
-            </div>
+  // If dialogs are disabled, just render the content directly
+  if (filteredVideos.length === 0) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="text-gray-400 text-center p-4">No videos found.</div>
+      </div>
+    );
+  }
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-              {filteredVideos.map((video, index) => (
-                <Card 
-                  key={index} 
-                  className="overflow-hidden bg-black/50 hover:bg-black/60 transition-colors border-white/10 hover:border-white/20"
-                >
-                  <CardHeader className="space-y-2">
-                    <CardTitle className="text-sm font-medium line-clamp-2 text-white">
-                      {video.title}
-                    </CardTitle>
-                    {video.metadata && (
-                      <CardDescription>
-                        <MediaStats metadata={video.metadata} />
-                      </CardDescription>
-                    )}
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    <VideoPlayer video={video} />
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {filteredVideos.map((video: any, index: number) => (
+        <Card 
+          key={index} 
+          className="overflow-hidden bg-black/50 hover:bg-black/60 transition-colors border-white/10 hover:border-white/20"
+        >
+          <CardHeader className="space-y-2">
+            <CardTitle className="text-sm font-medium line-clamp-2 text-white">
+              {video.title}
+            </CardTitle>
+            {video.metadata && (
+              <CardDescription>
+                <MediaStats metadata={video.metadata} />
+              </CardDescription>
+            )}
+          </CardHeader>
+          <CardContent className="p-0">
+            <VideoPlayer video={video} />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
 };
 
 // MLBMedia component remains largely the same
 const MLBMedia: React.FC<MLBMediaProps> = ({ media, chart }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  // Track both whether dialog is open and which image is selected
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
 
   if (!media) return null;
 
@@ -511,12 +495,11 @@ const MLBMedia: React.FC<MLBMediaProps> = ({ media, chart }) => {
             )}
           </div>
         );
-      
       default:
         return null;
     }
   };
-  
+
   return (
     <div className="mt-4 space-y-4">
       <button
@@ -542,7 +525,7 @@ const MLBMedia: React.FC<MLBMediaProps> = ({ media, chart }) => {
         <div className="space-y-4">
           {videos.length > 0 && (
             <div className="space-y-4">
-              {videos.length >= VIDEO_GALLERY_THRESHOLD ? (
+              {videos.length >= 3 ? (
                 <VideoGrid videos={videos} />
               ) : (
                 videos.map((video, index) => (
@@ -564,22 +547,23 @@ const MLBMedia: React.FC<MLBMediaProps> = ({ media, chart }) => {
               ))}
             </div>
           )}
-          
-          {/* Image Analysis Dialog */}
-          {selectedImage && (
-            <ImageAnalysisDialog
-              isOpen={!!selectedImage}
-              onClose={() => setSelectedImage(null)}
-              imageUrl={selectedImage}
-            />
-          )}
-          
+
           {chart && chart.requires_chart && (
             <div className="mt-8">
               <MLBStatistics chart={chart} />
             </div>
           )}
         </div>
+      )}
+
+      {/* Portal for ImageAnalysisDialog */}
+      {isMounted && selectedImage && createPortal(
+        <ImageAnalysisDialog
+          isOpen={!!selectedImage}
+          onClose={() => setSelectedImage(null)}
+          imageUrl={selectedImage}
+        />,
+        document.body
       )}
     </div>
   );

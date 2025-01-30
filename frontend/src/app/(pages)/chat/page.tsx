@@ -130,7 +130,7 @@ const TypingText = ({ text, language }: { text: string, language: string }) => {
 };
 
 
-const OnboardingChat = () => {
+const ChatPage = () => {
   const [messages, setMessages] = useState<Message[]>([])
   const [userLanguage, setUserLanguage] = useState('en');
   const [inputText, setInputText] = useState('')
@@ -188,12 +188,12 @@ const OnboardingChat = () => {
         return;
       }
 
-      const recentMessages = messages.slice(-5);
-
       const payload = {
-        messages: recentMessages.map(msg => ({
+        messages: messages.map(msg => ({
           content: msg.content,
           sender: msg.sender,
+          media: msg.media,
+          chart: msg.chart,
           type: msg.type,
           timestamp: Date.now()
         })),
@@ -219,7 +219,7 @@ const OnboardingChat = () => {
         throw new Error('Invalid response from preferences update API');
       }
 
-      const dd = await updateUserPreferences(authToken, backendResponse.data);
+      const UpdateUserPreferencesResponse = await updateUserPreferences(authToken, {messages, ...backendResponse.data});
 
       // Update user data without triggering a full re-render
       setUserData((prev: any) => ({
@@ -267,7 +267,7 @@ const OnboardingChat = () => {
 
       setMessages([{
         id: 'welcome-message',
-        content: languageContent[lang as keyof typeof languageContent]?.welcomeMessage || languageContent.en.welcomeMessage,
+        content: languageContent[lang as keyof typeof languageContent]?.welcome.greeting || languageContent.en.welcome.greeting,
         sender: 'bot',
         type: 'text',
         chart: undefined,
@@ -336,7 +336,7 @@ const OnboardingChat = () => {
     interests?: string[]
   }
 
-  // Update the handleSend function in your OnboardingChat component
+  // Update the handleSend function in your ChatPage component
   const handleSend = async () => {
     if (!inputText.trim()) return
 
@@ -462,7 +462,7 @@ const OnboardingChat = () => {
     // Reset to only welcome message
     setMessages([{
       id: 'welcome-message',
-      content: languageContent[userLanguage as keyof typeof languageContent]?.welcomeMessage || languageContent.en.welcomeMessage,
+      content: languageContent[userLanguage as keyof typeof languageContent]?.welcome.greeting || languageContent.en.welcome.greeting,
       sender: 'bot',
       type: 'text',
       chart: undefined,
@@ -517,7 +517,7 @@ const OnboardingChat = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.2 }}
               >
-                {languageContent[userLanguage as keyof typeof languageContent]?.pageTitle || languageContent.en.pageTitle}
+                {languageContent[userLanguage as keyof typeof languageContent]?.welcome.pageTitle || languageContent.en.welcome.pageTitle}
               </motion.h1>
               <motion.p
                 className="text-gray-300 mb-3 px-4"
@@ -525,7 +525,7 @@ const OnboardingChat = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.4 }}
               >
-                {languageContent[userLanguage as keyof typeof languageContent]?.pageSubtitle || languageContent.en.pageSubtitle}
+                {languageContent[userLanguage as keyof typeof languageContent]?.welcome.pageSubtitle || languageContent.en.welcome.pageSubtitle}
               </motion.p>
             </motion.div>
   
@@ -652,7 +652,7 @@ const OnboardingChat = () => {
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                placeholder={languageContent[userLanguage as keyof typeof languageContent]?.inputPlaceholder || languageContent.en.inputPlaceholder}
+                placeholder={languageContent[userLanguage as keyof typeof languageContent]?.welcome.inputPlaceholder || languageContent.en.welcome.inputPlaceholder}
                 className="bg-white/5 border-white/20 text-white placeholder:text-gray-400 backdrop-blur-sm flex-1 min-w-0"
               />
               <Button
@@ -669,4 +669,4 @@ const OnboardingChat = () => {
   );
 }
 
-export default OnboardingChat
+export default ChatPage

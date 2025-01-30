@@ -137,7 +137,11 @@ const renderHomerunsData = ({ data }: HomerunData): JSX.Element => {
       <Card className="bg-slate-900/90 border-slate-800 shadow-xl">
         <CardContent className="p-6">
           <ScrollArea className="h-[calc(100vh-24rem)]">
-            <VideoGrid videos={videos} />
+          <VideoGrid 
+  videos={videos} 
+  disableDialog={true}
+  className="z-[3001]"
+/>
           </ScrollArea>
         </CardContent>
       </Card>

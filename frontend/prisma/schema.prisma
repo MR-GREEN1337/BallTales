@@ -27,8 +27,14 @@ model UserPreferences {
   theme                  String  @default("system")
   notifications          Boolean @default(true)
   favoriteTeam          String?
+  favoriteTeamUrl       String?
+  favoriteTeamDescription String? @db.Text
   favoritePlayer        String?
+  favoritePlayerUrl     String?
+  favoritePlayerDescription String? @db.Text
   favoriteHomeRun       String?
+  favoriteHomeRunUrl    String?
+  favoriteHomeRunDescription String? @db.Text
   statsPreference       String  @default("Basic")
   notificationPreference String  @default("Game Time Only")
 }

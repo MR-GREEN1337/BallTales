@@ -603,7 +603,7 @@ Return the complete plan as a single valid JSON object strictly following this s
                     response_mime_type="application/json",
                     response_schema=IntentAnalysis,
                 ),
-                model_name="gemini-1.5-flash"
+                model_name="gemini-1.5-flash",
             )
 
             parsed_result = json.loads(result.text)
@@ -1600,7 +1600,9 @@ print(json.dumps(result))
                 intent=json.dumps(intent, indent=2, ensure_ascii=False),
                 data=json.dumps(data, indent=2, ensure_ascii=False),
                 homerun_sample=json.dumps(sample_homerun, indent=2, ensure_ascii=False),
-                media_sources=json.dumps(self.media_source, indent=2, ensure_ascii=False),
+                media_sources=json.dumps(
+                    self.media_source, indent=2, ensure_ascii=False
+                ),
                 user_query=self.user_query,
             )
 
@@ -1608,8 +1610,7 @@ print(json.dumps(result))
             result = await self.gemini.generate_with_fallback(
                 formatted_prompt,
                 generation_config=genai.GenerationConfig(
-                    temperature=0.1,
-                    response_mime_type="application/json"
+                    temperature=0.1, response_mime_type="application/json"
                 ),
             )
 
@@ -1643,51 +1644,87 @@ print(json.dumps(result))
                         # Check if the homerun meets all statistical criteria
                         if search_criteria:
                             if (
-                                ("min_exit_velocity" in search_criteria and exit_velocity < search_criteria["min_exit_velocity"])
-                                or ("max_exit_velocity" in search_criteria and exit_velocity > search_criteria["max_exit_velocity"])
-                                or ("min_launch_angle" in search_criteria and launch_angle < search_criteria["min_launch_angle"])
-                                or ("max_launch_angle" in search_criteria and launch_angle > search_criteria["max_launch_angle"])
-                                or ("min_distance" in search_criteria and hit_distance < search_criteria["min_distance"])
-                                or ("max_distance" in search_criteria and hit_distance > search_criteria["max_distance"])
+                                (
+                                    "min_exit_velocity" in search_criteria
+                                    and exit_velocity
+                                    < search_criteria["min_exit_velocity"]
+                                )
+                                or (
+                                    "max_exit_velocity" in search_criteria
+                                    and exit_velocity
+                                    > search_criteria["max_exit_velocity"]
+                                )
+                                or (
+                                    "min_launch_angle" in search_criteria
+                                    and launch_angle
+                                    < search_criteria["min_launch_angle"]
+                                )
+                                or (
+                                    "max_launch_angle" in search_criteria
+                                    and launch_angle
+                                    > search_criteria["max_launch_angle"]
+                                )
+                                or (
+                                    "min_distance" in search_criteria
+                                    and hit_distance < search_criteria["min_distance"]
+                                )
+                                or (
+                                    "max_distance" in search_criteria
+                                    and hit_distance > search_criteria["max_distance"]
+                                )
                             ):
                                 continue
 
                         # Calculate text similarity scores with error handling
                         title_scores = []
                         player_scores = []
-                        
+
                         if "keywords" in media_plan["homerun_search"]:
                             title_scores = [
-                                difflib.SequenceMatcher(None, str(row["title"]).lower(), str(keyword).lower()).ratio()
+                                difflib.SequenceMatcher(
+                                    None,
+                                    str(row["title"]).lower(),
+                                    str(keyword).lower(),
+                                ).ratio()
                                 for keyword in media_plan["homerun_search"]["keywords"]
                             ]
 
                         if "player_names" in media_plan["homerun_search"]:
                             player_scores = [
-                                difflib.SequenceMatcher(None, str(row["title"]).lower(), str(player).lower()).ratio()
-                                for player in media_plan["homerun_search"]["player_names"]
+                                difflib.SequenceMatcher(
+                                    None, str(row["title"]).lower(), str(player).lower()
+                                ).ratio()
+                                for player in media_plan["homerun_search"][
+                                    "player_names"
+                                ]
                             ]
 
                         # Use the best match from either keywords or player names
-                        best_score = max(title_scores + player_scores) if (title_scores or player_scores) else 0
+                        best_score = (
+                            max(title_scores + player_scores)
+                            if (title_scores or player_scores)
+                            else 0
+                        )
 
                         if best_score >= 0.55:  # Threshold for good matches
-                            homerun_matches.append({
-                                "type": "video",
-                                "url": str(row["video"]),
-                                "title": str(row["title"]),
-                                "description": (
-                                    f"Incredible home run by {str(row['title']).split(' homers')[0]} with "
-                                    f"{exit_velocity} mph exit velocity, {launch_angle}° "
-                                    f"launch angle, traveling {hit_distance} feet!"
-                                ),
-                                "metadata": {
-                                    "exit_velocity": exit_velocity,
-                                    "launch_angle": launch_angle,
-                                    "distance": hit_distance,
-                                    "year": int(row["season"])
+                            homerun_matches.append(
+                                {
+                                    "type": "video",
+                                    "url": str(row["video"]),
+                                    "title": str(row["title"]),
+                                    "description": (
+                                        f"Incredible home run by {str(row['title']).split(' homers')[0]} with "
+                                        f"{exit_velocity} mph exit velocity, {launch_angle}° "
+                                        f"launch angle, traveling {hit_distance} feet!"
+                                    ),
+                                    "metadata": {
+                                        "exit_velocity": exit_velocity,
+                                        "launch_angle": launch_angle,
+                                        "distance": hit_distance,
+                                        "year": int(row["season"]),
+                                    },
                                 }
-                            })
+                            )
 
                     except (ValueError, KeyError, TypeError) as row_error:
                         print(f"Error processing row: {str(row_error)}")
@@ -1701,7 +1738,7 @@ print(json.dumps(result))
                             + x["metadata"]["distance"] * 0.4  # Weight distance
                             + x["metadata"]["launch_angle"] * 0.2  # Weight launch angle
                         ),
-                        reverse=True
+                        reverse=True,
                     )
 
                     # Add top matches to media plan
@@ -1723,14 +1760,16 @@ print(json.dumps(result))
                 },
             }
 
-    async def _resolve_chart(self, deps: MLBDeps, data: Dict[str, Any], steps: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def _resolve_chart(
+        self, deps: MLBDeps, data: Dict[str, Any], steps: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Analyze if data can be visualized as a chart and return appropriate chart configuration"""
         try:
             # Get chart documentation
             chart_specs = self.charts_docs
 
             # Create prompt for chart analysis
-            chart_prompt = '''
+            chart_prompt = """
     Analyze this MLB data and determine if it can be visualized as a chart.
 
     Data:
@@ -1752,11 +1791,11 @@ print(json.dumps(result))
     - Choose most appropriate chart type for data visualization
     - Format data to match exact schema requirements
     - Return null for chart-specific fields if requires_chart is false
-    '''
+    """
             # Format prompt with actual data
             formatted_prompt = chart_prompt.format(
                 data=json.dumps(data, indent=2),
-                chart_specs=json.dumps(chart_specs, indent=2)
+                chart_specs=json.dumps(chart_specs, indent=2),
             )
 
             # Get chart recommendation from LLM
@@ -1780,12 +1819,12 @@ print(json.dumps(result))
                                         "label": {"type": "string"},
                                         "category": {"type": "string"},
                                         "date": {"type": "string"},
-                                        "fill": {"type": "string"}
-                                    }
-                                }
+                                        "fill": {"type": "string"},
+                                    },
+                                },
                             },
                             "title": {"type": "string"},
-                            "description": {"type": "string"}
+                            "description": {"type": "string"},
                         },
                         "required": [
                             "requires_chart",
@@ -1793,14 +1832,14 @@ print(json.dumps(result))
                             "description",
                             "formatted_data",
                             "variant",
-                            "chart_type"
-                        ]
-                    }
-                )
+                            "chart_type",
+                        ],
+                    },
+                ),
             )
 
             chart_plan = json.loads(result.text)
-            
+
             # Validate chart data if chart is required
             if chart_plan.get("requires_chart", False):
                 # Get chart type specs
@@ -1814,14 +1853,19 @@ print(json.dumps(result))
                 variant_specs = chart_specs.get("variants", {}).get(variant, {})
 
                 if not variant_specs:
-                    raise ValueError(f"Invalid chart type {chart_type} or variant {variant}")
+                    raise ValueError(
+                        f"Invalid chart type {chart_type} or variant {variant}"
+                    )
 
                 # Validate data against schema
                 input_schema = variant_specs.get("inputSchema", {})
                 formatted_data = chart_plan.get("formatted_data", [])
 
                 # Add styling information
-                if "common" in self.charts_docs and "styling" in self.charts_docs["common"]:
+                if (
+                    "common" in self.charts_docs
+                    and "styling" in self.charts_docs["common"]
+                ):
                     chart_plan["styles"] = self.charts_docs["common"]["styling"]
                 else:
                     chart_plan["styles"] = {}
@@ -1829,7 +1873,7 @@ print(json.dumps(result))
                 # Add component configurations
                 chart_plan["components"] = {
                     "tooltip": {"variant": "default"},
-                    "legend": {"position": "bottom", "alignment": "center"}
+                    "legend": {"position": "bottom", "alignment": "center"},
                 }
 
                 return chart_plan
