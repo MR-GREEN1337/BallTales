@@ -17,6 +17,7 @@ import { languageContent, typingPhrases } from '@/lib/constants'
 import AnimatedBotIcon from './_components/AnimatedBotIcon'
 import { updateUserPreferences } from '@/actions/user/update-preferences'
 import ContextViewer from './_components/ContextViewer'
+import PixelatedBackground from './_components/PixelatedBackground'
 
 
 interface PreferencesState {
@@ -217,6 +218,8 @@ const OnboardingChat = () => {
       if (!backendResponse.data || !backendResponse.data.preferences) {
         throw new Error('Invalid response from preferences update API');
       }
+
+      const dd = await updateUserPreferences(authToken, backendResponse.data);
 
       // Update user data without triggering a full re-render
       setUserData((prev: any) => ({
@@ -476,9 +479,7 @@ const OnboardingChat = () => {
 
   return (
 <div className="relative h-full w-full bg-slate-950">
-  <div className="absolute bottom-0 left-0 right-0 top-0 animate-shimmer bg-[linear-gradient(to_right,#ff000015_1px,transparent_1px),linear-gradient(to_bottom,#ff000015_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_80%_70%_at_50%_-20%,#000_70%,transparent_100%)]">
-    <div className="absolute inset-0 bg-[linear-gradient(110deg,transparent_35%,#ff000030_50%,transparent_65%)] animate-shimmer-wave" />
-  </div>
+<PixelatedBackground />
       <div className="min-h-screen relative overflow-x-hidden">
         {/* Header */}
         <motion.div
@@ -564,7 +565,7 @@ const OnboardingChat = () => {
                           )}
                         </div>
   
-                        <div className={`rounded-2xl p-4 backdrop-blur-sm break-words ${
+                        <div className={`rounded-2xl p-4 backdrop-blur-lg break-words ${
                           message.sender === 'user'
                             ? 'bg-blue-600/90 text-white'
                             : 'bg-white/10 text-white'
