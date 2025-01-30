@@ -131,6 +131,7 @@ const AnalysisDialog: React.FC<AnalysisDialogProps> = ({
         `${process.env.NEXT_PUBLIC_API_URL}/chat/analyze-video`,
         {
           videoUrl,
+          userLang: localStorage.getItem('userLang'),
           message: message.trim()
         }
       );

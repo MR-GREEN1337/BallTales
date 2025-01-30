@@ -12,7 +12,7 @@ from src.api.models import (
 )
 from src.api.agent import MLBDeps
 from src.api.analysis import MediaAnalyzer, get_analyzer, media_analyzer
-from src.api.utils import log_analysis_request, _build_chat_context
+from src.api.utils import log_analysis_request, _build_chat_context, translate_response
 from src.api.mlb_workflow_handler import MLBWorkflowHandler
 from fastapi_simple_rate_limiter import rate_limiter
 from fastapi.requests import Request
@@ -96,7 +96,9 @@ async def analyze_video(
             metadata=analysis_request.metadata,
         )
 
-        return AnalysisResponse(**result)
+        translated_result = await translate_response(result, analysis_request.userLang)
+
+        return AnalysisResponse(**translated_result)
 
     except Exception as e:
         # Log failed analysis attempt
@@ -143,7 +145,7 @@ async def analyze_image(
 
         # Log analysis start with content type
         logger.info(f"Starting image analysis for content type: {content_type}")
-
+        logger.info(f"User Language: {analysis_request.userLang}")
         # Perform image analysis with enhanced metadata
         enhanced_metadata = {
             **(analysis_request.metadata or {}),
@@ -165,8 +167,8 @@ async def analyze_image(
             success=True,
             metadata=enhanced_metadata,
         )
-
-        return ImageAnalysisResponse(**result)
+        translated_result = await translate_response(result, analysis_request.userLang)
+        return ImageAnalysisResponse(**translated_result)
 
     except Exception as e:
         # Enhanced error logging
@@ -199,6 +201,7 @@ async def handle_suggestion(
     request: Request,
     suggestion_type: str,
     mediaUrl: str = Query(..., description="URL of the media being analyzed"),
+    userLang: str = Query(..., description="Language of the user"),
     analyzer: MediaAnalyzer = Depends(get_analyzer),
 ):
     """
@@ -233,7 +236,8 @@ async def handle_suggestion(
         logger.info(f"Handler: {handler}")
         result = await handler.process_workflow(suggestion_type)
         logger.info(f"Result: {result}")
-        return SuggestionResponse(status="success", data=result)
+        translated_result = await translate_response(result, userLang)
+        return SuggestionResponse(status="success", data=translated_result)
 
     except ValueError as ve:
         logger.error(f"Invalid request: {str(ve)}")

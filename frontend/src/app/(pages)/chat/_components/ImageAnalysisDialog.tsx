@@ -49,12 +49,13 @@ const ImageAnalysisDialog: React.FC<ImageAnalysisDialogProps> = ({
     setError(null);
     setIsAnalyzing(true);
     setSuggestionData(null);
-
+    //alert(localStorage.getItem('userLang'))
     try {
       const response = await axios.post<ImageAnalysisResponse>(
         `${process.env.NEXT_PUBLIC_API_URL}/chat/analyze-image`,
         {
           imageUrl,
+          userLang: localStorage.getItem('userLang'),
           message: query.trim()
         }
       );
@@ -86,6 +87,7 @@ const ImageAnalysisDialog: React.FC<ImageAnalysisDialogProps> = ({
         null,
         {
           params: {
+            userLang: localStorage.getItem('userLang'),
             mediaUrl: imageUrl
           }
         }

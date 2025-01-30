@@ -249,7 +249,7 @@ class VideoAnalysisRequest(AnalysisRequest):
     """Request model for video analysis."""
 
     videoUrl: HttpUrl
-
+    userLang: str
 
 class ImageAnalysisRequest(BaseModel):
     """Request model for image analysis with enhanced fields."""
@@ -272,6 +272,7 @@ class ImageAnalysisRequest(BaseModel):
     """Request model for image analysis."""
 
     imageUrl: str
+    userLang: str
     message: str
     metadata: Optional[Dict[str, Any]] = None
 

@@ -163,34 +163,51 @@ def _build_chat_context(chat_request: ChatRequest) -> Dict[str, Any]:
     }
 
 
+def datetime_handler(obj: Any) -> str:
+    """Handle datetime serialization for JSON encoding."""
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    raise TypeError(f'Object of type {type(obj)} is not JSON serializable')
+
 async def translate_response(response: Any, target_language: str) -> MLBResponse:
     """Translate human-readable fields in the MLB response while preserving structure and technical data."""
-    if not target_language or target_language.lower() == "english":
+    if len(target_language) == 2 and target_language in LANGUAGES_FOR_LABELLING.keys():
+        target_language = LANGUAGES_FOR_LABELLING[target_language]
+
+    if not target_language or "en" in target_language.lower():
         return response
 
-    prompt = f"""Translate this MLB baseball response from English to {target_language}.
-        The response is provided as JSON. Return the exact same JSON structure.
-        
-        Rules:
-        1. Translate ONLY human-readable text like descriptions, messages, and titles
-        2. DO NOT translate or modify:
-        - Technical fields (ids, urls, types, flags)
-        - Player names and team names
-        - Statistics and numbers
-        - Data structure or field names
-        - Boolean flags or status indicators
-        3. Preserve all JSON structure and formatting exactly
-        
-        Input Response:
-        {json.dumps(response, indent=2)}
-        
-        Return the translated JSON with identical structure."""
-
     try:
+        # Convert the response to JSON using the custom datetime handler
+        response_json = json.dumps(
+            response,
+            indent=2,
+            default=datetime_handler
+        )
+
+        prompt = f"""Translate this MLB baseball response from English to {target_language}.
+            The response is provided as JSON. Return the exact same JSON structure.
+            
+            Rules:
+            1. Translate ONLY human-readable text like descriptions, messages, and titles
+            2. DO NOT translate or modify:
+            - Technical fields (ids, urls, types, flags)
+            - Player names and team names
+            - Statistics and numbers
+            - Data structure or field names
+            - Boolean flags or status indicators
+            3. Preserve all JSON structure and formatting exactly
+            
+            Input Response:
+            {response_json}
+            
+            Return the translated JSON with identical structure."""
+
         result = await GeminiSolid().generate_with_fallback(
             prompt,
             generation_config=genai.GenerationConfig(
-                temperature=0.1, response_mime_type="application/json"
+                temperature=0.1,
+                response_mime_type="application/json"
             ),
         )
 
@@ -198,4 +215,7 @@ async def translate_response(response: Any, target_language: str) -> MLBResponse
 
     except Exception as e:
         print(f"Translation error: {str(e)}")
+        # Log the full error details for debugging
+        import traceback
+        print(f"Full traceback: {traceback.format_exc()}")
         return response

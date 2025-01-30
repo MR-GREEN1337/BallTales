@@ -162,6 +162,8 @@ const ChatPage = () => {
       try {
         const data = await getUserProfile(authToken)
         setUserData(data)
+        //console.log("samaykom2", data)
+        localStorage.setItem('userLang', (data.preferences.preferences as any).language)
         //alert(JSON.stringify(data, null, 2))
       } catch (error) {
         console.error('Error fetching user data:', error)
