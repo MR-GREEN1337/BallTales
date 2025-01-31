@@ -10,15 +10,11 @@ from src.core.settings import settings
 from src.api.agent import MLBAgent
 
 # Global variables to store loaded JSON data
-json_data = {
-    "endpoints": None,
-    "functions": None,
-    "media": None,
-    "charts": None
-}
+json_data = {"endpoints": None, "functions": None, "media": None, "charts": None}
 
 # Global MLB agent instance
 mlb_agent = None
+
 
 @asynccontextmanager
 async def load_json_data(app: FastAPI):
@@ -29,20 +25,20 @@ async def load_json_data(app: FastAPI):
     try:
         # Define the base path for JSON files
         base_path = Path("src/core/constants")
-        
+
         # Load all JSON files
         with open(base_path / "endpoints.json", "r") as f:
             json_data["endpoints"] = f.read()
-            
+
         with open(base_path / "mlb_functions.json", "r") as f:
             json_data["functions"] = f.read()
-            
+
         with open(base_path / "media_sources.json", "r") as f:
             json_data["media"] = f.read()
-            
+
         with open(base_path / "charts_docs.json", "r") as f:
             json_data["charts"] = f.read()
-        
+
         logger.info(f"Loaded JSON data: successfully loaded all files")
         # Initialize MLB agent with loaded data
         global mlb_agent
@@ -51,9 +47,9 @@ async def load_json_data(app: FastAPI):
             endpoints_json=json_data["endpoints"],
             functions_json=json_data["functions"],
             media_json=json_data["media"],
-            charts_json=json_data["charts"]
+            charts_json=json_data["charts"],
         )
-        
+
         yield
     finally:
         # Clean up resources if needed
@@ -63,16 +59,14 @@ async def load_json_data(app: FastAPI):
         json_data["charts"] = None
         mlb_agent = None
 
+
 # Create FastAPI app with lifespan handler
-app = FastAPI(
-    description="BallTales Backend",
-    lifespan=load_json_data
-)
+app = FastAPI(description="BallTales Backend", lifespan=load_json_data)
 
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -82,14 +76,13 @@ app.add_middleware(
 app.include_router(chat_router, prefix="/api/v1")
 app.include_router(user_router, prefix="/api/v1")
 
+
 # Health check endpoint
 @app.get("/")
 async def health_check():
     """Health check endpoint to verify the application is running"""
-    return {
-        "status": "healthy",
-        "message": "BallTales API is running"
-    }
+    return {"status": "healthy", "message": "BallTales API is running"}
+
 
 def get_mlb_agent() -> MLBAgent:
     """

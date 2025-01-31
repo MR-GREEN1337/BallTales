@@ -87,20 +87,82 @@ class MLBWorkflowHandler:
             "_api_player_awards": self._get_player_awards,
         }
 
-    def _get_team_championships(self) -> Dict[str, Any]:
-        """Get team's championship history."""
+    async def _get_team_championships(self) -> Dict[str, Any]:
+        """Get comprehensive team championship history using Gemini analysis."""
         try:
-            # Get team info directly using the teams endpoint
+            # Get basic team info
             team_data = statsapi.get("team", {"teamId": self.entity_id})
-            print(team_data)
             team_info = team_data["teams"][0]
-            print(team_info)
+            first_year = int(team_info.get("firstYearOfPlay", datetime.now().year))
+            
+            # Get team's awards history
+            awards_data = statsapi.get("awards", {
+                "sportId": 1,
+                "teamId": self.entity_id,
+            })
 
-            return team_info
+            # Create prompt for Gemini
+            formatted_prompt = f"""Analyze this MLB team's awards and achievements data to generate a comprehensive championship history.
+            
+            Team Info:
+            {json.dumps(team_info, indent=2)}
+            
+            Awards Data:
+            {json.dumps(awards_data, indent=2)}
+            
+            Create a JSON response with the following structure:
+            {{
+                "championships": {{
+                    "world_series": [sorted years, newest first],
+                    "league_pennants": [sorted years, newest first],
+                    "division_titles": [sorted years, newest first],
+                    "wild_cards": [sorted years, newest first]
+                }},
+                "historical_achievements": [
+                    {{
+                        "year": int,
+                        "achievement": "description",
+                        "category": "championship_type"
+                    }}
+                ],
+                "stats": {{
+                    "total_world_series": int,
+                    "total_pennants": int,
+                    "total_division_titles": int,
+                    "total_wild_cards": int,
+                    "last_world_series": int or null,
+                    "last_pennant": int or null,
+                    "last_division_title": int or null,
+                    "championship_drought": int (years since last WS or founding)
+                }}
+            }}
+            
+            Rules:
+            1. Include all championships under correct categories
+            2. Sort years in descending order
+            3. Categories: World Series, League Pennants (AL/NL), Division Titles, Wild Cards
+            4. Historical achievements should note significant milestones
+            5. Calculate championship drought from last WS or team founding
+            """
+
+            # Generate analysis using Gemini
+            result = await self.gemini.generate_with_fallback(
+                formatted_prompt,
+                generation_config=genai.GenerationConfig(
+                    temperature=0.1,
+                    response_mime_type="application/json",
+                ),
+                model_name="gemini-2.0-flash-exp"
+            )
+
+            # Parse Gemini response and combine with team info
+            championship_data = json.loads(result.text)
+
+            return championship_data
+
         except Exception as e:
             logger.error(f"Error fetching team championships: {str(e)}")
             raise
-
     def _process_roster_parallel(
         self, roster_str: str, max_workers: int = 10
     ) -> Dict[str, Any]:
@@ -247,10 +309,11 @@ class MLBWorkflowHandler:
             raise
 
     def _get_team_recent_games(self) -> Dict[str, Any]:
-        """Get team's recent game results."""
+        """Get team's recent and upcoming game results."""
         try:
-            end_date = datetime.now()
-            start_date = end_date - timedelta(days=14)
+            # Get date range for past 14 days and upcoming 14 days
+            end_date = datetime.now() + timedelta(days=7*4*3)
+            start_date = datetime.now() - timedelta(days=7*4*3)
 
             schedule = statsapi.schedule(
                 start_date=start_date.strftime("%Y-%m-%d"),
@@ -258,32 +321,64 @@ class MLBWorkflowHandler:
                 team=self.entity_id,
             )
 
-            formatted_games = []
+            # Cache for team lookups to avoid multiple calls for same team
+            team_logo_cache = {}
+            
+            def get_opponent_logo(opponent_id: int) -> str:
+                """Helper function to get opponent logo URL with caching."""
+                if opponent_id not in team_logo_cache:
+                    team_logo_cache[opponent_id] = TEAM_LOGO_URL.format(team_id=opponent_id)
+                return team_logo_cache[opponent_id]
+
+            recent_games = []
+            upcoming_games = []
+            current_time = datetime.now()
+
             for game in schedule:
-                formatted_games.append(
-                    {
-                        "game_id": game["game_id"],
-                        "date": game["game_date"],
-                        "opponent": game["away_name"]
-                        if game["home_id"] == self.entity_id
-                        else game["home_name"],
-                        "home_away": "home"
-                        if game["home_id"] == self.entity_id
-                        else "away",
+                game_date = datetime.strptime(game['game_date'], "%Y-%m-%d")
+                opponent_id = game["away_id"] if game["home_id"] == self.entity_id else game["home_id"]
+                
+                game_data = {
+                    "game_id": game["game_id"],
+                    "date": game["game_date"],
+                    "opponent": game["away_name"] if game["home_id"] == self.entity_id else game["home_name"],
+                    "opponent_image_url": get_opponent_logo(opponent_id),
+                    "home_away": "home" if game["home_id"] == self.entity_id else "away",
+                    "status": game["status"],
+                    "venue": game.get("venue_name", ""),
+                    "time": game.get("game_time", ""),
+                }
+
+                # Add score for completed games
+                if game["status"] == "Final":
+                    game_data.update({
                         "result": game["summary"],
-                        "score": f"{game['home_score']}-{game['away_score']}",
-                    }
-                )
+                        "score": f"{game['home_score']}-{game['away_score']}"
+                    })
+                # Add scheduled info for upcoming games
+                else:
+                    game_data.update({
+                        "probable_pitcher": game.get("probable_pitchers", {}).get(
+                            "home" if game["home_id"] == self.entity_id else "away", 
+                            "TBD"
+                        ),
+                    })
+
+                # Sort into recent or upcoming based on game date
+                if game_date < current_time:
+                    recent_games.append(game_data)
+                else:
+                    upcoming_games.append(game_data)
 
             return {
                 "team_id": self.entity_id,
                 "period": f"{start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}",
-                "games": formatted_games,
+                "recent_games": sorted(recent_games, key=lambda x: x["date"], reverse=True),
+                "upcoming_games": sorted(upcoming_games, key=lambda x: x["date"])
             }
         except Exception as e:
-            logger.error(f"Error fetching recent games: {str(e)}")
+            logger.error(f"Error fetching recent and upcoming games: {str(e)}")
             raise
-
     async def _get_player_career_stats(self) -> Dict[str, Any]:
         """Get comprehensive player career statistics and generate visualization configuration."""
         try:
@@ -419,59 +514,125 @@ class MLBWorkflowHandler:
             raise
 
     def _get_player_recent_games(self) -> Dict[str, Any]:
-        """Get player's recent game performances."""
+        """Get player's recent and upcoming game performances."""
         try:
-            stat_data = statsapi.player_stat_data(
-                self.entity_id, group="[hitting,pitching]", type="lastTen"
+            # Get basic player info including team ID
+            player_info = statsapi.lookup_player(self.entity_id)[0]
+            team_id = player_info.get("currentTeam", {}).get("id")
+            
+            if not team_id:
+                raise ValueError(f"No current team found for player {self.entity_id}")
+
+            # Get team schedule
+            end_date = datetime.now() + timedelta(days=7*4*3)
+            start_date = datetime.now() - timedelta(days=7*4*3)
+
+            schedule = statsapi.schedule(
+                start_date=start_date.strftime("%Y-%m-%d"),
+                end_date=end_date.strftime("%Y-%m-%d"),
+                team=team_id
             )
 
-            formatted_games = []
+            # Cache for team lookups to avoid multiple calls for same team
+            team_logo_cache = {}
+            
+            def get_opponent_logo(opponent_id: int) -> str:
+                """Helper function to get opponent logo URL with caching."""
+                if opponent_id not in team_logo_cache:
+                    team_logo_cache[opponent_id] = TEAM_LOGO_URL.format(team_id=opponent_id)
+                return team_logo_cache[opponent_id]
 
-            # Process hitting games
-            if "hitting" in stat_data:
-                for game in stat_data["hitting"]:
-                    game_data = {
-                        "date": game["date"],
-                        "opponent": game["opponent"],
-                        "batting": {
-                            "hits": game.get("hits", 0),
-                            "at_bats": game.get("atBats", 0),
-                            "home_runs": game.get("homeRuns", 0),
-                            "rbi": game.get("rbi", 0),
-                            "walks": game.get("baseOnBalls", 0),
-                            "strikeouts": game.get("strikeOuts", 0),
-                            "avg": game.get("avg", ".000"),
-                        },
-                    }
-                    formatted_games.append(game_data)
+            recent_games = []
+            upcoming_games = []
+            current_time = datetime.now()
 
-            # Process pitching games
-            if "pitching" in stat_data:
-                for game in stat_data["pitching"]:
-                    game_data = {
-                        "date": game["date"],
-                        "opponent": game["opponent"],
-                        "pitching": {
-                            "innings": game.get("inningsPitched", "0.0"),
-                            "hits": game.get("hits", 0),
-                            "runs": game.get("runs", 0),
-                            "earned_runs": game.get("earnedRuns", 0),
-                            "walks": game.get("baseOnBalls", 0),
-                            "strikeouts": game.get("strikeOuts", 0),
-                            "era": game.get("era", "0.00"),
-                        },
-                    }
-                    formatted_games.append(game_data)
+            # Get recent performance stats
+            stat_data = statsapi.player_stat_data(
+                self.entity_id, 
+                group="[hitting,pitching]", 
+                type="lastTen"
+            )
+
+            # Process recent games with stats
+            for game in schedule:
+                game_date = datetime.strptime(game['game_date'], "%Y-%m-%d")
+                opponent_id = game["away_id"] if game["home_id"] == team_id else game["home_id"]
+                
+                if game_date < current_time:
+                    # Find matching stats for this game
+                    game_stats = None
+                    if "hitting" in stat_data:
+                        game_stats = next(
+                            (g for g in stat_data["hitting"] if g["date"] == game["game_date"]),
+                            None
+                        )
+                        if game_stats:
+                            game_data = {
+                                "date": game["game_date"],
+                                "opponent": game["away_name"] if game["home_id"] == team_id else game["home_name"],
+                                "opponent_image_url": get_opponent_logo(opponent_id),
+                                "home_away": "home" if game["home_id"] == team_id else "away",
+                                "status": game["status"],
+                                "batting": {
+                                    "hits": game_stats.get("hits", 0),
+                                    "at_bats": game_stats.get("atBats", 0),
+                                    "home_runs": game_stats.get("homeRuns", 0),
+                                    "rbi": game_stats.get("rbi", 0),
+                                    "walks": game_stats.get("baseOnBalls", 0),
+                                    "strikeouts": game_stats.get("strikeOuts", 0),
+                                    "avg": game_stats.get("avg", ".000"),
+                                }
+                            }
+                            recent_games.append(game_data)
+
+                    if "pitching" in stat_data:
+                        game_stats = next(
+                            (g for g in stat_data["pitching"] if g["date"] == game["game_date"]),
+                            None
+                        )
+                        if game_stats:
+                            game_data = {
+                                "date": game["game_date"],
+                                "opponent": game["away_name"] if game["home_id"] == team_id else game["home_name"],
+                                "opponent_image_url": get_opponent_logo(opponent_id),
+                                "home_away": "home" if game["home_id"] == team_id else "away",
+                                "status": game["status"],
+                                "pitching": {
+                                    "innings": game_stats.get("inningsPitched", "0.0"),
+                                    "hits": game_stats.get("hits", 0),
+                                    "runs": game_stats.get("runs", 0),
+                                    "earned_runs": game_stats.get("earnedRuns", 0),
+                                    "walks": game_stats.get("baseOnBalls", 0),
+                                    "strikeouts": game_stats.get("strikeOuts", 0),
+                                    "era": game_stats.get("era", "0.00"),
+                                }
+                            }
+                            recent_games.append(game_data)
+                else:
+                    # Add upcoming games
+                    upcoming_games.append({
+                        "game_id": game["game_id"],
+                        "date": game["game_date"],
+                        "opponent": game["away_name"] if game["home_id"] == team_id else game["home_name"],
+                        "opponent_image_url": get_opponent_logo(opponent_id),
+                        "home_away": "home" if game["home_id"] == team_id else "away",
+                        "status": game["status"],
+                        "venue": game.get("venue_name", ""),
+                        "time": game.get("game_time", ""),
+                        "probable_pitcher": game.get("probable_pitchers", {}).get(
+                            "home" if game["home_id"] == team_id else "away",
+                            "TBD"
+                        ) if player_info.get("primaryPosition", {}).get("abbreviation") == "P" else None
+                    })
 
             return {
                 "player_id": self.entity_id,
-                "total_games": len(formatted_games),
-                "recent_games": sorted(
-                    formatted_games, key=lambda x: x["date"], reverse=True
-                ),
+                "total_games": len(recent_games) + len(upcoming_games),
+                "recent_games": sorted(recent_games, key=lambda x: x["date"], reverse=True),
+                "upcoming_games": sorted(upcoming_games, key=lambda x: x["date"])
             }
         except Exception as e:
-            logger.error(f"Error fetching player recent games: {str(e)}")
+            logger.error(f"Error fetching player recent and upcoming games: {str(e)}")
             raise
 
     def _get_player_homeruns(self) -> Dict[str, Any]:
@@ -560,49 +721,49 @@ class MLBWorkflowHandler:
             raise
 
     async def _get_player_awards(self) -> Dict[str, Any]:
-            """Get player's statistical achievements and milestones."""
-            try:
-                # Get career and yearly stats
-                career_data = statsapi.player_stat_data(
-                    self.entity_id, group="[hitting,pitching]", type="career"
-                )
-                yearly_data = statsapi.player_stat_data(
-                    self.entity_id, group="[hitting,pitching]", type="yearByYear"
-                )
+        """Get player's statistical achievements and milestones."""
+        try:
+            # Get career and yearly stats
+            career_data = statsapi.player_stat_data(
+                self.entity_id, group="[hitting,pitching]", type="career"
+            )
+            yearly_data = statsapi.player_stat_data(
+                self.entity_id, group="[hitting,pitching]", type="yearByYear"
+            )
 
-                # Safely get player info with defaults
-                first_name = career_data.get('first_name', '')
-                last_name = career_data.get('last_name', '')
-                position = career_data.get('position', 'Unknown')
-                mlb_debut = career_data.get('mlb_debut', '')
+            # Safely get player info with defaults
+            first_name = career_data.get("first_name", "")
+            last_name = career_data.get("last_name", "")
+            position = career_data.get("position", "Unknown")
+            mlb_debut = career_data.get("mlb_debut", "")
 
-                # Safely get stats with proper null checks
-                stats = career_data.get('stats', [])
-                career_stats = {}
-                if stats and len(stats) > 0:
-                    career_stats = stats[0].get('stats', {})
+            # Safely get stats with proper null checks
+            stats = career_data.get("stats", [])
+            career_stats = {}
+            if stats and len(stats) > 0:
+                career_stats = stats[0].get("stats", {})
 
-                # Safely get yearly stats
-                yearly_stats = {}
-                for stat in yearly_data.get('stats', []):
-                    if stat.get('type') == 'yearByYear':
-                        season = stat.get('season')
-                        if season:
-                            yearly_stats[season] = stat.get('stats', {})
+            # Safely get yearly stats
+            yearly_stats = {}
+            for stat in yearly_data.get("stats", []):
+                if stat.get("type") == "yearByYear":
+                    season = stat.get("season")
+                    if season:
+                        yearly_stats[season] = stat.get("stats", {})
 
-                # Construct player stats dictionary with safe values
-                player_stats = {
-                    "player_info": {
-                        "name": f"{first_name} {last_name}".strip(),
-                        "position": position,
-                        "mlb_debut": mlb_debut,
-                    },
-                    "career_stats": career_stats,
-                    "yearly_stats": yearly_stats
-                }
+            # Construct player stats dictionary with safe values
+            player_stats = {
+                "player_info": {
+                    "name": f"{first_name} {last_name}".strip(),
+                    "position": position,
+                    "mlb_debut": mlb_debut,
+                },
+                "career_stats": career_stats,
+                "yearly_stats": yearly_stats,
+            }
 
-                # Create prompt for Gemini
-                formatted_prompt = f"""Analyze these MLB player statistics and generate a structured achievement summary as JSON.
+            # Create prompt for Gemini
+            formatted_prompt = f"""Analyze these MLB player statistics and generate a structured achievement summary as JSON.
         Focus on career milestones, exceptional seasons, and notable records.
         Return the data in this exact JSON structure:
 
@@ -650,54 +811,56 @@ class MLBWorkflowHandler:
         Parse this player data and return only verified achievements:
         {json.dumps(player_stats, indent=2)}"""
 
-                # Generate response using Gemini with error handling
-                try:
-                    result = await self.gemini.generate_with_fallback(
-                        formatted_prompt,
-                        generation_config=genai.GenerationConfig(
-                            temperature=0.1,
-                            response_mime_type="application/json",
-                        ),
-                    )
-                    
-                    # Parse and validate the response
-                    parsed_result = json.loads(result.text)
-                    
-                    # Ensure minimum required structure
-                    required_fields = ["player_info", "career_achievements", "notable_seasons", "records"]
-                    if not all(field in parsed_result for field in required_fields):
-                        return {
-                            "player_info": player_stats["player_info"],
-                            "career_achievements": [],
-                            "notable_seasons": [],
-                            "records": []
-                        }
-                    
-                    return parsed_result
+            # Generate response using Gemini with error handling
+            try:
+                result = await self.gemini.generate_with_fallback(
+                    formatted_prompt,
+                    generation_config=genai.GenerationConfig(
+                        temperature=0.1,
+                        response_mime_type="application/json",
+                    ),
+                )
 
-                except Exception as gemini_error:
-                    logger.error(f"Gemini processing error: {str(gemini_error)}")
-                    # Return a valid but empty structure on Gemini error
+                # Parse and validate the response
+                parsed_result = json.loads(result.text)
+
+                # Ensure minimum required structure
+                required_fields = [
+                    "player_info",
+                    "career_achievements",
+                    "notable_seasons",
+                    "records",
+                ]
+                if not all(field in parsed_result for field in required_fields):
                     return {
                         "player_info": player_stats["player_info"],
                         "career_achievements": [],
                         "notable_seasons": [],
-                        "records": []
+                        "records": [],
                     }
 
-            except Exception as e:
-                logger.error(f"Error fetching player achievements: {str(e)}")
-                # Return a valid but empty structure on any error
+                return parsed_result
+
+            except Exception as gemini_error:
+                logger.error(f"Gemini processing error: {str(gemini_error)}")
+                # Return a valid but empty structure on Gemini error
                 return {
-                    "player_info": {
-                        "name": "",
-                        "position": "Unknown",
-                        "mlb_debut": ""
-                    },
+                    "player_info": player_stats["player_info"],
                     "career_achievements": [],
                     "notable_seasons": [],
-                    "records": []
+                    "records": [],
                 }
+
+        except Exception as e:
+            logger.error(f"Error fetching player achievements: {str(e)}")
+            # Return a valid but empty structure on any error
+            return {
+                "player_info": {"name": "", "position": "Unknown", "mlb_debut": ""},
+                "career_achievements": [],
+                "notable_seasons": [],
+                "records": [],
+            }
+
     async def process_workflow(self, endpoint: str) -> Dict[str, Any]:
         """Process the workflow based on the endpoint."""
         try:

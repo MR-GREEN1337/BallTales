@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import {
+  import {
   Trophy,
   Users,
   UserCheck,
@@ -14,7 +14,10 @@ import {
   Target,
   Award,
   ChevronRight,
-  X
+  X,
+  MapPin,
+  Building2,
+  Star
 } from 'lucide-react';
 import { useState } from "react";
 import RosterGallery from "./RosterGallery";
@@ -23,6 +26,7 @@ import { motion } from "framer-motion";
 import renderHomerunsData from "./renderHomeruns";
 import { getEndpointTitle } from "@/lib/constants";
 import MLBStatistics from "./MLBStatistics";
+import renderGames from "./renderRecentGames";
 
 interface EndpointResultDialogProps {
   isOpen: boolean;
@@ -42,45 +46,154 @@ const EndpointResultDialog = ({ isOpen, onClose, endpoint, data, onImageAnalysis
   // Extract endpoint name without path
   const endpointName = endpoint;
 
-  const renderChampionshipData = (data: any) => (
-    <Card className="bg-gradient-to-br from-yellow-500/10 to-yellow-600/10 border-yellow-500/20">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Trophy className="w-5 h-5 text-yellow-500" />
-          Championship History
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-black/20 rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-yellow-400 mb-2">World Series</h3>
-            <p className="text-3xl font-bold text-white mb-2">{data.world_series.total}</p>
-            <p className="text-sm text-white/60">Last won: {data.world_series.last_won || 'Never'}</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {data.world_series.titles.map((year: number) => (
-                <span key={year} className="px-2 py-1 bg-yellow-500/20 rounded text-xs">
-                  {year}
-                </span>
-              ))}
-            </div>
-          </div>
-          <div className="bg-black/20 rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-yellow-400 mb-2">League Pennants</h3>
-            <p className="text-3xl font-bold text-white mb-2">{data.pennants.total}</p>
-            <p className="text-sm text-white/60">Last won: {data.pennants.last_won || 'Never'}</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {data.pennants.titles.map((year: number) => (
-                <span key={year} className="px-2 py-1 bg-yellow-500/20 rounded text-xs">
-                  {year}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+  interface TeamData {
+    name: string;
+    firstYearOfPlay: string;
+    locationName: string;
+    venue: {
+      name: string;
+    };
+    league: {
+      name: string;
+    };
+    division: {
+      name: string;
+    };
+  }
+  
 
+  const ChampionshipHistory = ({ oldData }: any) => {
+    const data = oldData.data;
+    const startYear = data.first_season;
+    const currentYear = new Date().getFullYear();
+    const yearsActive = currentYear - startYear;
+  
+    // Helper function to display years with "more" indicator
+    const displayYears = (years: any, limit = 5) => {
+      if (!years || years.length === 0) return [];
+      const displayedYears = years.slice(0, limit);
+      const remaining = years.length - limit;
+      return (
+        <div className="flex flex-wrap gap-2">
+          {displayedYears.map((year: any) => (
+            <span key={year} className="px-2 py-1 bg-yellow-900/30 rounded text-xs text-zinc-300">
+              {year}
+            </span>
+          ))}
+          {remaining > 0 && (
+            <span className="px-2 py-1 bg-yellow-900/30 rounded text-xs text-zinc-300">
+              +{remaining} more
+            </span>
+          )}
+        </div>
+      );
+    };
+  
+    // Helper function for championship section
+    const ChampionshipSection = ({ title, total, lastWon, years }: any) => (
+      <div className="bg-zinc-800/80 rounded-lg p-4">
+        <div className="border-b border-zinc-700 pb-3 mb-3">
+          <h3 className="text-lg font-semibold text-yellow-500 mb-1">{title}</h3>
+          <p className="text-4xl font-bold text-zinc-200">{total}</p>
+          <p className="text-sm text-zinc-400">
+            {lastWon ? `Last won: ${lastWon}` : 'No championships yet'}
+          </p>
+        </div>
+        {displayYears(years)}
+      </div>
+    );
+  
+    return (
+      <Card className="bg-zinc-900 border-yellow-900/50">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-yellow-500">
+            <Trophy className="w-5 h-5" />
+            {data.team_name} History
+          </CardTitle>
+          <div className="flex flex-wrap gap-4 text-sm text-zinc-400">
+            <div className="flex items-center gap-1">
+              <Calendar className="w-4 h-4" />
+              Est. {data.first_season}
+            </div>
+            <div className="flex items-center gap-1">
+              <MapPin className="w-4 h-4" />
+              {data.venue.city}
+            </div>
+            <div className="flex items-center gap-1">
+              <Building2 className="w-4 h-4" />
+              {data.venue.name}
+            </div>
+          </div>
+        </CardHeader>
+        
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Team Legacy */}
+            <div className="bg-zinc-800/80 rounded-lg p-4 md:col-span-2 lg:col-span-1">
+              <h3 className="text-lg font-semibold text-yellow-500 mb-2 flex items-center gap-2">
+                <Star className="w-4 h-4" />
+                Team Legacy
+              </h3>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-zinc-400">Years Active</span>
+                  <span className="text-zinc-200 font-semibold">{yearsActive}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-zinc-400">League</span>
+                  <span className="text-zinc-200 font-semibold">{data.league}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-zinc-400">Division</span>
+                  <span className="text-zinc-200 font-semibold">{data.division}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-zinc-400">Championship Drought</span>
+                  <span className="text-zinc-200 font-semibold">{data.stats.championship_drought} years</span>
+                </div>
+              </div>
+            </div>
+  
+            {/* World Series Section */}
+            <ChampionshipSection 
+              title="World Series"
+              total={data.stats.total_world_series}
+              lastWon={data.stats.last_world_series}
+              years={data.championships.world_series}
+            />
+  
+            {/* Division Titles Section */}
+            <ChampionshipSection 
+              title="Division Titles"
+              total={data.stats.total_division_titles}
+              lastWon={data.stats.last_division_title}
+              years={data.championships.division_titles}
+            />
+          </div>
+  
+          {/* Additional Achievements */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* League Pennants */}
+            <ChampionshipSection 
+              title="League Pennants"
+              total={data.stats.total_pennants}
+              lastWon={data.stats.last_pennant}
+              years={data.championships.league_pennants}
+            />
+  
+            {/* Wild Card Appearances */}
+            <ChampionshipSection 
+              title="Wild Card Appearances"
+              total={data.stats.total_wild_cards}
+              lastWon={data.championships.wild_cards?.[0]}
+              years={data.championships.wild_cards}
+            />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+  
   const renderRosterData = (data: any) => {
     const [searchTerm, setSearchTerm] = useState('');
     console.log('roster data:', data);
@@ -190,7 +303,7 @@ const renderRecentGames = (oldData: any) => {
     hidden: { y: 20, opacity: 0 },
     show: { y: 0, opacity: 1 }
   };
-
+  console.log("recent games", data)
   return (
     <Card className="bg-gradient-to-br from-blue-700/10 to-blue-800/10 border-blue-700/20">
       <CardHeader>
@@ -253,11 +366,11 @@ const renderRecentGames = (oldData: any) => {
     switch (endpointName) {
       case '/api/team/games/recent':
       case '/api/player/games/recent':
-        return renderRecentGames(data);
+        return renderGames(data);
       case '/api/player/awards':
         return renderPlayerAwards(data);
-      case 'championships':
-        return renderChampionshipData(data);
+      case '/api/team/championships':
+        return <ChampionshipHistory oldData={data} />;
       case '/api/team/roster/current':
       case '/api/team/roster/all-time':
         return renderRosterData(data);

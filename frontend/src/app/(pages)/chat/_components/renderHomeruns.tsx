@@ -78,7 +78,7 @@ const formatStats = (metrics: HomerunMetrics): StatItem[] => {
   ];
 };
 
-const renderHomerunsData = ({ data }: HomerunData): JSX.Element => {
+const renderHomerunsData = ({ data }: HomerunData) => {
   // Transform homeruns data for VideoGrid
   const videos = data.homeruns.map(hr => ({
     type: 'video' as const,

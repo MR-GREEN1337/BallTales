@@ -41,6 +41,7 @@ async def chat(request: Request, chat_request: ChatRequest):
     This endpoint handles general chat interactions, maintaining context and user preferences.
     """
     from src.main import get_mlb_agent
+
     mlb_agent = get_mlb_agent()
     async with httpx.AsyncClient() as client:
         try:

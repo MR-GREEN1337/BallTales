@@ -5,10 +5,12 @@ from fastapi import HTTPException
 import json
 from src.api.gemini_solid import GeminiSolid
 
+
 class UpdateUserDataRequest(BaseModel):
     messages: List[Dict[str, Any]]
     preferences: Dict[str, Any]
     user: Dict[str, Any]
+
 
 async def analyze_user_preferences(request: UpdateUserDataRequest) -> Dict[str, Any]:
     """
@@ -22,7 +24,7 @@ async def analyze_user_preferences(request: UpdateUserDataRequest) -> Dict[str, 
         data_context = {
             "messages": request.messages,
             "current_preferences": request.preferences,
-            "user": request.user
+            "user": request.user,
         }
 
         prompt = f"""
@@ -75,7 +77,7 @@ async def analyze_user_preferences(request: UpdateUserDataRequest) -> Dict[str, 
             generation_config=genai.GenerationConfig(
                 response_mime_type="application/json",
             ),
-            model_name="gemini-1.5-flash"
+            model_name="gemini-1.5-flash",
         )
 
         # Parse and validate the response
@@ -87,6 +89,5 @@ async def analyze_user_preferences(request: UpdateUserDataRequest) -> Dict[str, 
 
     except Exception as e:
         raise HTTPException(
-            status_code=500,
-            detail=f"Error analyzing user preferences: {str(e)}"
+            status_code=500, detail=f"Error analyzing user preferences: {str(e)}"
         )

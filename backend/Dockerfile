@@ -1,24 +1,20 @@
-# Use Python 3.11 slim image as base
 FROM python:3.13-slim
 
-# Set working directory in container
+ENV PYTHONUNBUFFERED=true
 WORKDIR /app
 
-# Copy requirements first to leverage Docker cache
-COPY backend/requirements.txt .
+RUN apt-get update && apt-get -y install libpq-dev gcc libcairo2-dev
 
-# Install dependencies
+COPY /requirements.txt .
+COPY .env .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application
-COPY backend/src/ ./src/
+COPY /src/ ./src/
 
-# Set environment variables
 ENV PYTHONPATH=/app
 ENV PORT=8000
+ENV $(cat .env | xargs)
 
-# Expose the port the app runs on
 EXPOSE 8000
 
-# Command to run the application
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]

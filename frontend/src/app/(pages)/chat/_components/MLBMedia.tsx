@@ -425,14 +425,14 @@ export const VideoGrid: React.FC<any> = ({ videos: allMedia }) => {
   // If dialogs are disabled, just render the content directly
   if (filteredVideos.length === 0) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
         <div className="text-gray-400 text-center p-4">No videos found.</div>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
       {filteredVideos.map((video: any, index: number) => (
         <Card 
           key={index} 

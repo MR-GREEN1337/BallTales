@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { UserCircle2, Bot, Send, ChevronRight, Save, Loader2Icon } from 'lucide-react'
+import { UserCircle2, Send } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { toast } from 'sonner'
@@ -11,7 +11,7 @@ import MLBProfile from './_components/MLBProfile'
 import MLBMedia from './_components/MLBMedia'
 import { getUserProfile } from '@/actions/user/get-user'
 import Cookies from "js-cookie"
-import { redirect, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { ClearButton, MessageDust } from './_components/ResetButton'
 import { languageContent, typingPhrases } from '@/lib/constants'
 import AnimatedBotIcon from './_components/AnimatedBotIcon'

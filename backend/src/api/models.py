@@ -251,6 +251,7 @@ class VideoAnalysisRequest(AnalysisRequest):
     videoUrl: HttpUrl
     userLang: str
 
+
 class ImageAnalysisRequest(BaseModel):
     """Request model for image analysis with enhanced fields."""
 

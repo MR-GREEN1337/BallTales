@@ -1,29 +1,21 @@
-# Use Node 20 as base image
 FROM node:23-alpine
 
-# Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY frontend/package*.json ./
+# Copy package.json and package-lock.json
+COPY package*.json ./
 
 # Install dependencies
-RUN npm ci
+RUN npm install
 
-# Copy prisma schema
-COPY frontend/prisma ./prisma/
-
-# Generate Prisma client
+# Copy prisma schema and generate client
+COPY prisma ./prisma/
 RUN npx prisma generate
 
-# Copy the rest of the application
-COPY frontend/ ./
-
-# Build the application
+# Copy rest of app and build
+COPY . .
 RUN npm run build
 
-# Expose the port the app runs on
 EXPOSE 3000
 
-# Start the application
 CMD ["npm", "start"]
