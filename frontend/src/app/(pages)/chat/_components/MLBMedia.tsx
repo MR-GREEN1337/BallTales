@@ -24,6 +24,8 @@ import axios from 'axios';
 import ImageAnalysisDialog from './ImageAnalysisDialog';
 import VideoAnalysis, { AnalysisResponse } from './VideoAnalysis';
 import { createPortal } from 'react-dom';
+import { NEXT_PUBLIC_API_URL } from '@/lib/constants';
+import { api } from '@/lib/utils';
 
 // TypeScript interfaces remain the same
 interface MediaMetadata {
@@ -127,8 +129,8 @@ const AnalysisDialog: React.FC<AnalysisDialogProps> = ({
     setAnalysisResult(null);
 
     try {
-      const response = await axios.post<AnalysisResponse>(
-        `${process.env.NEXT_PUBLIC_API_URL}/chat/analyze-video`,
+      const response = await api.post<AnalysisResponse>(
+        `${NEXT_PUBLIC_API_URL}/chat/analyze-video`,
         {
           videoUrl,
           userLang: localStorage.getItem('userLang'),

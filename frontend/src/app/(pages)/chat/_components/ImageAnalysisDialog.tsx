@@ -4,6 +4,8 @@ import { useState } from "react";
 import axios from "axios";
 import ImageAnalysisComponent from './ImageAnalysisDialogComponent';
 import EndpointResultDialog from './EndpointResultDialog';
+import { NEXT_PUBLIC_API_URL } from "@/lib/constants";
+import { api } from "@/lib/utils";
 
 interface SuggestionItem {
   text: string;
@@ -51,8 +53,8 @@ const ImageAnalysisDialog: React.FC<ImageAnalysisDialogProps> = ({
     setSuggestionData(null);
     //alert(localStorage.getItem('userLang'))
     try {
-      const response = await axios.post<ImageAnalysisResponse>(
-        `${process.env.NEXT_PUBLIC_API_URL}/chat/analyze-image`,
+      const response = await api.post<ImageAnalysisResponse>(
+        `${NEXT_PUBLIC_API_URL}/chat/analyze-image`,
         {
           imageUrl,
           userLang: localStorage.getItem('userLang'),
@@ -82,8 +84,8 @@ const ImageAnalysisDialog: React.FC<ImageAnalysisDialogProps> = ({
     setActiveEndpoint(endpoint);
 
     try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/chat/${endpoint.replaceAll('/', '_')}`,
+      const response = await api.post(
+        `${NEXT_PUBLIC_API_URL}/chat/${endpoint.replaceAll('/', '_')}`,
         null,
         {
           params: {

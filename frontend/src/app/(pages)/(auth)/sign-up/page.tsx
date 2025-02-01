@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Mail, Lock, User, ChevronRight, Eye, EyeOff, AlertCircle, Chrome, Github } from 'lucide-react'
+import { Mail, Lock, User, ChevronRight, Eye, EyeOff, AlertCircle } from 'lucide-react'
 import { useMutation } from '@tanstack/react-query'
 import { signUp } from '@/actions/auth/sign-up'
 import { useRouter } from 'next/navigation'
@@ -14,12 +14,13 @@ import { toast } from 'sonner'
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import Cookies from "js-cookie"
 import BackgroundSlideshow from '../_components/BackgroundSlideShow'
+import { translations, useLanguage, SupportedLanguage } from '@/hooks/use-language-auth'
 
 interface SignUpFormData {
   email: string
   password: string
   name: string
-  language: string
+  language: SupportedLanguage
 }
 
 interface FormErrors {
@@ -32,29 +33,31 @@ const EMAIL_REGEX = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/
 
 const SignUpPage = () => {
+  const { language, updateLanguage } = useLanguage()
+  const t = translations.auth[language]
+  const router = useRouter()
+
   // Form state
   const [step, setStep] = useState(1)
   const [formData, setFormData] = useState<SignUpFormData>({
     email: '',
     password: '',
     name: '',
-    language: 'en'
+    language: language
   })
   
   // UI state
   const [showPassword, setShowPassword] = useState(false)
   const [formErrors, setFormErrors] = useState<FormErrors>({})
   const [isFormTouched, setIsFormTouched] = useState(false)
-  
-  const router = useRouter()
 
   // Password strength indicator
   const getPasswordStrength = (password: string): { strength: number; message: string } => {
     if (password.length === 0) return { strength: 0, message: '' }
-    if (password.length < 8) return { strength: 1, message: 'Too short' }
-    if (!PASSWORD_REGEX.test(password)) return { strength: 2, message: 'Make it stronger' }
-    if (password.length < 12) return { strength: 3, message: 'Getting there' }
-    return { strength: 4, message: 'Strong password!' }
+    if (password.length < 8) return { strength: 1, message: t.passwordTooShort || 'Too short' }
+    if (!PASSWORD_REGEX.test(password)) return { strength: 2, message: t.passwordMakeStronger || 'Make it stronger' }
+    if (password.length < 12) return { strength: 3, message: t.passwordGettingThere || 'Getting there' }
+    return { strength: 4, message: t.passwordStrong || 'Strong password!' }
   }
 
   // Form validation
@@ -63,21 +66,21 @@ const SignUpPage = () => {
 
     if (step === 1) {
       if (!formData.email) {
-        errors.email = 'Email is required'
+        errors.email = t.emailRequired || 'Email is required'
       } else if (!EMAIL_REGEX.test(formData.email)) {
-        errors.email = 'Please enter a valid email'
+        errors.email = t.emailInvalid || 'Please enter a valid email'
       }
 
       if (!formData.password) {
-        errors.password = 'Password is required'
+        errors.password = t.passwordRequired || 'Password is required'
       } else if (!PASSWORD_REGEX.test(formData.password)) {
-        errors.password = 'Password must contain uppercase, lowercase, number, and special character'
+        errors.password = t.passwordRequirements || 'Password must contain uppercase, lowercase, number, and special character'
       }
     } else {
       if (!formData.name) {
-        errors.name = 'Name is required'
+        errors.name = t.nameRequired || 'Name is required'
       } else if (formData.name.length < 2) {
-        errors.name = 'Name must be at least 2 characters'
+        errors.name = t.nameMinLength || 'Name must be at least 2 characters'
       }
     }
 
@@ -89,37 +92,33 @@ const SignUpPage = () => {
   const { mutate: handleSignUp, isPending, isError, error } = useMutation({
     mutationFn: async () => {
       const result = await signUp(formData)
-      
-      if (result.error) {
-        throw new Error(result.error)
-      }
+      if (result.error) throw new Error(result.error)
       if (result.token) {
-        // Set the cookie on the client side
         Cookies.set('auth-token', result.token, {
-          expires: 7, // 7 days
+          expires: 7,
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'lax',
           path: '/'
         })
-        
-        // Add a small delay before redirecting to ensure cookie is set
-        setTimeout(() => {
-          router.push('/chat')
-        }, 100)
+        setTimeout(() => router.push('/chat'), 100)
       }
       return result.user
     },
-    onSuccess: (user) => {
-      toast.success('Account created successfully!')
+    onSuccess: () => {
+      toast.success(t.accountCreated || 'Account created successfully!')
       router.push('/chat')
     },
     onError: (error: Error) => {
       toast.error(error.message)
-      if (error.message.includes('email')) {
-        setStep(1) // Go back to email step if email error
-      }
+      if (error.message.includes('email')) setStep(1)
     },
   })
+
+  // Handle language change
+  const handleLanguageChange = (newLanguage: SupportedLanguage) => {
+    updateLanguage(newLanguage)
+    setFormData(prev => ({ ...prev, language: newLanguage }))
+  }
 
   // Form submission handler
   const handleSubmit = async (e: React.FormEvent) => {
@@ -141,9 +140,7 @@ const SignUpPage = () => {
   ) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
-    if (isFormTouched) {
-      validateForm(step)
-    }
+    if (isFormTouched) validateForm(step)
   }
 
   const passwordStrength = getPasswordStrength(formData.password)
@@ -153,8 +150,25 @@ const SignUpPage = () => {
       <BackgroundSlideshow />
       
       <Card className="w-full max-w-md relative bg-black/80 backdrop-blur-xl border-white/10">
-      <CardContent className="p-6">
-          {/* Logo and Title section remains the same */}
+        <CardContent className="p-6">
+          <div className="text-center mb-8">
+            <motion.h1
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              className="text-3xl font-bold text-white mb-2"
+            >
+              {t.welcomeNew}
+            </motion.h1>
+            
+            <motion.p
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.1 }}
+              className="text-gray-300"
+            >
+              {t.signUpJoin}
+            </motion.p>
+          </div>
 
           {/* Progress Steps */}
           <div className="flex justify-center mb-8">
@@ -195,9 +209,9 @@ const SignUpPage = () => {
               >
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Error</AlertTitle>
+                  <AlertTitle>{t.error || 'Error'}</AlertTitle>
                   <AlertDescription>
-                    {error?.message || 'An error occurred during sign up'}
+                    {error?.message || t.  || 'An error occurred during sign up'}
                   </AlertDescription>
                 </Alert>
               </motion.div>
@@ -212,32 +226,6 @@ const SignUpPage = () => {
             onSubmit={handleSubmit}
             className="space-y-4"
           >
-            <div className="text-center mb-8">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", duration: 0.5 }}
-            >
-              {/* Your existing logo */}
-            </motion.div>
-            
-            <motion.h1
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              className="text-3xl font-bold text-white mb-2"
-            >
-              Welcome
-            </motion.h1>
-            
-            <motion.p
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.1 }}
-              className="text-gray-300"
-            >
-              Sign up to join BallTales
-            </motion.p>
-          </div>
             {step === 1 ? (
               <>
                 <div className="space-y-2">
@@ -246,13 +234,12 @@ const SignUpPage = () => {
                     <Input
                       type="email"
                       name="email"
-                      placeholder="Email"
+                      placeholder={t.email}
                       value={formData.email}
                       onChange={handleInputChange}
                       className={`pl-10 bg-black/50 border-white/20 text-white placeholder:text-gray-400
                         ${formErrors.email ? 'border-red-500' : 'focus:border-blue-400'}
                       `}
-                      
                       required
                     />
                   </div>
@@ -267,7 +254,7 @@ const SignUpPage = () => {
                     <Input
                       type={showPassword ? 'text' : 'password'}
                       name="password"
-                      placeholder="Password"
+                      placeholder={t.password}
                       value={formData.password}
                       onChange={handleInputChange}
                       className={`pl-10 bg-black/50 border-white/20 text-white placeholder:text-gray-400
@@ -327,7 +314,7 @@ const SignUpPage = () => {
                     <Input
                       type="text"
                       name="name"
-                      placeholder="Your name"
+                      placeholder={t.name}
                       value={formData.name}
                       onChange={handleInputChange}
                       className={`pl-10 bg-white/10 border-white/20 text-white placeholder:text-gray-400 ${
@@ -342,12 +329,11 @@ const SignUpPage = () => {
                 </div>
 
                 <Select
-                  name="language"
                   value={formData.language}
-                  onValueChange={(value) => handleInputChange({ target: { name: 'language', value } })}
+                  onValueChange={handleLanguageChange}
                 >
                   <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                    <SelectValue placeholder="Select language" />
+                    <SelectValue placeholder={t.selectLanguage} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="en">English</SelectItem>
@@ -375,32 +361,21 @@ const SignUpPage = () => {
                 </motion.div>
               ) : (
                 <div className="flex items-center justify-center gap-2">
-                  {step === 1 ? "Continue" : "Create Account"}
+                  {step === 1 ? t.continue : t.createAccount}
                   <ChevronRight className="w-4 h-4" />
                 </div>
               )}
             </Button>
 
-            {step === 1 && (
-              <>
-                <div className="mt-6">
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
-
             {/* Sign In Link */}
             <p className="mt-6 text-center text-gray-300">
-              Already have an account?{' '}
+              {t.haveAccount}{' '}
               <button
                 type="button"
                 onClick={() => router.push('/sign-in')}
                 className="text-blue-400 hover:text-blue-300"
               >
-                Sign in
+                {t.signIn}
               </button>
             </p>
           </motion.form>

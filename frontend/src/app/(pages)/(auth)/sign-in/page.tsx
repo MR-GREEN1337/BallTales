@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/alert";
 import Cookies from 'js-cookie';
 import BackgroundSlideshow from '../_components/BackgroundSlideShow'
+import { translations, useLanguage } from '@/hooks/use-language-auth'
 
 interface SignInFormData {
   email: string;
@@ -51,7 +52,8 @@ const SignInPage = () => {
   const [isFormTouched, setIsFormTouched] = useState(false)
   
   const router = useRouter()
-
+  const { language } = useLanguage();
+  const t = translations.auth[language];
   // Load saved email if it exists
   useEffect(() => {
     const savedEmail = localStorage.getItem('rememberedEmail')
@@ -144,7 +146,6 @@ const SignInPage = () => {
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
       <BackgroundSlideshow />
       
-      {/* Updated Card styling for better contrast */}
       <Card className="w-full max-w-md relative bg-black/80 backdrop-blur-xl border-white/10">
         <CardContent className="p-6">
           {/* Logo and Title Section */}
@@ -152,23 +153,23 @@ const SignInPage = () => {
             <motion.h1
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              className="text-3xl font-bold text-white mb-2" // Keeping white for main heading
+              className="text-3xl font-bold text-white mb-2"
             >
-              Welcome Back
+              {t.welcomeBack}
             </motion.h1>
             
             <motion.p
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.1 }}
-              className="text-gray-200" // Lightened for better visibility
+              className="text-gray-200"
             >
-              Sign in to continue to BallTales
+              {t.signInContinue}
             </motion.p>
           </div>
 
-          {/* Error Alert with improved visibility */}
-          <AnimatePresence>
+         {/* Error Alert with improved visibility */}
+         <AnimatePresence>
             {isError && (
               <motion.div
                 initial={{ opacity: 0, y: -20 }}
@@ -187,7 +188,6 @@ const SignInPage = () => {
             )}
           </AnimatePresence>
 
-          {/* Form with enhanced input styling */}
           <motion.form
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -195,14 +195,14 @@ const SignInPage = () => {
             onSubmit={onSubmit}
             className="space-y-4"
           >
-            {/* Email Field with darker background */}
+            {/* Email Field */}
             <div className="space-y-2">
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                 <Input
                   type="email"
                   name="email"
-                  placeholder="Email"
+                  placeholder={t.email}
                   value={formData.email}
                   onChange={handleInputChange}
                   className={`pl-10 bg-black/50 border-white/20 text-white placeholder:text-gray-400
@@ -216,17 +216,17 @@ const SignInPage = () => {
               )}
             </div>
 
-            {/* Password Field with consistent styling */}
+            {/* Password Field */}
             <div className="space-y-2">
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                 <Input
                   type={showPassword ? 'text' : 'password'}
                   name="password"
-                  placeholder="Password"
+                  placeholder={t.password}
                   value={formData.password}
                   onChange={handleInputChange}
-                  className={`pl-10 pr-10 bg-black/50 border-white/20 text-white placeholder:text-gray-400
+                  className={`pl-10 bg-black/50 border-white/20 text-white placeholder:text-gray-400
                     ${formErrors.password ? 'border-red-500' : 'focus:border-blue-400'}
                   `}
                   required
@@ -234,7 +234,7 @@ const SignInPage = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-200"
+                  className="absolute right-3 mb-3 top-3 text-gray-400 hover:text-gray-200"
                 >
                   {showPassword ? (
                     <EyeOff className="h-5 w-5" />
@@ -248,27 +248,27 @@ const SignInPage = () => {
               )}
             </div>
 
-            {/* Remember Me & Forgot Password with enhanced contrast */}
+            {/* Remember Me */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="rememberMe"
-                  checked={formData.rememberMe}
-                  onCheckedChange={(checked) => 
-                    setFormData(prev => ({ ...prev, rememberMe: checked === true }))
-                  }
-                  className="border-white/20 data-[state=checked]:bg-blue-500"
-                />
-                <label 
-                  htmlFor="rememberMe" 
-                  className="text-sm text-gray-200 cursor-pointer hover:text-white"
-                >
-                  Remember me
-                </label>
-              </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="rememberMe"
+                checked={formData.rememberMe}
+                onCheckedChange={(checked) => 
+                  setFormData(prev => ({ ...prev, rememberMe: checked === true }))
+                }
+                className="border-white/20 data-[state=checked]:bg-blue-500"
+              />
+              <label 
+                htmlFor="rememberMe" 
+                className="text-sm text-gray-200 cursor-pointer hover:text-white"
+              >
+                {t.rememberMe}
+              </label>
+            </div>
             </div>
 
-            {/* Submit Button with more vibrant gradient */}
+            {/* Submit Button */}
             <Button
               type="submit"
               className="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white hover:from-blue-700 hover:to-blue-900"
@@ -278,22 +278,22 @@ const SignInPage = () => {
                 <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
                 <div className="flex items-center justify-center gap-2">
-                  Sign In
+                  {t.signIn}
                   <ChevronRight className="w-4 h-4" />
                 </div>
               )}
             </Button>
           </motion.form>
 
-          {/* Sign Up Link with improved visibility */}
+          {/* Sign Up Link */}
           <p className="mt-6 text-center text-gray-200">
-            Don't have an account?{' '}
+            {t.noAccount}{' '}
             <button
               type="button" 
               onClick={() => router.push('/sign-up')}
               className="text-blue-400 hover:text-blue-300"
             >
-              Sign up
+              {t.signUp}
             </button>
           </p>
         </CardContent>

@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AppProviders from "@/components/providers/AppProviders";
 import { CustomToaster } from "@/components/global/CustomTosater";
+import { NEXT_PUBLIC_API_URL } from "@/lib/constants";
+import { PublicEnvScript } from "next-runtime-env";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,6 +28,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <PublicEnvScript />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

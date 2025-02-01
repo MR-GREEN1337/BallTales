@@ -13,11 +13,12 @@ import { getUserProfile } from '@/actions/user/get-user'
 import Cookies from "js-cookie"
 import { useRouter } from 'next/navigation'
 import { ClearButton, MessageDust } from './_components/ResetButton'
-import { languageContent, typingPhrases } from '@/lib/constants'
+import { languageContent, NEXT_PUBLIC_API_URL, typingPhrases } from '@/lib/constants'
 import AnimatedBotIcon from './_components/AnimatedBotIcon'
 import { updateUserPreferences } from '@/actions/user/update-preferences'
 import ContextViewer from './_components/ContextViewer'
 import PixelatedBackground from './_components/PixelatedBackground'
+import { api } from '@/lib/utils'
 
 
 interface PreferencesState {
@@ -207,8 +208,8 @@ const ChatPage = () => {
         }
       };
 
-      const backendResponse = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/user/update-preferences`,
+      const backendResponse = await api.post(
+        `${NEXT_PUBLIC_API_URL}/user/update-preferences`,
         payload,
         {
           headers: {
@@ -257,6 +258,7 @@ const ChatPage = () => {
 
   const handleLogout = () => {
     Cookies.remove('auth-token')
+    localStorage.removeItem('userLang')
     router.push('/sign-in')
     toast.success('Successfully logged out')
   }
@@ -388,7 +390,8 @@ const ChatPage = () => {
         user_data: userDataForRequest
       }
       //console.log("Back Data", backData)
-      const response = await axios.post<MLBResponse>(`${process.env.NEXT_PUBLIC_API_URL}/chat`, backData as ChatRequestData)
+      console.log('API URL:', NEXT_PUBLIC_API_URL)
+      const response = await api.post<MLBResponse>(`${NEXT_PUBLIC_API_URL}/chat`, backData as ChatRequestData)
       console.log(response)
       // Clear thinking timeout and hide indicator
       if (thinkingTimeoutRef.current) {

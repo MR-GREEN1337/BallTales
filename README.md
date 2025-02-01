@@ -140,7 +140,6 @@ JWT_SECRET=secret
 
 # Backend (.env)
 GEMINI_API_KEY=your_api_key
-UPDATE_INTERVAL=3  # Number of interactions before preference update
 ```
 
 ### Installation

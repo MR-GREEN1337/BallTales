@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import ScreenshotLoader from '@/components/global/ScreenshotLoader';
+import { useLanguage } from '@/hooks/use-language-auth';
 
 const translations = {
   en: {
@@ -27,7 +29,7 @@ const translations = {
 };
 
 const Home = () => {
-  const [language, setLanguage] = useState<'en' | 'es' | 'ja'>('en');
+  const { language, updateLanguage } = useLanguage();
   const t = translations[language];
 
   return (
@@ -125,7 +127,7 @@ const Home = () => {
             >
               <Button 
                 variant={language === 'en' ? 'default' : 'ghost'} 
-                onClick={() => setLanguage('en')}
+                onClick={() => updateLanguage('en')}
                 className={cn(
                   "text-white",
                   language === 'en' ? "bg-red-600 hover:bg-red-700" : "hover:text-red-500"
@@ -135,7 +137,7 @@ const Home = () => {
               </Button>
               <Button 
                 variant={language === 'es' ? 'default' : 'ghost'}
-                onClick={() => setLanguage('es')}
+                onClick={() => updateLanguage('es')}
                 className={cn(
                   "text-white",
                   language === 'es' ? "bg-red-600 hover:bg-red-700" : "hover:text-red-500"
@@ -145,7 +147,7 @@ const Home = () => {
               </Button>
               <Button 
                 variant={language === 'ja' ? 'default' : 'ghost'}
-                onClick={() => setLanguage('ja')}
+                onClick={() => updateLanguage('ja')}
                 className={cn(
                   "text-white",
                   language === 'ja' ? "bg-red-600 hover:bg-red-700" : "hover:text-red-500"
@@ -167,7 +169,7 @@ const Home = () => {
         </div>
       </div>
     </div>
-  );
+);
 };
 
 export default Home;

@@ -30,7 +30,7 @@ router = APIRouter(
 
 
 @router.post(
-    "/",
+    "",
     description="Return Agent's response to chat request",
 )
 @rate_limiter(limit=30, seconds=60)
