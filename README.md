@@ -5,6 +5,7 @@
 An intelligent baseball analytics platform that leverages Google's Gemini API to deliver personalized MLB insights, multilingual support, and interactive media experiences.
 
 ![Landing Page](./assets/LandingPage.png)
+![Landing Page](./assets/chat_resp.png)
 ![Inside the App](./assets/Aaron_Judge.png)
 ![Inside the App](./assets/App_Inside.png)
 ![Mike Trout Stats](./assets/trout_stats.png)
