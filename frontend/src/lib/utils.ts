@@ -9,21 +9,31 @@ export function cn(...inputs: ClassValue[]) {
 
 export const api = axios.create({
   baseURL: NEXT_PUBLIC_API_URL,
-  maxRedirects: 5, // Allow up to 5 redirects
   headers: {
-    'Content-Type': 'application/json'
-  }
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  },
+  withCredentials: true
 });
 
-// Add request interceptor to ensure HTTPS
+// Helper function to enforce HTTPS in production
+const enforceHttps = (url: string): string => {
+  if (process.env.NODE_ENV === 'production') {
+    return url.replace('http://', 'https://');
+  }
+  return url;
+};
+
+// Add request interceptor for production HTTPS enforcement
+if (process.env.NODE_ENV === 'production') {
 api.interceptors.request.use((config) => {
-  // Ensure the URL uses HTTPS
   if (config.url) {
-    config.url = config.url.replace('http://', 'https://');
+    config.url = enforceHttps(config.url);
   }
   return config;
-});
+});}
 
+if (process.env.NODE_ENV === 'production') {
 // Add response interceptor to handle redirects
 api.interceptors.response.use(
   (response) => response,
@@ -31,10 +41,10 @@ api.interceptors.response.use(
     if (axios.isAxiosError(error) && error.response?.status === 307) {
       const redirectUrl = error.response.headers.location;
       if (redirectUrl) {
-        // Ensure redirect URL uses HTTPS
-        const httpsRedirectUrl = redirectUrl.replace('http://', 'https://');
+        // Apply HTTPS enforcement only in production
+        const processedRedirectUrl = enforceHttps(redirectUrl);
         // Make a new request to the redirect URL
-        return api.post(httpsRedirectUrl, error.config?.data, {
+        return api.post(processedRedirectUrl, error.config?.data, {
           headers: error.config?.headers
         });
       }
@@ -42,3 +52,4 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+}

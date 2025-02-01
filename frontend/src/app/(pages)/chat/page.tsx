@@ -253,7 +253,7 @@ const ChatPage = () => {
         ...prev,
         botMessageCount: 2
       }));
-    }
+    } 
   };
 
   const handleLogout = () => {

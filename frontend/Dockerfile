@@ -1,13 +1,16 @@
-FROM node:18-alpine AS base
+FROM node:20-alpine AS base
 
 # Dependencies stage
 FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copy package files
+# Add caching for npm
 COPY package.json package-lock.json* ./
-RUN npm ci
+RUN \
+  if [ -f package-lock.json ]; then export CI=1 && npm ci --omit=dev; \
+  else echo "Warning: Lockfile not found." && npm install --omit=dev; \
+  fi
 
 # Builder stage
 FROM base AS builder
@@ -22,7 +25,7 @@ COPY prisma ./prisma/
 RUN npx prisma generate
 
 # Disable telemetry
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Build the app
 RUN npm run build
@@ -31,31 +34,28 @@ RUN npm run build
 FROM base AS runner
 WORKDIR /app
 
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NPM_CONFIG_PRODUCTION=true
+ENV PORT=3000
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy public files
+# Copy public files and built application
 COPY --from=builder /app/public ./public
-
-# Set up .next directory
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
-
-# Copy built application
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy Prisma files and generate client
-COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+# Set up .next directory
+RUN mkdir -p .next && chown nextjs:nodejs .next
 
 USER nextjs
 
 EXPOSE 3000
-ENV PORT 3000
+
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
 
 CMD ["node", "server.js"]
