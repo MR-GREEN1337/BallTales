@@ -144,7 +144,7 @@ JWT_SECRET=secret
 
 # Backend (.env)
 GEMINI_API_KEY=your_api_key
-ALLOWED_ORIGINS=["localhost:3000", "127.0.0.1:3000"]```
+ALLOWED_ORIGINS=["localhost:3000", "127.0.0.1:3000"]
 
 ### Installation
 
