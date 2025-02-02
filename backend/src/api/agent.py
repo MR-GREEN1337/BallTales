@@ -1553,18 +1553,18 @@ print(json.dumps(result))
             return self._create_error_response(message, str(e))
 
     async def _get_search_parameters(
-            self, intent: Dict[str, Any], data: Dict[str, Any]
-        ) -> Dict[str, Any]:
-            """
-            Get ready-to-use media URLs and relevant homerun keywords, with enhanced search capabilities
-            and robust null value handling.
-            """
-            try:
-                # Get a small sample of homerun data for context
-                sample_homerun = self.homeruns.head(15).to_dict()
+        self, intent: Dict[str, Any], data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Get ready-to-use media URLs and relevant homerun keywords, with enhanced search capabilities
+        and robust null value handling.
+        """
+        try:
+            # Get a small sample of homerun data for context
+            sample_homerun = self.homeruns.head(15).to_dict()
 
-                # Enhanced prompt focusing on specific, meaningful search parameters
-                media_prompt = """Based on this MLB context, generate a complete media plan with ready-to-use URLs and detailed, specific search parameters that capture the distinctive aspects of each home run.
+            # Enhanced prompt focusing on specific, meaningful search parameters
+            media_prompt = """Based on this MLB context, generate a complete media plan with ready-to-use URLs and detailed, specific search parameters that capture the distinctive aspects of each home run.
 
         Intent: {intent}
         Data: {data}
@@ -1594,99 +1594,165 @@ print(json.dumps(result))
         - Player headshots: https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/[player_id]/headshot/67/current
         - Team logos: https://www.mlbstatic.com/team-logos/[team_id].svg"""
 
-                # Format prompt with actual data
-                formatted_prompt = media_prompt.format(
-                    intent=json.dumps(intent, indent=2, ensure_ascii=False),
-                    data=json.dumps(data, indent=2, ensure_ascii=False),
-                    homerun_sample=json.dumps(sample_homerun, indent=2, ensure_ascii=False),
-                    media_sources=json.dumps(self.media_source, indent=2, ensure_ascii=False),
-                    user_query=self.user_query,
-                )
+            # Format prompt with actual data
+            formatted_prompt = media_prompt.format(
+                intent=json.dumps(intent, indent=2, ensure_ascii=False),
+                data=json.dumps(data, indent=2, ensure_ascii=False),
+                homerun_sample=json.dumps(sample_homerun, indent=2, ensure_ascii=False),
+                media_sources=json.dumps(
+                    self.media_source, indent=2, ensure_ascii=False
+                ),
+                user_query=self.user_query,
+            )
 
-                # Get media plan from LLM
-                result = await self.gemini.generate_with_fallback(
-                    formatted_prompt,
-                    generation_config=genai.GenerationConfig(
-                        temperature=0.1, 
-                        response_mime_type="application/json"
-                    ),
-                )
+            # Get media plan from LLM
+            result = await self.gemini.generate_with_fallback(
+                formatted_prompt,
+                generation_config=genai.GenerationConfig(
+                    temperature=0.1, response_mime_type="application/json"
+                ),
+            )
 
-                try:
-                    media_plan = json.loads(result.text)
-                except json.JSONDecodeError as json_error:
-                    print(f"JSON parsing error: {str(json_error)}")
-                    return {
-                        "direct_media": [],
-                        "homerun_search": {
-                            "keywords": [],
-                            "stats_criteria": {},
-                            "player_names": [],
-                        },
-                    }
+            try:
+                media_plan = json.loads(result.text)
+            except json.JSONDecodeError as json_error:
+                print(f"JSON parsing error: {str(json_error)}")
+                return {
+                    "direct_media": [],
+                    "homerun_search": {
+                        "keywords": [],
+                        "stats_criteria": {},
+                        "player_names": [],
+                    },
+                }
 
-                # Process homerun matches with enhanced null value handling
-                if "homerun_search" in media_plan:
-                    homerun_matches = []
-                    search_criteria = media_plan["homerun_search"].get("stats_criteria", {})
+            # Process homerun matches with enhanced null value handling
+            if "homerun_search" in media_plan:
+                homerun_matches = []
+                search_criteria = media_plan["homerun_search"].get("stats_criteria", {})
 
-                    for _, row in self.homeruns.iterrows():
+                for _, row in self.homeruns.iterrows():
+                    try:
+                        # Safely convert statistical values with null checking
                         try:
-                            # Safely convert statistical values with null checking
-                            try:
-                                exit_velocity = float(row["ExitVelocity"]) if pd.notna(row["ExitVelocity"]) else None
-                                launch_angle = float(row["LaunchAngle"]) if pd.notna(row["LaunchAngle"]) else None
-                                hit_distance = float(row["HitDistance"]) if pd.notna(row["HitDistance"]) else None
-                            except (ValueError, TypeError):
+                            exit_velocity = (
+                                float(row["ExitVelocity"])
+                                if pd.notna(row["ExitVelocity"])
+                                else None
+                            )
+                            launch_angle = (
+                                float(row["LaunchAngle"])
+                                if pd.notna(row["LaunchAngle"])
+                                else None
+                            )
+                            hit_distance = (
+                                float(row["HitDistance"])
+                                if pd.notna(row["HitDistance"])
+                                else None
+                            )
+                        except (ValueError, TypeError):
+                            continue
+
+                        # Skip row if any required stat is missing
+                        if any(
+                            v is None
+                            for v in [exit_velocity, launch_angle, hit_distance]
+                        ):
+                            continue
+
+                        # Check if the homerun meets all statistical criteria with null-safe comparisons
+                        if search_criteria:
+                            if (
+                                (
+                                    "min_exit_velocity" in search_criteria
+                                    and (
+                                        exit_velocity is None
+                                        or exit_velocity
+                                        < search_criteria["min_exit_velocity"]
+                                    )
+                                )
+                                or (
+                                    "max_exit_velocity" in search_criteria
+                                    and (
+                                        exit_velocity is None
+                                        or exit_velocity
+                                        > search_criteria["max_exit_velocity"]
+                                    )
+                                )
+                                or (
+                                    "min_launch_angle" in search_criteria
+                                    and (
+                                        launch_angle is None
+                                        or launch_angle
+                                        < search_criteria["min_launch_angle"]
+                                    )
+                                )
+                                or (
+                                    "max_launch_angle" in search_criteria
+                                    and (
+                                        launch_angle is None
+                                        or launch_angle
+                                        > search_criteria["max_launch_angle"]
+                                    )
+                                )
+                                or (
+                                    "min_distance" in search_criteria
+                                    and (
+                                        hit_distance is None
+                                        or hit_distance
+                                        < search_criteria["min_distance"]
+                                    )
+                                )
+                                or (
+                                    "max_distance" in search_criteria
+                                    and (
+                                        hit_distance is None
+                                        or hit_distance
+                                        > search_criteria["max_distance"]
+                                    )
+                                )
+                            ):
                                 continue
 
-                            # Skip row if any required stat is missing
-                            if any(v is None for v in [exit_velocity, launch_angle, hit_distance]):
-                                continue
+                        # Calculate text similarity scores with null-safe string handling
+                        title_scores = []
+                        player_scores = []
 
-                            # Check if the homerun meets all statistical criteria with null-safe comparisons
-                            if search_criteria:
-                                if (
-                                    ("min_exit_velocity" in search_criteria and 
-                                    (exit_velocity is None or exit_velocity < search_criteria["min_exit_velocity"])) or
-                                    ("max_exit_velocity" in search_criteria and 
-                                    (exit_velocity is None or exit_velocity > search_criteria["max_exit_velocity"])) or
-                                    ("min_launch_angle" in search_criteria and 
-                                    (launch_angle is None or launch_angle < search_criteria["min_launch_angle"])) or
-                                    ("max_launch_angle" in search_criteria and 
-                                    (launch_angle is None or launch_angle > search_criteria["max_launch_angle"])) or
-                                    ("min_distance" in search_criteria and 
-                                    (hit_distance is None or hit_distance < search_criteria["min_distance"])) or
-                                    ("max_distance" in search_criteria and 
-                                    (hit_distance is None or hit_distance > search_criteria["max_distance"]))
-                                ):
-                                    continue
+                        if row["title"] and "keywords" in media_plan["homerun_search"]:
+                            row_title = str(row["title"]).lower()
+                            title_scores = [
+                                difflib.SequenceMatcher(
+                                    None, row_title, str(keyword).lower()
+                                ).ratio()
+                                for keyword in media_plan["homerun_search"]["keywords"]
+                                if keyword
+                            ]
 
-                            # Calculate text similarity scores with null-safe string handling
-                            title_scores = []
-                            player_scores = []
-                            
-                            if row["title"] and "keywords" in media_plan["homerun_search"]:
-                                row_title = str(row["title"]).lower()
-                                title_scores = [
-                                    difflib.SequenceMatcher(None, row_title, str(keyword).lower()).ratio()
-                                    for keyword in media_plan["homerun_search"]["keywords"]
-                                    if keyword
+                        if (
+                            row["title"]
+                            and "player_names" in media_plan["homerun_search"]
+                        ):
+                            row_title = str(row["title"]).lower()
+                            player_scores = [
+                                difflib.SequenceMatcher(
+                                    None, row_title, str(player).lower()
+                                ).ratio()
+                                for player in media_plan["homerun_search"][
+                                    "player_names"
                                 ]
+                                if player
+                            ]
 
-                            if row["title"] and "player_names" in media_plan["homerun_search"]:
-                                row_title = str(row["title"]).lower()
-                                player_scores = [
-                                    difflib.SequenceMatcher(None, row_title, str(player).lower()).ratio()
-                                    for player in media_plan["homerun_search"]["player_names"]
-                                    if player
-                                ]
+                        # Use the best match from either keywords or player names
+                        best_score = (
+                            max(title_scores + player_scores)
+                            if (title_scores or player_scores)
+                            else 0
+                        )
 
-                            # Use the best match from either keywords or player names
-                            best_score = max(title_scores + player_scores) if (title_scores or player_scores) else 0
-
-                            if best_score >= 0.55:  # Threshold for good matches
-                                homerun_matches.append({
+                        if best_score >= 0.55:  # Threshold for good matches
+                            homerun_matches.append(
+                                {
                                     "type": "video",
                                     "url": str(row["video"]),
                                     "title": str(row["title"]),
@@ -1699,43 +1765,48 @@ print(json.dumps(result))
                                         "exit_velocity": exit_velocity,
                                         "launch_angle": launch_angle,
                                         "distance": hit_distance,
-                                        "year": int(row["season"]) if pd.notna(row["season"]) else None,
-                                        "match_score": best_score
-                                    }
-                                })
+                                        "year": int(row["season"])
+                                        if pd.notna(row["season"])
+                                        else None,
+                                        "match_score": best_score,
+                                    },
+                                }
+                            )
 
-                        except Exception as row_error:
-                            print(f"Error processing row: {str(row_error)}")
-                            continue
+                    except Exception as row_error:
+                        print(f"Error processing row: {str(row_error)}")
+                        continue
 
-                    # Sort matches by relevance and statistical impressiveness
-                    if homerun_matches:
-                        homerun_matches.sort(
-                            key=lambda x: (
-                                (x["metadata"]["exit_velocity"] or 0) * 0.4 +  # Weight exit velocity
-                                (x["metadata"]["distance"] or 0) * 0.4 +      # Weight distance
-                                (x["metadata"]["launch_angle"] or 0) * 0.2    # Weight launch angle
-                            ),
-                            reverse=True
-                        )
+                # Sort matches by relevance and statistical impressiveness
+                if homerun_matches:
+                    homerun_matches.sort(
+                        key=lambda x: (
+                            (x["metadata"]["exit_velocity"] or 0)
+                            * 0.4  # Weight exit velocity
+                            + (x["metadata"]["distance"] or 0) * 0.4  # Weight distance
+                            + (x["metadata"]["launch_angle"] or 0)
+                            * 0.2  # Weight launch angle
+                        ),
+                        reverse=True,
+                    )
 
-                        # Add top matches to media plan
-                        if "direct_media" not in media_plan:
-                            media_plan["direct_media"] = []
-                        media_plan["direct_media"].extend(homerun_matches[:80])
+                    # Add top matches to media plan
+                    if "direct_media" not in media_plan:
+                        media_plan["direct_media"] = []
+                    media_plan["direct_media"].extend(homerun_matches[:80])
 
-                return media_plan
+            return media_plan
 
-            except Exception as e:
-                print(f"Error in media resolution: {str(e)}")
-                return {
-                    "direct_media": [],
-                    "homerun_search": {
-                        "keywords": [],
-                        "stats_criteria": {},
-                        "player_names": [],
-                    }
-                }
+        except Exception as e:
+            print(f"Error in media resolution: {str(e)}")
+            return {
+                "direct_media": [],
+                "homerun_search": {
+                    "keywords": [],
+                    "stats_criteria": {},
+                    "player_names": [],
+                },
+            }
 
     async def _resolve_chart(
         self, deps: MLBDeps, data: Dict[str, Any], steps: List[Dict[str, Any]]
@@ -1860,41 +1931,6 @@ print(json.dumps(result))
         except Exception as e:
             print(f"Error in chart resolution: {str(e)}")
             return {"requires_chart": False}
-
-    def _validate_chart_data(
-        self, data: List[Dict[str, Any]], schema: Dict[str, Any]
-    ) -> bool:
-        """Validate chart data against its schema"""
-        try:
-            if not isinstance(data, list):
-                return False
-
-            required_props = schema.get("items", {}).get("required", [])
-            properties = schema.get("items", {}).get("properties", {})
-
-            for item in data:
-                # Check required properties
-                if not all(prop in item for prop in required_props):
-                    return False
-
-                # Validate property types
-                for prop, value in item.items():
-                    expected_type = properties.get(prop)
-                    if not expected_type:
-                        continue
-
-                    if expected_type == "string" and not isinstance(value, str):
-                        return False
-                    elif expected_type == "number" and not isinstance(
-                        value, (int, float)
-                    ):
-                        return False
-
-            return True
-
-        except Exception as e:
-            print(f"Error validating chart data: {str(e)}")
-            return False
 
     async def _resolve_media(
         self, deps: MLBDeps, data: Dict[str, Any], steps: Dict[str, Any]

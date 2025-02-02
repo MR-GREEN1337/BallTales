@@ -362,7 +362,7 @@ const renderRecentGames = (oldData: any) => {
 
   const renderContent = () => {
     console.log("EndpointResultDialog", endpointName, data);
-   alert(endpointName)
+   //alert(endpointName)
     switch (endpointName) {
       case '/api/team/games/recent':
       case '/api/player/games/recent':

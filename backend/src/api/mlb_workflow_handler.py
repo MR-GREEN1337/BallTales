@@ -94,12 +94,15 @@ class MLBWorkflowHandler:
             team_data = statsapi.get("team", {"teamId": self.entity_id})
             team_info = team_data["teams"][0]
             first_year = int(team_info.get("firstYearOfPlay", datetime.now().year))
-            
+
             # Get team's awards history
-            awards_data = statsapi.get("awards", {
-                "sportId": 1,
-                "teamId": self.entity_id,
-            })
+            awards_data = statsapi.get(
+                "awards",
+                {
+                    "sportId": 1,
+                    "teamId": self.entity_id,
+                },
+            )
 
             # Create prompt for Gemini
             formatted_prompt = f"""Analyze this MLB team's awards and achievements data to generate a comprehensive championship history.
@@ -152,7 +155,7 @@ class MLBWorkflowHandler:
                     temperature=0.1,
                     response_mime_type="application/json",
                 ),
-                model_name="gemini-2.0-flash-exp"
+                model_name="gemini-2.0-flash-exp",
             )
 
             # Parse Gemini response and combine with team info
@@ -163,6 +166,7 @@ class MLBWorkflowHandler:
         except Exception as e:
             logger.error(f"Error fetching team championships: {str(e)}")
             raise
+
     def _process_roster_parallel(
         self, roster_str: str, max_workers: int = 10
     ) -> Dict[str, Any]:
@@ -312,8 +316,8 @@ class MLBWorkflowHandler:
         """Get team's recent and upcoming game results."""
         try:
             # Get date range for past 14 days and upcoming 14 days
-            end_date = datetime.now() + timedelta(days=7*4*3)
-            start_date = datetime.now() - timedelta(days=7*4*3)
+            end_date = datetime.now() + timedelta(days=7 * 4 * 3)
+            start_date = datetime.now() - timedelta(days=7 * 4 * 3)
 
             schedule = statsapi.schedule(
                 start_date=start_date.strftime("%Y-%m-%d"),
@@ -323,11 +327,13 @@ class MLBWorkflowHandler:
 
             # Cache for team lookups to avoid multiple calls for same team
             team_logo_cache = {}
-            
+
             def get_opponent_logo(opponent_id: int) -> str:
                 """Helper function to get opponent logo URL with caching."""
                 if opponent_id not in team_logo_cache:
-                    team_logo_cache[opponent_id] = TEAM_LOGO_URL.format(team_id=opponent_id)
+                    team_logo_cache[opponent_id] = TEAM_LOGO_URL.format(
+                        team_id=opponent_id
+                    )
                 return team_logo_cache[opponent_id]
 
             recent_games = []
@@ -335,15 +341,23 @@ class MLBWorkflowHandler:
             current_time = datetime.now()
 
             for game in schedule:
-                game_date = datetime.strptime(game['game_date'], "%Y-%m-%d")
-                opponent_id = game["away_id"] if game["home_id"] == self.entity_id else game["home_id"]
-                
+                game_date = datetime.strptime(game["game_date"], "%Y-%m-%d")
+                opponent_id = (
+                    game["away_id"]
+                    if game["home_id"] == self.entity_id
+                    else game["home_id"]
+                )
+
                 game_data = {
                     "game_id": game["game_id"],
                     "date": game["game_date"],
-                    "opponent": game["away_name"] if game["home_id"] == self.entity_id else game["home_name"],
+                    "opponent": game["away_name"]
+                    if game["home_id"] == self.entity_id
+                    else game["home_name"],
                     "opponent_image_url": get_opponent_logo(opponent_id),
-                    "home_away": "home" if game["home_id"] == self.entity_id else "away",
+                    "home_away": "home"
+                    if game["home_id"] == self.entity_id
+                    else "away",
                     "status": game["status"],
                     "venue": game.get("venue_name", ""),
                     "time": game.get("game_time", ""),
@@ -351,18 +365,22 @@ class MLBWorkflowHandler:
 
                 # Add score for completed games
                 if game["status"] == "Final":
-                    game_data.update({
-                        "result": game["summary"],
-                        "score": f"{game['home_score']}-{game['away_score']}"
-                    })
+                    game_data.update(
+                        {
+                            "result": game["summary"],
+                            "score": f"{game['home_score']}-{game['away_score']}",
+                        }
+                    )
                 # Add scheduled info for upcoming games
                 else:
-                    game_data.update({
-                        "probable_pitcher": game.get("probable_pitchers", {}).get(
-                            "home" if game["home_id"] == self.entity_id else "away", 
-                            "TBD"
-                        ),
-                    })
+                    game_data.update(
+                        {
+                            "probable_pitcher": game.get("probable_pitchers", {}).get(
+                                "home" if game["home_id"] == self.entity_id else "away",
+                                "TBD",
+                            ),
+                        }
+                    )
 
                 # Sort into recent or upcoming based on game date
                 if game_date < current_time:
@@ -373,12 +391,15 @@ class MLBWorkflowHandler:
             return {
                 "team_id": self.entity_id,
                 "period": f"{start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}",
-                "recent_games": sorted(recent_games, key=lambda x: x["date"], reverse=True),
-                "upcoming_games": sorted(upcoming_games, key=lambda x: x["date"])
+                "recent_games": sorted(
+                    recent_games, key=lambda x: x["date"], reverse=True
+                ),
+                "upcoming_games": sorted(upcoming_games, key=lambda x: x["date"]),
             }
         except Exception as e:
             logger.error(f"Error fetching recent and upcoming games: {str(e)}")
             raise
+
     async def _get_player_career_stats(self) -> Dict[str, Any]:
         """Get comprehensive player career statistics and generate visualization configuration."""
         try:
@@ -519,27 +540,29 @@ class MLBWorkflowHandler:
             # Get basic player info including team ID
             player_info = statsapi.lookup_player(self.entity_id)[0]
             team_id = player_info.get("currentTeam", {}).get("id")
-            
+
             if not team_id:
                 raise ValueError(f"No current team found for player {self.entity_id}")
 
             # Get team schedule
-            end_date = datetime.now() + timedelta(days=7*4*3)
-            start_date = datetime.now() - timedelta(days=7*4*3)
+            end_date = datetime.now() + timedelta(days=7 * 4 * 3)
+            start_date = datetime.now() - timedelta(days=7 * 4 * 3)
 
             schedule = statsapi.schedule(
                 start_date=start_date.strftime("%Y-%m-%d"),
                 end_date=end_date.strftime("%Y-%m-%d"),
-                team=team_id
+                team=team_id,
             )
 
             # Cache for team lookups to avoid multiple calls for same team
             team_logo_cache = {}
-            
+
             def get_opponent_logo(opponent_id: int) -> str:
                 """Helper function to get opponent logo URL with caching."""
                 if opponent_id not in team_logo_cache:
-                    team_logo_cache[opponent_id] = TEAM_LOGO_URL.format(team_id=opponent_id)
+                    team_logo_cache[opponent_id] = TEAM_LOGO_URL.format(
+                        team_id=opponent_id
+                    )
                 return team_logo_cache[opponent_id]
 
             recent_games = []
@@ -548,30 +571,38 @@ class MLBWorkflowHandler:
 
             # Get recent performance stats
             stat_data = statsapi.player_stat_data(
-                self.entity_id, 
-                group="[hitting,pitching]", 
-                type="lastTen"
+                self.entity_id, group="[hitting,pitching]", type="lastTen"
             )
 
             # Process recent games with stats
             for game in schedule:
-                game_date = datetime.strptime(game['game_date'], "%Y-%m-%d")
-                opponent_id = game["away_id"] if game["home_id"] == team_id else game["home_id"]
-                
+                game_date = datetime.strptime(game["game_date"], "%Y-%m-%d")
+                opponent_id = (
+                    game["away_id"] if game["home_id"] == team_id else game["home_id"]
+                )
+
                 if game_date < current_time:
                     # Find matching stats for this game
                     game_stats = None
                     if "hitting" in stat_data:
                         game_stats = next(
-                            (g for g in stat_data["hitting"] if g["date"] == game["game_date"]),
-                            None
+                            (
+                                g
+                                for g in stat_data["hitting"]
+                                if g["date"] == game["game_date"]
+                            ),
+                            None,
                         )
                         if game_stats:
                             game_data = {
                                 "date": game["game_date"],
-                                "opponent": game["away_name"] if game["home_id"] == team_id else game["home_name"],
+                                "opponent": game["away_name"]
+                                if game["home_id"] == team_id
+                                else game["home_name"],
                                 "opponent_image_url": get_opponent_logo(opponent_id),
-                                "home_away": "home" if game["home_id"] == team_id else "away",
+                                "home_away": "home"
+                                if game["home_id"] == team_id
+                                else "away",
                                 "status": game["status"],
                                 "batting": {
                                     "hits": game_stats.get("hits", 0),
@@ -581,21 +612,29 @@ class MLBWorkflowHandler:
                                     "walks": game_stats.get("baseOnBalls", 0),
                                     "strikeouts": game_stats.get("strikeOuts", 0),
                                     "avg": game_stats.get("avg", ".000"),
-                                }
+                                },
                             }
                             recent_games.append(game_data)
 
                     if "pitching" in stat_data:
                         game_stats = next(
-                            (g for g in stat_data["pitching"] if g["date"] == game["game_date"]),
-                            None
+                            (
+                                g
+                                for g in stat_data["pitching"]
+                                if g["date"] == game["game_date"]
+                            ),
+                            None,
                         )
                         if game_stats:
                             game_data = {
                                 "date": game["game_date"],
-                                "opponent": game["away_name"] if game["home_id"] == team_id else game["home_name"],
+                                "opponent": game["away_name"]
+                                if game["home_id"] == team_id
+                                else game["home_name"],
                                 "opponent_image_url": get_opponent_logo(opponent_id),
-                                "home_away": "home" if game["home_id"] == team_id else "away",
+                                "home_away": "home"
+                                if game["home_id"] == team_id
+                                else "away",
                                 "status": game["status"],
                                 "pitching": {
                                     "innings": game_stats.get("inningsPitched", "0.0"),
@@ -605,31 +644,43 @@ class MLBWorkflowHandler:
                                     "walks": game_stats.get("baseOnBalls", 0),
                                     "strikeouts": game_stats.get("strikeOuts", 0),
                                     "era": game_stats.get("era", "0.00"),
-                                }
+                                },
                             }
                             recent_games.append(game_data)
                 else:
                     # Add upcoming games
-                    upcoming_games.append({
-                        "game_id": game["game_id"],
-                        "date": game["game_date"],
-                        "opponent": game["away_name"] if game["home_id"] == team_id else game["home_name"],
-                        "opponent_image_url": get_opponent_logo(opponent_id),
-                        "home_away": "home" if game["home_id"] == team_id else "away",
-                        "status": game["status"],
-                        "venue": game.get("venue_name", ""),
-                        "time": game.get("game_time", ""),
-                        "probable_pitcher": game.get("probable_pitchers", {}).get(
-                            "home" if game["home_id"] == team_id else "away",
-                            "TBD"
-                        ) if player_info.get("primaryPosition", {}).get("abbreviation") == "P" else None
-                    })
+                    upcoming_games.append(
+                        {
+                            "game_id": game["game_id"],
+                            "date": game["game_date"],
+                            "opponent": game["away_name"]
+                            if game["home_id"] == team_id
+                            else game["home_name"],
+                            "opponent_image_url": get_opponent_logo(opponent_id),
+                            "home_away": "home"
+                            if game["home_id"] == team_id
+                            else "away",
+                            "status": game["status"],
+                            "venue": game.get("venue_name", ""),
+                            "time": game.get("game_time", ""),
+                            "probable_pitcher": game.get("probable_pitchers", {}).get(
+                                "home" if game["home_id"] == team_id else "away", "TBD"
+                            )
+                            if player_info.get("primaryPosition", {}).get(
+                                "abbreviation"
+                            )
+                            == "P"
+                            else None,
+                        }
+                    )
 
             return {
                 "player_id": self.entity_id,
                 "total_games": len(recent_games) + len(upcoming_games),
-                "recent_games": sorted(recent_games, key=lambda x: x["date"], reverse=True),
-                "upcoming_games": sorted(upcoming_games, key=lambda x: x["date"])
+                "recent_games": sorted(
+                    recent_games, key=lambda x: x["date"], reverse=True
+                ),
+                "upcoming_games": sorted(upcoming_games, key=lambda x: x["date"]),
             }
         except Exception as e:
             logger.error(f"Error fetching player recent and upcoming games: {str(e)}")
